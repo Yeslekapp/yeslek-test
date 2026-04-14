@@ -293,6 +293,15 @@ def lookup_number():
 
 @recharge_bp.get("/enter-number")
 def enter_number_get():
+
+    # ---------------------------
+    # RESET FLOW (IMPORTANT)
+    # ---------------------------
+    session.pop("recharge_forfait", None)
+    session.pop("recharge_operator", None)
+    session.pop("recharge_amount", None)
+    session.pop("recharge_total_amount", None)
+
     initial_phone = session.get("recharge_phone", "+93")
     country_iso = detect_country_iso_from_phone(initial_phone) or "AF"
     city = get_city_for_country(country_iso)
@@ -397,9 +406,13 @@ def select_operator_post():
 # ---------------------------
 # Feature: Select amount (GET)
 # ---------------------------
-
 @recharge_bp.get("/select-amount")
 def select_amount_get():
+
+    # AUTO CLEAR SAFE
+    if request.args.get("reset") == "1":
+        session.pop("recharge_forfait", None)
+
     session.pop("received_display", None)
     phone = session.get("recharge_phone")
 

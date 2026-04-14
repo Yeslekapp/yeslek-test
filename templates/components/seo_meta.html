@@ -2,8 +2,8 @@
 {# SEO META GLOBAL #}
 {# --------------------------- #}
 
-{% set default_title = "Yeslek - Recharge mobile internationale" %}
-{% set default_description = "Recharge mobile internationale instantanée. Envoyez du crédit dans plus de 150 pays avec Tikzok." %}
+{% set default_title = "Yeslek - Recharge mobile internationale instantanée" %}
+{% set default_description = "Yeslek permet d'envoyer du crédit mobile instantanément dans plus de 150 pays. Recharge internationale rapide, paiement sécurisé, livraison immédiate." %}
 
 {% set seo_title = seo_title if seo_title else default_title %}
 {% set seo_description = seo_description if seo_description else default_description %}
@@ -20,8 +20,23 @@
 <meta property="og:description" content="{{ seo_description }}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ seo_url }}">
+<meta property="og:site_name" content="Yeslek">
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ seo_title }}">
 <meta name="twitter:description" content="{{ seo_description }}">
+
+{# --------------------------- #}
+{# STRUCTURED DATA (MARQUE) #}
+{# --------------------------- #}
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Yeslek",
+  "url": "https://yeslek.com",
+  "logo": "https://yeslek.com/static/logo.png"
+}
+</script>

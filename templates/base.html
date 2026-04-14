@@ -48,9 +48,14 @@ href="{{ url_for('static', filename='images/logo.png') }}">
   {% include "components/navbar.html" %}
 
   <!-- ========================= Page content ========================= -->
-  <main class="tz-container">
-    {% block content %}{% endblock %}
-  </main>
+<main class="tz-container">
+
+<h1 class="tz-seo-h1">
+Yeslek - Recharge mobile internationale instantanée
+</h1>
+
+{% block content %}{% endblock %}
+</main>
 
   <!-- ========================= Footer ========================= -->
   {% include "components/footer.html" %}

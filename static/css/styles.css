@@ -1892,3 +1892,11 @@ color:#2f7de1;
 .tz-share-btn:active{
 transform:scale(.98);
 }
+
+.tz-seo-h1{
+position:absolute;
+left:-9999px;
+top:-9999px;
+opacity:0;
+pointer-events:none;
+}
