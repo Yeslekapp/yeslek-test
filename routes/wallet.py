@@ -1,8 +1,8 @@
 # ---------------------------
-# Wallet routes
+# Wallet routes (FINAL SEO SAFE)
 # ---------------------------
 
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, session, url_for
 from services.user.user_service import UserService
 
 wallet_bp = Blueprint("wallet", __name__, url_prefix="/wallet")
@@ -27,5 +27,12 @@ def wallet_home():
         "wallet/index.html",
         balance=balance,
         default_amount=default_amount,
-        share_link=share_link
+        share_link=share_link,
+
+        # ---------------------------
+        # SEO (IMPORTANT)
+        # ---------------------------
+        meta_robots="noindex,follow",
+        seo_title="Yeslek - Wallet",
+        seo_description="Gérez votre solde Yeslek en toute sécurité."
     )

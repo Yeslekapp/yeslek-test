@@ -311,6 +311,7 @@ def enter_number_get():
         initial_phone=initial_phone,
         country_iso=country_iso,
         city=city,
+        canonical_url="https://yeslek.com/recharge/enter-number"
     )
 
 
