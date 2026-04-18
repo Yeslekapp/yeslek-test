@@ -132,7 +132,7 @@ def create_app() -> Flask:
 
         lang = (lang or "fr").lower()
 
-        allowed = {"fr", "en", "ar", "fa", "ps", "uz"}
+        allowed = {"fr", "en", "ar", "fa", "ps", "uz","tr"}
 
         if lang not in allowed:
          lang = "fr"
@@ -162,7 +162,7 @@ def create_app() -> Flask:
             accept = request.headers.get("Accept-Language", "").lower()
             lang = "fr" if accept.startswith("fr") else "en"
 
-        allowed = {"fr", "en", "ar", "fa", "ps", "uz"}
+        allowed = {"fr", "en", "ar", "fa", "ps", "uz","tr"}
 
         if lang not in allowed:
          lang = "fr"
