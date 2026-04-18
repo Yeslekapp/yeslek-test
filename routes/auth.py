@@ -64,7 +64,9 @@ def login():
             return render_template("auth/email_login.html", error=True)
 
         try:
-            EmailOTPService.send_verification(email_value)
+         lang = session.get("lang", "fr")
+
+         EmailOTPService.send_verification(email_value, lang)
 
         except Exception as e:
             print("EMAIL ERROR:", e)

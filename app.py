@@ -70,6 +70,7 @@ def _deep_merge_dict(base: dict, extra: dict) -> dict:
 def create_app() -> Flask:
 
     app = Flask(__name__)
+
     from datetime import timedelta
     app.permanent_session_lifetime = timedelta(days=365 * 5)
 
@@ -98,7 +99,7 @@ def create_app() -> Flask:
         return dict(now=datetime.now)
 
     # ---------------------------
-    # Stripe key for frontend
+    # Stripe key
     # ---------------------------
     @app.context_processor
     def inject_stripe_key():
@@ -130,12 +131,10 @@ def create_app() -> Flask:
 
     def _load_l10n(lang: str) -> dict:
 
-        lang = (lang or "fr").lower()
-
-        allowed = {"fr", "en", "ar", "fa", "ps", "uz","tr"}
+        allowed = {"fr", "en", "ar", "fa", "ps", "uz", "tr"}
 
         if lang not in allowed:
-         lang = "fr"
+            lang = "en"
 
         base_dir = os.path.join(os.path.dirname(__file__), "l10n")
 
@@ -148,24 +147,39 @@ def create_app() -> Flask:
         return _deep_merge_dict(base_data, admin_data)
 
     # ---------------------------
-    # Set lang
+    # Set lang (FINAL PRODUCTION)
     # ---------------------------
     @app.before_request
     def _set_lang():
 
+        allowed = {"fr", "en", "ar", "fa", "ps", "uz", "tr"}
+
         lang = session.get("lang")
+
+        if not lang:
+            lang = request.cookies.get("lang")
 
         if not lang:
             lang = request.args.get("lang")
 
         if not lang:
-            accept = request.headers.get("Accept-Language", "").lower()
-            lang = "fr" if accept.startswith("fr") else "en"
+            accept = request.headers.get("Accept-Language", "")
+            lang = None
 
-        allowed = {"fr", "en", "ar", "fa", "ps", "uz","tr"}
+            if accept:
+                for l in accept.split(","):
+                    code = l.split(";")[0].strip()
+                    short = code.split("-")[0]
+
+                    if short in allowed:
+                        lang = short
+                        break
+
+        if not lang:
+            lang = "en"
 
         if lang not in allowed:
-         lang = "fr"
+            lang = "en"
 
         session["lang"] = lang
         g.lang = lang
@@ -175,7 +189,7 @@ def create_app() -> Flask:
         session["is_admin"] = user_email in config.ADMIN_EMAILS
 
     # ---------------------------
-    # Inject user balance (cached)
+    # Inject user balance
     # ---------------------------
     @app.before_request
     def inject_user_balance():
@@ -232,7 +246,6 @@ def create_app() -> Flask:
     app.register_blueprint(wallet_bp)
 
     return app
-
 
 # ---------------------------
 # App Init

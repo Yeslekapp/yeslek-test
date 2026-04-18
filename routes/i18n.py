@@ -10,10 +10,11 @@ bp = Blueprint("i18n", __name__)
 ALLOWED_LANGS = {
     "fr",
     "en",
-    "ar",   # arabe
-    "fa",   # persan
-    "ps",   # pashto
-    "uz"    # ouzbek (Afghanistan)
+    "ar",
+    "fa",
+    "ps",
+    "uz",
+    "tr"
 }
 
 # Langues RTL

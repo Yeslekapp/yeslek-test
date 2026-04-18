@@ -66,7 +66,26 @@ class EmailService:
             return False
 
     # ---------------------------
-    # Helpers (AJOUT SAFE)
+    # Load translations (NEW)
+    # ---------------------------
+    @staticmethod
+    def _load_l10n(lang: str):
+        import json
+
+        allowed = {"fr", "en", "ar", "fa", "ps", "uz", "tr"}
+
+        if lang not in allowed:
+            lang = "fr"
+
+        try:
+            with open(f"l10n/{lang}.json", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            with open("l10n/fr.json", encoding="utf-8") as f:
+                return json.load(f)
+
+    # ---------------------------
+    # Helpers
     # ---------------------------
     @staticmethod
     def _country_flag(iso: str | None) -> str:
@@ -84,11 +103,28 @@ class EmailService:
     def send_payment_success(
         email: str,
         payload: dict,
+        lang: str = "fr",  # ✅ AJOUT
         phone: str | None = None,
         country_name: str | None = None,
         operator_name: str | None = None,
-        operator_logo: str | None = None  # ✅ AJOUT
+        operator_logo: str | None = None
     ):
+
+        # ---------------------------
+        # Traduction (NEW)
+        # ---------------------------
+        l10n = EmailService._load_l10n(lang)
+
+        def t(key, default=""):
+            cur = l10n
+            for p in key.split("."):
+                if not isinstance(cur, dict) or p not in cur:
+                    return default or key
+                cur = cur[p]
+            return cur if isinstance(cur, str) else default
+
+        rtl_langs = {"ar", "fa", "ps"}
+        dir_attr = "rtl" if lang in rtl_langs else "ltr"
 
         # ---------------------------
         # Data (SAFE + PRO)
@@ -100,7 +136,6 @@ class EmailService:
         points_used = payload.get("points_used") or 0
 
         reference = payload.get("reference")
-        order_number = payload.get("orderNumber")
         date = payload.get("date")
 
         fee = round(charged_amount - amount, 2)
@@ -117,15 +152,21 @@ class EmailService:
 
         year = datetime.now().year
 
-        subject = f"Recharge confirmée - {reference}"
+        # ---------------------------
+        # Subject (FIX LANG)
+        # ---------------------------
+        subject = f"{t('payment.success.title')} - {reference}"
 
+        # ---------------------------
+        # HTML (IDENTIQUE + t())
+        # ---------------------------
         html = f"""<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 </head>
 
-<body style="margin:0;background:#0e1117;font-family:Arial,Helvetica,sans-serif;">
+<body dir="{dir_attr}" style="margin:0;background:#0e1117;font-family:Arial,Helvetica,sans-serif;">
 
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:30px 0;">
 <tr>
@@ -140,7 +181,7 @@ Yeslek
 </td>
 
 <td style="text-align:right;font-size:13px;color:#9ca3af;">
-Référence : {reference}
+{t("payment.success.referenceLabel")} : {reference}
 </td>
 </tr>
 
@@ -148,13 +189,13 @@ Référence : {reference}
 
 <tr>
 <td colspan="2" style="font-size:22px;font-weight:bold;text-align:center;">
-Votre recharge a été envoyée
+{t("payment.success.title")}
 </td>
 </tr>
 
 <tr>
 <td colspan="2" style="text-align:center;color:#9ca3af;padding-top:6px;">
-Livré instantanément ⚡
+{t("payment.success.message")}
 </td>
 </tr>
 
@@ -166,14 +207,14 @@ Livré instantanément ⚡
 <table width="100%" style="background:#0f172a;border-radius:12px;padding:20px;">
 
 <tr>
-<td style="color:#9ca3af;">Date :</td>
+<td style="color:#9ca3af;">{t("payment.success.dateLabel")} :</td>
 <td style="text-align:right;">{date or "-"}</td>
 </tr>
 
 <tr><td style="height:8px"></td></tr>
 
 <tr>
-<td style="color:#9ca3af;">Numéro :</td>
+<td style="color:#9ca3af;">{t("profile.phone")} :</td>
 <td style="text-align:right;">{phone or "-"}</td>
 </tr>
 
@@ -205,7 +246,7 @@ Livré instantanément ⚡
 <tr><td style="height:20px"></td></tr>
 
 <tr>
-<td style="color:#9ca3af;">Montant :</td>
+<td style="color:#9ca3af;">{t("payment.success.amountLabel")} :</td>
 <td style="text-align:right;">{amount:.2f} €</td>
 </tr>
 
@@ -245,7 +286,7 @@ Livré instantanément ⚡
 <a href="https://yeslek.com"
 style="background:#b4ff00;color:black;padding:14px 26px;
 text-decoration:none;border-radius:30px;font-weight:bold;display:inline-block;">
-Envoyer une autre recharge
+{t("recharge.selectAmount.goToPay")}
 </a>
 
 </td>
@@ -255,7 +296,7 @@ Envoyer une autre recharge
 
 <tr>
 <td colspan="2" style="text-align:center;color:#9ca3af;font-size:12px;">
-Besoin d'aide ? Contactez support@yeslek.com
+support@yeslek.com
 </td>
 </tr>
 
