@@ -32,21 +32,39 @@
 
     <div class="tz-stack">
 
-      <a
-        class="tz-lang-btn {% if current_lang == 'en' %}is-active{% endif %}"
-        href="{{ url_for('i18n.change_lang', lang='en', next=next_url or '/') }}"
-        role="button"
-      >
-        🇬🇧 {{ t("lang.en") }}
-      </a>
+      {% for lang in allowed_langs %}
 
-      <a
-        class="tz-lang-btn {% if current_lang == 'fr' %}is-active{% endif %}"
-        href="{{ url_for('i18n.change_lang', lang='fr', next=next_url or '/') }}"
-        role="button"
-      >
-        🇫🇷 {{ t("lang.fr") }}
-      </a>
+        <a
+          class="tz-lang-btn {% if current_lang == lang %}is-active{% endif %}"
+          href="{{ url_for('i18n.change_lang', lang=lang, next=next_url or '/') }}"
+          role="button"
+        >
+
+          <!-- Flag + Label -->
+          {% if lang == "fr" %}
+            🇫🇷 Français
+          {% elif lang == "en" %}
+            🇬🇧 English
+          {% elif lang == "ar" %}
+            🇸🇦 العربية
+          {% elif lang == "fa" %}
+            🇮🇷 فارسی
+          {% elif lang == "ps" %}
+            🇦🇫 پښتو
+          {% elif lang == "uz" %}
+            🇦🇫 اوزبیکچه (افغانستان)
+          {% else %}
+            {{ lang }}
+          {% endif %}
+
+          <!-- Check active -->
+          {% if current_lang == lang %}
+            <span style="margin-left:auto;">✓</span>
+          {% endif %}
+
+        </a>
+
+      {% endfor %}
 
     </div>
 

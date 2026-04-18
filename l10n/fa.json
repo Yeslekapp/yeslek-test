@@ -1,0 +1,269 @@
+{
+  "common": {
+    "continue": "ادامه",
+    "remove": "حذف",
+    "hello": "سلام",
+    "user": "شارژ بین‌المللی موبایل",
+    "goodMorning": "صبح بخیر",
+    "goodEvening": "عصر بخیر",
+    "goodAfternoon": "بعدازظهر بخیر",
+    "language": "زبان",
+    "save": "ذخیره",
+    "back": "بازگشت",
+    "yes": "بله",
+    "no": "خیر",
+    "copy": "کپی",
+    "copied": "کپی شد",
+    "copyFailed": "کپی ناموفق",
+    "removed": "حذف شد",
+    "close": "بستن"
+  },
+
+  "account": {
+    "profile": "اطلاعات من",
+    "settings": "تنظیمات حساب",
+    "balance": "موجودی yeslek",
+    "payment_methods": "روش‌های پرداخت",
+    "about": "درباره"
+  },
+
+  "wallet": {
+    "creditEarned": "شما {amount} € اعتبار دریافت می‌کنید",
+    "creditAvailable": "اعتبار موجود",
+    "addCredit": "افزودن اعتبار",
+    "copyLink": "کپی لینک دعوت",
+    "shareAfterPayment": "برای دریافت اعتبار لینک را به اشتراک بگذارید",
+    "continue": "ادامه",
+    "balance": "موجودی در دسترس"
+  },
+
+  "auth": {
+    "name": "نام",
+    "name_placeholder": "نام یا اسم شما",
+    "login": "ورود",
+    "logout": "خروج",
+    "choose": "یک روش انتخاب کنید",
+    "choose_hint": "در چند ثانیه به حساب خود دسترسی پیدا کنید",
+    "email": "ایمیل",
+    "phone": "شماره تلفن",
+    "email_required": "ایمیل الزامی است",
+    "email_invalid": "ایمیل نامعتبر است",
+    "phone_required": "شماره الزامی است",
+    "security_hint": "کد یک‌بار مصرف. ما هرگز اطلاعات شما را به اشتراک نمی‌گذاریم.",
+    "email_hint": "یک کد تأیید برای شما ارسال می‌کنیم",
+    "email_label": "آدرس ایمیل",
+    "email_placeholder": "name@gmail.com",
+    "email_help": "املای ایمیل را بررسی کنید. کد سریع می‌رسد.",
+    "phone_hint": "یک کد از طریق پیامک ارسال می‌کنیم",
+    "phone_label": "شماره تلفن",
+    "phone_placeholder": "شماره تلفن",
+    "phone_help": "از فرمت بین‌المللی استفاده کنید (مثلاً +33...).",
+    "invalid_phone": "شماره نامعتبر",
+    "otp_title": "تأیید",
+    "otp_sent_to": "کد ارسال شد به",
+    "otp_label": "کد",
+    "otp_placeholder": "کد را وارد کنید",
+    "otp_help": "می‌توانید کد را پیست کنید. یک‌بار مصرف است.",
+    "otp_invalid": "کد نامعتبر یا منقضی شده",
+    "resend": "ارسال مجدد",
+    "change_email": "تغییر ایمیل",
+    "change_phone": "تغییر شماره",
+    "logout_confirm": "آیا می‌خواهید خارج شوید؟",
+    "or_continue": "یا ادامه با",
+    "legal_notice": "با ادامه، شرایط استفاده و سیاست حفظ حریم خصوصی را می‌پذیرید."
+  },
+
+  "lang": {
+    "fr": "فرانسوی",
+    "en": "انگلیسی"
+  },
+
+  "recharge": {
+    "enterNumber": {
+      "title": "وارد کردن شماره",
+      "beneficiaryNumber": "شماره گیرنده",
+      "phoneExample": "+33…",
+      "enterNumber": "یک شماره وارد کنید",
+      "validNumber": "شماره معتبر",
+      "invalidNumber": "شماره نامعتبر",
+      "enterValidNumber": "یک شماره معتبر وارد کنید",
+      "searchCountry": "جستجو…",
+      "contacts": "مخاطبین",
+      "noInternetPlans": "برای این اپراتور بسته اینترنتی موجود نیست"
+    },
+
+    "selectOperator": {
+      "title": "انتخاب اپراتور",
+      "emptyTitle": "اپراتوری یافت نشد",
+      "emptyMessage": "برای این شماره اپراتوری پیدا نکردیم."
+    },
+
+    "selectForfait": {
+      "title": "انتخاب بسته",
+      "internet": "اینترنت",
+      "days": "{days} روز"
+    },
+
+    "selectAmount": {
+      "title": "انتخاب مبلغ",
+      "operatorNotDetected": "اپراتور شناسایی نشد",
+      "editOperator": "تغییر اپراتور",
+      "amountLabel": "مبلغ",
+      "chooseInternetPlan": "انتخاب بسته اینترنت",
+      "creditAndTotal": "اعتبار و مجموع",
+      "amountRow": "مبلغ",
+      "taxesRow": "مالیات",
+      "receivedAmountTitle": "دریافتی",
+      "goToPay": "پرداخت",
+      "operatorPickerSoon": "انتخاب اپراتور به زودی",
+      "choose": "انتخاب"
+    }
+  },
+
+  "payment": {
+    "method": {
+      "title": "روش پرداخت",
+      "points": "امتیازها",
+      "saveCard": "ذخیره کارت",
+      "chooseMethod": "یک روش انتخاب کنید",
+      "cardPayment": "کارت بانکی",
+      "cardPaymentDesc": "پرداخت امن",
+      "applePay": "Apple Pay",
+      "applePayDesc": "به زودی",
+      "googlePay": "Google Pay",
+      "googlePayDesc": "به زودی",
+      "paypal": "PayPal",
+      "paypalDesc": "به زودی",
+      "wallet": "کیف پول",
+      "walletDesc": "به زودی",
+      "methodSelected": "روش انتخاب شد",
+      "methodUnavailable": "روش در دسترس نیست",
+      "paypalComingSoon": "به زودی",
+      "pay": "پرداخت {amount}",
+      "pointsAvailable": "امتیازهای موجود: {points}",
+      "setDefault": "تنظیم به عنوان روش پرداخت",
+
+      "payment.method.title": "روش پرداخت",
+      "payment.points.title": "امتیازها",
+      "payment.points.available": "امتیازهای موجود: {points}",
+      "payment.saveCard": "ذخیره کارت",
+      "payment.chooseMethod": "انتخاب روش پرداخت",
+      "payment.methods.card.title": "کارت بانکی",
+      "payment.methods.card.desc": "پرداخت با ویزا یا مسترکارت",
+      "payment.methodSelected": "روش انتخاب شد",
+      "payment.pay": "پرداخت {amount} €",
+      "currency.eur": "€",
+
+      "legacy_errors": {
+        "emptyName": "لطفاً نام دارنده کارت را وارد کنید",
+        "invalidName": "نام نامعتبر",
+        "invalidCardNumber": "شماره کارت نامعتبر",
+        "incompleteCardNumber": "شماره کارت ناقص",
+        "invalidExpiry": "تاریخ انقضا نامعتبر",
+        "invalidCvc": "کد امنیتی نامعتبر",
+        "paymentFailed": "پرداخت ناموفق",
+        "paymentNotCompleted": "پرداخت تکمیل نشد",
+        "serverError": "خطای سرور، لطفاً دوباره تلاش کنید"
+      }
+    },
+
+    "points": {
+      "title": "امتیازها",
+      "available": "امتیازهای موجود: {points}"
+    },
+
+    "methods": {
+      "card": {
+        "title": "کارت بانکی",
+        "desc": "پرداخت با ویزا یا مسترکارت"
+      }
+    },
+
+    "saveCard": "ذخیره کارت",
+    "chooseMethod": "انتخاب روش پرداخت",
+    "methodSelected": "روش انتخاب شد",
+    "pay": "پرداخت {amount} €",
+
+    "card": {
+      "title": "پرداخت با کارت",
+      "securityNotice": "اطلاعات پرداخت شما محافظت می‌شود.",
+      "invalidForm": "فرم نامعتبر است.",
+      "genericError": "خطایی رخ داد.",
+      "holderName": "نام دارنده کارت",
+      "number": "شماره کارت",
+      "expiry": "MM/YY",
+      "cvv": "CVV",
+      "payAmount": "پرداخت {amount} €",
+      "scanTooltip": "اسکن کارت",
+      "invalidCardHolderName": "نام نامعتبر",
+      "invalidCardNumber": "شماره کارت نامعتبر",
+      "invalidExpiry": "تاریخ نامعتبر",
+      "invalidCvv": "CVV نامعتبر",
+      "formError": "لطفاً خطاها را اصلاح کنید",
+      "errors": {
+        "emptyName": "لطفاً نام دارنده کارت را وارد کنید",
+        "invalidName": "نام نامعتبر",
+        "invalidCardNumber": "شماره کارت نامعتبر",
+        "incompleteCardNumber": "شماره کارت ناقص",
+        "invalidExpiry": "تاریخ انقضا نامعتبر",
+        "invalidCvc": "کد امنیتی نامعتبر",
+        "paymentFailed": "پرداخت ناموفق",
+        "paymentNotCompleted": "پرداخت تکمیل نشد",
+        "serverError": "خطای سرور، لطفاً دوباره تلاش کنید"
+      }
+    },
+
+    "success": {
+      "title": "پرداخت موفق",
+      "message": "پرداخت شما تأیید شد.",
+      "amount": "مبلغ",
+      "date": "تاریخ",
+      "order": "سفارش",
+      "reference": "مرجع",
+      "finish": "پایان",
+      "amountLabel": "مبلغ",
+      "dateLabel": "تاریخ",
+      "orderLabel": "سفارش",
+      "referenceLabel": "مرجع",
+      "processing": "شارژ در حال انجام است... لطفاً صبر کنید ⏳",
+      "done": "شارژ با موفقیت ارسال شد ✅"
+    },
+
+    "empty": {
+      "title": "روش پرداختی وجود ندارد",
+      "desc": "برای پرداخت سریع‌تر یک روش اضافه کنید.",
+      "cta": "انجام شارژ"
+    }
+  },
+
+  "country": {
+    "af": "افغانستان",
+    "fr": "فرانسه",
+    "us": "ایالات متحده",
+    "de": "آلمان",
+    "it": "ایتالیا",
+    "es": "اسپانیا"
+  },
+
+  "history": {
+    "empty": "تاریخی وجود ندارد"
+  },
+
+  "menu": {
+    "history": "تاریخچه"
+  },
+
+  "about": {
+    "description": "اپلیکیشن ساده و سریع برای شارژ موبایل.",
+    "privacy": "سیاست حفظ حریم خصوصی",
+    "terms": "شرایط استفاده"
+  },
+
+  "profile": {
+    "name": "نام",
+    "email": "ایمیل",
+    "phone": "شماره تلفن",
+    "birthdate": "تاریخ تولد",
+    "not_defined": "تعریف نشده"
+  }
+}

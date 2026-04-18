@@ -1900,3 +1900,32 @@ top:-9999px;
 opacity:0;
 pointer-events:none;
 }
+
+
+
+
+.language-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lang-item {
+  padding: 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #111;
+  display: flex;
+  justify-content: space-between;
+  background: #f5f5f5;
+  transition: 0.2s;
+}
+
+.lang-item:hover {
+  background: #eaeaea;
+}
+
+.lang-item.active {
+  background: #111;
+  color: #fff;
+}

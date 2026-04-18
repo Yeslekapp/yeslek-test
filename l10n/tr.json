@@ -1,0 +1,269 @@
+{
+  "common": {
+    "continue": "Devam et",
+    "remove": "Kaldır",
+    "hello": "Merhaba",
+    "user": "Uluslararası mobil yükleme",
+    "goodMorning": "Günaydın",
+    "goodEvening": "İyi akşamlar",
+    "goodAfternoon": "İyi günler",
+    "language": "Dil",
+    "save": "Kaydet",
+    "back": "Geri",
+    "yes": "Evet",
+    "no": "Hayır",
+    "copy": "Kopyala",
+    "copied": "Kopyalandı",
+    "copyFailed": "Kopyalama başarısız",
+    "removed": "Kaldırıldı",
+    "close": "Kapat"
+  },
+
+  "account": {
+    "profile": "Bilgilerim",
+    "settings": "Hesap ayarları",
+    "balance": "yeslek bakiyesi",
+    "payment_methods": "Ödeme yöntemleri",
+    "about": "Hakkında"
+  },
+
+  "wallet": {
+    "creditEarned": "{amount} € kredi kazandınız",
+    "creditAvailable": "Mevcut kredi",
+    "addCredit": "Kredi ekle",
+    "copyLink": "Referans bağlantısını kopyala",
+    "shareAfterPayment": "Kredi almak için bağlantıyı paylaş",
+    "continue": "Devam et",
+    "balance": "Mevcut bakiye"
+  },
+
+  "auth": {
+    "name": "İsim",
+    "name_placeholder": "Adınız veya isminiz",
+    "login": "Giriş yap",
+    "logout": "Çıkış yap",
+    "choose": "Bir yöntem seç",
+    "choose_hint": "Hesabınıza saniyeler içinde erişin",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "email_required": "E-posta gerekli",
+    "email_invalid": "Geçersiz e-posta",
+    "phone_required": "Numara gerekli",
+    "security_hint": "Tek kullanımlık kod. Bilgilerinizi asla paylaşmayız.",
+    "email_hint": "Size bir doğrulama kodu göndereceğiz",
+    "email_label": "E-posta adresi",
+    "email_placeholder": "name@gmail.com",
+    "email_help": "Yazımı kontrol edin. Kod hızlı gelir.",
+    "phone_hint": "Size SMS ile bir kod göndereceğiz",
+    "phone_label": "Telefon numarası",
+    "phone_placeholder": "Telefon numarası",
+    "phone_help": "Uluslararası format kullanın (örn. +33...).",
+    "invalid_phone": "Geçersiz numara",
+    "otp_title": "Doğrulama",
+    "otp_sent_to": "Kod gönderildi",
+    "otp_label": "Kod",
+    "otp_placeholder": "Kodu girin",
+    "otp_help": "Kodu yapıştırabilirsiniz. Tek kullanımlık.",
+    "otp_invalid": "Geçersiz veya süresi dolmuş kod",
+    "resend": "Tekrar gönder",
+    "change_email": "E-postayı değiştir",
+    "change_phone": "Numarayı değiştir",
+    "logout_confirm": "Çıkış yapmak istiyor musunuz?",
+    "or_continue": "Veya devam et",
+    "legal_notice": "Devam ederek Kullanım Şartları ve Gizlilik Politikasını kabul edersiniz."
+  },
+
+  "lang": {
+    "fr": "Fransızca",
+    "en": "İngilizce"
+  },
+
+  "recharge": {
+    "enterNumber": {
+      "title": "Numara gir",
+      "beneficiaryNumber": "Alıcı numarası",
+      "phoneExample": "+33…",
+      "enterNumber": "Bir numara girin",
+      "validNumber": "Geçerli numara",
+      "invalidNumber": "Geçersiz numara",
+      "enterValidNumber": "Geçerli bir numara girin",
+      "searchCountry": "Ara…",
+      "contacts": "Kişiler",
+      "noInternetPlans": "Bu operatör için internet paketi yok"
+    },
+
+    "selectOperator": {
+      "title": "Operatör seç",
+      "emptyTitle": "Operatör bulunamadı",
+      "emptyMessage": "Bu numara için operatör bulunamadı."
+    },
+
+    "selectForfait": {
+      "title": "Paket seç",
+      "internet": "İnternet",
+      "days": "{days} gün"
+    },
+
+    "selectAmount": {
+      "title": "Tutar seç",
+      "operatorNotDetected": "Operatör algılanamadı",
+      "editOperator": "Operatörü değiştir",
+      "amountLabel": "Tutar",
+      "chooseInternetPlan": "İnternet paketi seç",
+      "creditAndTotal": "Kredi & toplam",
+      "amountRow": "Tutar",
+      "taxesRow": "Vergiler",
+      "receivedAmountTitle": "Alıcıya ulaşan",
+      "goToPay": "Öde",
+      "operatorPickerSoon": "Operatör seçimi yakında",
+      "choose": "Seç"
+    }
+  },
+
+  "payment": {
+    "method": {
+      "title": "Ödeme yöntemi",
+      "points": "Puanlar",
+      "saveCard": "Kartı kaydet",
+      "chooseMethod": "Bir yöntem seç",
+      "cardPayment": "Kredi kartı",
+      "cardPaymentDesc": "Güvenli ödeme",
+      "applePay": "Apple Pay",
+      "applePayDesc": "Yakında",
+      "googlePay": "Google Pay",
+      "googlePayDesc": "Yakında",
+      "paypal": "PayPal",
+      "paypalDesc": "Yakında",
+      "wallet": "Cüzdan",
+      "walletDesc": "Yakında",
+      "methodSelected": "Yöntem seçildi",
+      "methodUnavailable": "Yöntem kullanılamıyor",
+      "paypalComingSoon": "Yakında",
+      "pay": "{amount} öde",
+      "pointsAvailable": "Mevcut puanlar: {points}",
+      "setDefault": "Varsayılan ödeme yöntemi yap",
+
+      "payment.method.title": "Ödeme yöntemi",
+      "payment.points.title": "Puanlar",
+      "payment.points.available": "Mevcut puanlar: {points}",
+      "payment.saveCard": "Kartı kaydet",
+      "payment.chooseMethod": "Ödeme yöntemi seç",
+      "payment.methods.card.title": "Kredi kartı",
+      "payment.methods.card.desc": "Visa veya Mastercard ile öde",
+      "payment.methodSelected": "Yöntem seçildi",
+      "payment.pay": "{amount} € öde",
+      "currency.eur": "€",
+
+      "legacy_errors": {
+        "emptyName": "Lütfen kart sahibinin adını girin",
+        "invalidName": "Geçersiz isim",
+        "invalidCardNumber": "Geçersiz kart numarası",
+        "incompleteCardNumber": "Eksik kart numarası",
+        "invalidExpiry": "Geçersiz son kullanma tarihi",
+        "invalidCvc": "Geçersiz güvenlik kodu",
+        "paymentFailed": "Ödeme başarısız",
+        "paymentNotCompleted": "Ödeme tamamlanmadı",
+        "serverError": "Sunucu hatası, lütfen tekrar deneyin"
+      }
+    },
+
+    "points": {
+      "title": "Puanlar",
+      "available": "Mevcut puanlar: {points}"
+    },
+
+    "methods": {
+      "card": {
+        "title": "Kredi kartı",
+        "desc": "Visa veya Mastercard ile öde"
+      }
+    },
+
+    "saveCard": "Kartı kaydet",
+    "chooseMethod": "Ödeme yöntemi seç",
+    "methodSelected": "Yöntem seçildi",
+    "pay": "{amount} € öde",
+
+    "card": {
+      "title": "Kart ile ödeme",
+      "securityNotice": "Ödeme bilgileriniz korunmaktadır.",
+      "invalidForm": "Geçersiz form.",
+      "genericError": "Bir hata oluştu.",
+      "holderName": "Kart sahibinin adı",
+      "number": "Kart numarası",
+      "expiry": "AA/YY",
+      "cvv": "CVV",
+      "payAmount": "{amount} € öde",
+      "scanTooltip": "Kartı tara",
+      "invalidCardHolderName": "Geçersiz isim",
+      "invalidCardNumber": "Geçersiz kart numarası",
+      "invalidExpiry": "Geçersiz tarih",
+      "invalidCvv": "Geçersiz CVV",
+      "formError": "Hataları düzeltin",
+      "errors": {
+        "emptyName": "Lütfen kart sahibinin adını girin",
+        "invalidName": "Geçersiz isim",
+        "invalidCardNumber": "Geçersiz kart numarası",
+        "incompleteCardNumber": "Eksik kart numarası",
+        "invalidExpiry": "Geçersiz son kullanma tarihi",
+        "invalidCvc": "Geçersiz güvenlik kodu",
+        "paymentFailed": "Ödeme başarısız",
+        "paymentNotCompleted": "Ödeme tamamlanmadı",
+        "serverError": "Sunucu hatası, lütfen tekrar deneyin"
+      }
+    },
+
+    "success": {
+      "title": "Ödeme başarılı",
+      "message": "Ödemeniz doğrulandı.",
+      "amount": "Tutar",
+      "date": "Tarih",
+      "order": "Sipariş",
+      "reference": "Referans",
+      "finish": "Bitir",
+      "amountLabel": "Tutar",
+      "dateLabel": "Tarih",
+      "orderLabel": "Sipariş",
+      "referenceLabel": "Referans",
+      "processing": "Yükleme devam ediyor... lütfen bekleyin ⏳",
+      "done": "Yükleme başarıyla gönderildi ✅"
+    },
+
+    "empty": {
+      "title": "Ödeme yöntemi yok",
+      "desc": "Daha hızlı ödeme için bir yöntem ekleyin.",
+      "cta": "Yükleme yap"
+    }
+  },
+
+  "country": {
+    "af": "Afganistan",
+    "fr": "Fransa",
+    "us": "Amerika Birleşik Devletleri",
+    "de": "Almanya",
+    "it": "İtalya",
+    "es": "İspanya"
+  },
+
+  "history": {
+    "empty": "Geçmiş yok"
+  },
+
+  "menu": {
+    "history": "Geçmiş"
+  },
+
+  "about": {
+    "description": "Basit ve hızlı mobil yükleme uygulaması.",
+    "privacy": "Gizlilik politikası",
+    "terms": "Kullanım şartları"
+  },
+
+  "profile": {
+    "name": "İsim",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "birthdate": "Doğum tarihi",
+    "not_defined": "Tanımlı değil"
+  }
+}

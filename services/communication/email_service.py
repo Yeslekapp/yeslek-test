@@ -14,7 +14,7 @@ class EmailService:
     # ---------------------------
     API_KEY = os.getenv("BREVO_API_KEY")
     FROM_EMAIL = os.getenv("BREVO_FROM_EMAIL")
-    FROM_NAME = os.getenv("BREVO_FROM_NAME", "Tikzok")
+    FROM_NAME = os.getenv("BREVO_FROM_NAME", "Yeslek")
 
     BASE_URL = "https://api.brevo.com/v3/smtp/email"
 
@@ -45,7 +45,7 @@ class EmailService:
                 ],
                 "subject": subject,
                 "htmlContent": html,
-                "textContent": text or "Tikzok notification"
+                "textContent": text or "Yeslek notification"
             }
 
             response = requests.post(
@@ -136,7 +136,7 @@ style="max-width:520px;background:#111827;border-radius:14px;padding:30px;color:
 
 <tr>
 <td style="font-size:28px;font-weight:bold;color:#00d1c1;">
-Tikzok
+Yeslek
 </td>
 
 <td style="text-align:right;font-size:13px;color:#9ca3af;">
@@ -242,7 +242,7 @@ Livré instantanément ⚡
 <tr>
 <td colspan="2" align="center">
 
-<a href="https://tikzok.com"
+<a href="https://yeslek.com"
 style="background:#b4ff00;color:black;padding:14px 26px;
 text-decoration:none;border-radius:30px;font-weight:bold;display:inline-block;">
 Envoyer une autre recharge
@@ -255,13 +255,13 @@ Envoyer une autre recharge
 
 <tr>
 <td colspan="2" style="text-align:center;color:#9ca3af;font-size:12px;">
-Besoin d'aide ? Contactez support@tikzok.com
+Besoin d'aide ? Contactez support@yeslek.com
 </td>
 </tr>
 
 <tr>
 <td colspan="2" style="text-align:center;color:#6b7280;font-size:11px;padding-top:10px;">
-© {year} Tikzok
+© {year} yeslek
 </td>
 </tr>
 

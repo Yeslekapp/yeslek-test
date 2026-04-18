@@ -75,7 +75,7 @@ class EmailOTPService:
         # ---------------------------
         # TEXT (IMPORTANT iOS auto-fill)
         # ---------------------------
-        text = f"""Tikzok
+        text = f"""yeslek
 
 Votre code de vérification est : {code}
 

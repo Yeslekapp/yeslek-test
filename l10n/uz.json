@@ -1,0 +1,269 @@
+{
+  "common": {
+    "continue": "داۋام ئېتىش",
+    "remove": "ئۆچۈرۈش",
+    "hello": "سالام",
+    "user": "خەلقئارا موبايل تولدۇرۇش",
+    "goodMorning": "خەيرلىك تاڭ",
+    "goodEvening": "خەيرلىك كەچ",
+    "goodAfternoon": "خەيرلىك كۈن",
+    "language": "تىل",
+    "save": "ساقلاش",
+    "back": "قايتىش",
+    "yes": "ھەئە",
+    "no": "ياق",
+    "copy": "كۆچۈرۈش",
+    "copied": "كۆچۈرۈلدى",
+    "copyFailed": "كۆچۈرۈش مەغلۇپ",
+    "removed": "ئۆچۈرۈلدى",
+    "close": "يېپىش"
+  },
+
+  "account": {
+    "profile": "مېنىڭ ئۇچۇرلىرىم",
+    "settings": "ھېساب تەڭشەكلىرى",
+    "balance": "yeslek بالانسى",
+    "payment_methods": "تۆلەش ئۇسۇللىرى",
+    "about": "ھەققىدە"
+  },
+
+  "wallet": {
+    "creditEarned": "سىز {amount} € كرېدىت ئالدىڭىز",
+    "creditAvailable": "مەۋجۇت كرېدىت",
+    "addCredit": "كرېدىت قوشۇش",
+    "copyLink": "ئۇلىنىشنى كۆچۈرۈش",
+    "shareAfterPayment": "كرېدىت ئېلىش ئۈچۈن ئۇلىنىشنى ھەمبەھىرلەڭ",
+    "continue": "داۋام ئېتىش",
+    "balance": "مەۋجۇت بالانس"
+  },
+
+  "auth": {
+    "name": "ئىسم",
+    "name_placeholder": "ئىسمىڭىز",
+    "login": "كىرىش",
+    "logout": "چىقىش",
+    "choose": "بىر ئۇسۇل تاللاڭ",
+    "choose_hint": "سېكۇنتلاردا ھېسابىڭىزغا كىرىڭ",
+    "email": "ئېلخەت",
+    "phone": "تېلېفون",
+    "email_required": "ئېلخەت زۆرۈر",
+    "email_invalid": "خاتا ئېلخەت",
+    "phone_required": "نومۇر زۆرۈر",
+    "security_hint": "بىر قېتىملىق كود. بىز ئۇچۇرلىرىڭىزنى ھەمبەھىرلىمەيمىز.",
+    "email_hint": "سىزگە كود ئەۋەتىمىز",
+    "email_label": "ئېلخەت ئادرىسى",
+    "email_placeholder": "name@gmail.com",
+    "email_help": "توغرىلىقىنى تەكشۈرۈڭ. كود تېز كېلىدۇ.",
+    "phone_hint": "SMS ئارقىلىق كود ئەۋەتىمىز",
+    "phone_label": "تېلېفون نومۇرى",
+    "phone_placeholder": "تېلېفون نومۇرى",
+    "phone_help": "خەلقئارا فورمات ئىشلىتىڭ (+33...)",
+    "invalid_phone": "خاتا نومۇر",
+    "otp_title": "دەلىللەش",
+    "otp_sent_to": "كود ئەۋەتىلدى",
+    "otp_label": "كود",
+    "otp_placeholder": "كودنى كىرگۈزۈڭ",
+    "otp_help": "كودنى چاپلىسىڭىز بولىدۇ",
+    "otp_invalid": "خاتا ياكى ۋاقتى ئۆتكەن كود",
+    "resend": "قايتا ئەۋەتىش",
+    "change_email": "ئېلخەتنى ئۆزگەرتىش",
+    "change_phone": "نومۇرنى ئۆزگەرتىش",
+    "logout_confirm": "چىقىشنى خالامسىز؟",
+    "or_continue": "ياكى داۋام ئېتىڭ",
+    "legal_notice": "داۋام ئېتىش ئارقىلىق شەرتلەرنى قوبۇل قىلىسىز"
+  },
+
+  "lang": {
+    "fr": "فىرانسۇزچە",
+    "en": "ئىنگلىزچە"
+  },
+
+  "recharge": {
+    "enterNumber": {
+      "title": "نومۇر كىرگۈزۈش",
+      "beneficiaryNumber": "قوبۇل قىلغۇچى نومۇرى",
+      "phoneExample": "+33…",
+      "enterNumber": "نومۇر كىرگۈزۈڭ",
+      "validNumber": "توغرا نومۇر",
+      "invalidNumber": "خاتا نومۇر",
+      "enterValidNumber": "توغرا نومۇر كىرگۈزۈڭ",
+      "searchCountry": "ئىزدەش…",
+      "contacts": "ئالاقىلار",
+      "noInternetPlans": "بۇ ئوپېراتور ئۈچۈن ئىنتېرنېت پىلانى يوق"
+    },
+
+    "selectOperator": {
+      "title": "ئوپېراتور تاللاش",
+      "emptyTitle": "ئوپېراتور تېپىلمىدى",
+      "emptyMessage": "بۇ نومۇر ئۈچۈن ئوپېراتور تېپىلمىدى."
+    },
+
+    "selectForfait": {
+      "title": "پىلان تاللاش",
+      "internet": "ئىنتېرنېت",
+      "days": "{days} كۈن"
+    },
+
+    "selectAmount": {
+      "title": "مقدار تاللاش",
+      "operatorNotDetected": "ئوپېراتور بايقالمىدى",
+      "editOperator": "ئوپېراتورنى ئۆزگەرتىش",
+      "amountLabel": "مقدار",
+      "chooseInternetPlan": "ئىنتېرنېت پىلانىنى تاللاڭ",
+      "creditAndTotal": "كرېدىت ۋە جەمئى",
+      "amountRow": "مقدار",
+      "taxesRow": "بېج",
+      "receivedAmountTitle": "ئۇلار ئالىدۇ",
+      "goToPay": "تۆلەش",
+      "operatorPickerSoon": "ئوپېراتور تاللاش يېقىندا",
+      "choose": "تاللاش"
+    }
+  },
+
+  "payment": {
+    "method": {
+      "title": "تۆلەش ئۇسۇلى",
+      "points": "نۇقتىلار",
+      "saveCard": "كارتىنى ساقلاش",
+      "chooseMethod": "بىر ئۇسۇل تاللاڭ",
+      "cardPayment": "بانكا كارتىسى",
+      "cardPaymentDesc": "بىخەتەر تۆلەش",
+      "applePay": "Apple Pay",
+      "applePayDesc": "يېقىندا",
+      "googlePay": "Google Pay",
+      "googlePayDesc": "يېقىندا",
+      "paypal": "PayPal",
+      "paypalDesc": "يېقىندا",
+      "wallet": "ھېساب",
+      "walletDesc": "يېقىندا",
+      "methodSelected": "ئۇسۇل تاللاندى",
+      "methodUnavailable": "ئۇسۇل مەۋجۇت ئەمەس",
+      "paypalComingSoon": "يېقىندا",
+      "pay": "{amount} تۆلەش",
+      "pointsAvailable": "مەۋجۇت نۇقتىلار: {points}",
+      "setDefault": "ئاساسىي تۆلەش ئۇسۇلى قىلىش",
+
+      "payment.method.title": "تۆلەش ئۇسۇلى",
+      "payment.points.title": "نۇقتىلار",
+      "payment.points.available": "مەۋجۇت نۇقتىلار: {points}",
+      "payment.saveCard": "كارتىنى ساقلاش",
+      "payment.chooseMethod": "تۆلەش ئۇسۇلىنى تاللاڭ",
+      "payment.methods.card.title": "بانكا كارتىسى",
+      "payment.methods.card.desc": "Visa ياكى Mastercard بىلەن تۆلەش",
+      "payment.methodSelected": "ئۇسۇل تاللاندى",
+      "payment.pay": "{amount} € تۆلەش",
+      "currency.eur": "€",
+
+      "legacy_errors": {
+        "emptyName": "كارتىنىڭ ئىگىسىنىڭ نامىنى كىرگۈزۈڭ",
+        "invalidName": "خاتا نام",
+        "invalidCardNumber": "خاتا كارت نومۇرى",
+        "incompleteCardNumber": "كارت نومۇرى تولۇق ئەمەس",
+        "invalidExpiry": "خاتا ۋاقتى",
+        "invalidCvc": "خاتا بىخەتەرلىك كودى",
+        "paymentFailed": "تۆلەش مەغلۇپ بولدى",
+        "paymentNotCompleted": "تۆلەش تاماملانمىدى",
+        "serverError": "سېۋىر خاتالىقى، قايتا سىناڭ"
+      }
+    },
+
+    "points": {
+      "title": "نۇقتىلار",
+      "available": "مەۋجۇت نۇقتىلار: {points}"
+    },
+
+    "methods": {
+      "card": {
+        "title": "بانكا كارتىسى",
+        "desc": "Visa ياكى Mastercard بىلەن تۆلەش"
+      }
+    },
+
+    "saveCard": "كارتىنى ساقلاش",
+    "chooseMethod": "تۆلەش ئۇسۇلىنى تاللاڭ",
+    "methodSelected": "ئۇسۇل تاللاندى",
+    "pay": "{amount} € تۆلەش",
+
+    "card": {
+      "title": "كارت تۆلەش",
+      "securityNotice": "تۆلەش ئۇچۇرلىرىڭىز بىخەتەر.",
+      "invalidForm": "خاتا فورما.",
+      "genericError": "خاتا كۆرۈلدى.",
+      "holderName": "كارت ئىگىسىنىڭ نامى",
+      "number": "كارت نومۇرى",
+      "expiry": "MM/YY",
+      "cvv": "CVV",
+      "payAmount": "{amount} € تۆلەش",
+      "scanTooltip": "كارتىنى سىكان قىلىش",
+      "invalidCardHolderName": "خاتا نام",
+      "invalidCardNumber": "خاتا كارت نومۇرى",
+      "invalidExpiry": "خاتا ۋاقتى",
+      "invalidCvv": "خاتا CVV",
+      "formError": "خاتالىقلارنى توغرىلاڭ",
+      "errors": {
+        "emptyName": "كارتىنىڭ ئىگىسىنىڭ نامىنى كىرگۈزۈڭ",
+        "invalidName": "خاتا نام",
+        "invalidCardNumber": "خاتا كارت نومۇرى",
+        "incompleteCardNumber": "كارت نومۇرى تولۇق ئەمەس",
+        "invalidExpiry": "خاتا ۋاقتى",
+        "invalidCvc": "خاتا بىخەتەرلىك كودى",
+        "paymentFailed": "تۆلەش مەغلۇپ بولدى",
+        "paymentNotCompleted": "تۆلەش تاماملانمىدى",
+        "serverError": "سېۋىر خاتالىقى، قايتا سىناڭ"
+      }
+    },
+
+    "success": {
+      "title": "تۆلەش مۇۋەپپەقىيەتلىك",
+      "message": "تۆلەشڭىز تەستىقلاندى.",
+      "amount": "مقدار",
+      "date": "چېسلا",
+      "order": "زاكاز",
+      "reference": "پايدىلانما",
+      "finish": "تامام",
+      "amountLabel": "مقدار",
+      "dateLabel": "چېسلا",
+      "orderLabel": "زاكاز",
+      "referenceLabel": "پايدىلانما",
+      "processing": "تولدۇرۇش جەريانى... سەۋر قىلىڭ ⏳",
+      "done": "تولدۇرۇش مۇۋەپپەقىيەتلىك ئەۋەتىلدى ✅"
+    },
+
+    "empty": {
+      "title": "تۆلەش ئۇسۇلى يوق",
+      "desc": "تېز تۆلەش ئۈچۈن بىر ئۇسۇل قوشۇڭ",
+      "cta": "تولدۇرۇش قىلىڭ"
+    }
+  },
+
+  "country": {
+    "af": "ئافغانىستان",
+    "fr": "فىرانسىيە",
+    "us": "ئامېرىكا",
+    "de": "گېرمانىيە",
+    "it": "ئىتالىيە",
+    "es": "ئىسپانىيە"
+  },
+
+  "history": {
+    "empty": "تارىخ يوق"
+  },
+
+  "menu": {
+    "history": "تارىخ"
+  },
+
+  "about": {
+    "description": "ئاسان ۋە تېز موبايل تولدۇرۇش ئەپ",
+    "privacy": "مەخپىيەتلىك سىياسىتى",
+    "terms": "ئىشلىتىش شەرتلىرى"
+  },
+
+  "profile": {
+    "name": "ئىسم",
+    "email": "ئېلخەت",
+    "phone": "تېلېفون",
+    "birthdate": "تۇغۇلغان چېسلا",
+    "not_defined": "بېكىتىلمىگەن"
+  }
+}

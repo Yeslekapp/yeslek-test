@@ -132,10 +132,8 @@ def create_app() -> Flask:
 
         lang = (lang or "fr").lower()
 
-        allowed = {"fr", "en", "ar", "fa", "ps", "uz"}
-
-        if lang not in allowed:
-         lang = "fr"
+        if lang not in ("fr", "en"):
+            lang = "fr"
 
         base_dir = os.path.join(os.path.dirname(__file__), "l10n")
 
@@ -162,10 +160,8 @@ def create_app() -> Flask:
             accept = request.headers.get("Accept-Language", "").lower()
             lang = "fr" if accept.startswith("fr") else "en"
 
-        allowed = {"fr", "en", "ar", "fa", "ps", "uz"}
-
-        if lang not in allowed:
-         lang = "fr"
+        if lang not in ("fr", "en"):
+            lang = "fr"
 
         session["lang"] = lang
         g.lang = lang
@@ -288,11 +284,9 @@ def index():
     return redirect(url_for("recharge.enter_number_get"))
 
 
-
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=int(os.getenv("PORT", "8080")),
-        debug=os.getenv("ENV") != "production",
-        use_reloader=False  # ✅ FIX CRASH WINDOWS
+        debug=os.getenv("ENV") != "production"
     )
