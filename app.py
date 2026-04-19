@@ -131,7 +131,7 @@ def create_app() -> Flask:
 
     def _load_l10n(lang: str) -> dict:
 
-        allowed = {"fr", "en", "ar", "fa", "ps", "uz", "tr"}
+        allowed = {"fr", "en", "ar", "fa", "ps", "uz", "tr", "de"}
 
         if lang not in allowed:
             lang = "en"
@@ -152,7 +152,7 @@ def create_app() -> Flask:
     @app.before_request
     def _set_lang():
 
-        allowed = {"fr", "en", "ar", "fa", "ps", "uz", "tr"}
+        allowed = {"fr", "en", "ar", "fa", "ps", "uz", "tr", "de"}
 
         lang = session.get("lang")
 

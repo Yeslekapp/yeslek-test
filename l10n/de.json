@@ -1,0 +1,289 @@
+{
+  "common": {
+    "continue": "Weiter",
+    "remove": "Entfernen",
+    "hello": "Hallo",
+    "user": "Internationale Handy-Aufladung",
+    "goodMorning": "Guten Morgen",
+    "goodEvening": "Guten Abend",
+    "goodAfternoon": "Guten Tag",
+    "language": "Sprache",
+    "save": "Speichern",
+    "back": "Zurück",
+    "yes": "Ja",
+    "no": "Nein",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "copyFailed": "Kopieren fehlgeschlagen",
+    "removed": "Entfernt",
+    "close": "Schließen"
+  },
+
+  "account": {
+    "profile": "Meine Daten",
+    "settings": "Kontoeinstellungen",
+    "balance": "Yeslek Guthaben",
+    "payment_methods": "Zahlungsmethoden",
+    "about": "Über uns"
+  },
+
+  "wallet": {
+    "creditEarned": "Sie erhalten {amount} € Guthaben",
+    "creditAvailable": "Verfügbares Guthaben",
+    "addCredit": "Guthaben hinzufügen",
+    "copyLink": "Empfehlungslink kopieren",
+    "shareAfterPayment": "Teilen Sie den Link, um Guthaben zu erhalten",
+    "continue": "Weiter",
+    "balance": "Verfügbares Guthaben"
+  },
+
+  "auth": {
+    "name": "Name",
+    "name_placeholder": "Ihr Name oder Vorname",
+
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "choose": "Methode wählen",
+    "choose_hint": "Greifen Sie in Sekunden auf Ihr Konto zu",
+
+    "email": "E-Mail",
+    "phone": "Telefon",
+
+    "email_required": "E-Mail erforderlich",
+    "email_invalid": "Ungültige E-Mail",
+    "phone_required": "Nummer erforderlich",
+
+    "security_hint": "Einmalcode. Wir geben Ihre Daten niemals weiter.",
+
+    "email_hint": "Wir senden Ihnen einen Bestätigungscode",
+    "email_label": "E-Mail-Adresse",
+    "email_placeholder": "name@gmail.com",
+    "email_help": "Überprüfen Sie die Schreibweise. Der Code kommt schnell an.",
+
+    "phone_hint": "Wir senden Ihnen einen Code per SMS",
+    "phone_label": "Telefonnummer",
+    "phone_placeholder": "Telefonnummer",
+    "phone_help": "Internationales Format verwenden (z. B. +49...).",
+
+    "invalid_phone": "Ungültige Nummer",
+
+    "otp_title": "Bestätigung",
+    "otp_sent_to": "Code gesendet an",
+    "otp_label": "Code",
+    "otp_placeholder": "Code eingeben",
+    "otp_help": "Sie können den Code einfügen. Einmalige Verwendung.",
+    "otp_invalid": "Ungültiger oder abgelaufener Code",
+
+    "resend": "Erneut senden",
+    "change_email": "E-Mail ändern",
+    "change_phone": "Nummer ändern",
+
+    "logout_confirm": "Möchten Sie sich abmelden?",
+
+    "or_continue": "Oder fortfahren mit",
+
+    "legal_notice": "Durch Fortfahren akzeptieren Sie unsere Nutzungsbedingungen und Datenschutzrichtlinie."
+  },
+
+  "lang": {
+    "fr": "Französisch",
+    "en": "Englisch",
+    "de": "Deutsch"
+  },
+
+  "recharge": {
+    "enterNumber": {
+      "title": "Nummer eingeben",
+      "beneficiaryNumber": "Empfängernummer",
+      "phoneExample": "+49…",
+
+      "enterNumber": "Nummer eingeben",
+      "validNumber": "Gültige Nummer",
+      "invalidNumber": "Ungültige Nummer",
+
+      "enterValidNumber": "Gültige Nummer eingeben",
+      "searchCountry": "Suchen…",
+      "contacts": "Kontakte",
+      "noInternetPlans": "Keine Internetpakete für diesen Anbieter verfügbar"
+    },
+
+    "selectOperator": {
+      "title": "Anbieter wählen",
+      "emptyTitle": "Kein Anbieter gefunden",
+      "emptyMessage": "Für diese Nummer wurde kein Anbieter gefunden."
+    },
+
+    "selectForfait": {
+      "title": "Tarif wählen",
+      "internet": "Internet",
+      "days": "{days} Tage"
+    },
+
+    "selectAmount": {
+      "title": "Betrag wählen",
+      "operatorNotDetected": "Anbieter nicht erkannt",
+      "editOperator": "Anbieter ändern",
+      "amountLabel": "Betrag",
+      "chooseInternetPlan": "Internetpaket wählen",
+      "creditAndTotal": "Guthaben & Gesamt",
+      "amountRow": "Betrag",
+      "taxesRow": "Gebühren",
+      "receivedAmountTitle": "Empfänger erhält",
+      "goToPay": "Bezahlen",
+      "operatorPickerSoon": "Anbieterauswahl bald verfügbar",
+      "choose": "Auswählen"
+    }
+  },
+
+  "payment": {
+    "method": {
+      "title": "Zahlungsmethode",
+      "points": "Punkte",
+      "saveCard": "Karte speichern",
+      "chooseMethod": "Methode wählen",
+      "cardPayment": "Kreditkarte",
+      "cardPaymentDesc": "Sichere Zahlung",
+      "applePay": "Apple Pay",
+      "applePayDesc": "Demnächst verfügbar",
+      "googlePay": "Google Pay",
+      "googlePayDesc": "Demnächst verfügbar",
+      "paypal": "PayPal",
+      "paypalDesc": "Demnächst verfügbar",
+      "wallet": "Wallet",
+      "walletDesc": "Demnächst verfügbar",
+      "methodSelected": "Methode ausgewählt",
+      "methodUnavailable": "Methode nicht verfügbar",
+      "paypalComingSoon": "Demnächst verfügbar",
+      "pay": "Bezahlen {amount}",
+      "pointsAvailable": "Verfügbare Punkte: {points}",
+      "setDefault": "Als Zahlungsmethode festlegen",
+
+      "payment.method.title": "Zahlungsmethode",
+      "payment.points.title": "Punkte",
+      "payment.points.available": "Verfügbare Punkte: {points}",
+      "payment.saveCard": "Karte speichern",
+      "payment.chooseMethod": "Zahlungsmethode wählen",
+      "payment.methods.card.title": "Kreditkarte",
+      "payment.methods.card.desc": "Mit Visa oder Mastercard bezahlen",
+      "payment.methodSelected": "Methode ausgewählt",
+      "payment.pay": "Bezahlen {amount} €",
+      "currency.eur": "€",
+
+      "legacy_errors": {
+        "emptyName": "Bitte Karteninhaber eingeben",
+        "invalidName": "Ungültiger Name",
+        "invalidCardNumber": "Ungültige Kartennummer",
+        "incompleteCardNumber": "Unvollständige Kartennummer",
+        "invalidExpiry": "Ungültiges Ablaufdatum",
+        "invalidCvc": "Ungültiger Sicherheitscode",
+        "paymentFailed": "Zahlung fehlgeschlagen",
+        "paymentNotCompleted": "Zahlung nicht abgeschlossen",
+        "serverError": "Serverfehler, bitte erneut versuchen"
+      }
+    },
+
+    "points": {
+      "title": "Punkte",
+      "available": "Verfügbare Punkte: {points}"
+    },
+
+    "methods": {
+      "card": {
+        "title": "Kreditkarte",
+        "desc": "Mit Visa oder Mastercard bezahlen"
+      }
+    },
+
+    "saveCard": "Karte speichern",
+    "chooseMethod": "Zahlungsmethode wählen",
+    "methodSelected": "Methode ausgewählt",
+    "pay": "Bezahlen {amount} €",
+
+    "card": {
+      "title": "Kartenzahlung",
+      "securityNotice": "Ihre Zahlungsdaten sind geschützt.",
+      "invalidForm": "Ungültiges Formular.",
+      "genericError": "Ein Fehler ist aufgetreten.",
+
+      "holderName": "Karteninhaber",
+      "number": "Kartennummer",
+      "expiry": "MM/JJ",
+      "cvv": "CVV",
+      "payAmount": "Bezahlen {amount} €",
+      "scanTooltip": "Karte scannen",
+
+      "invalidCardHolderName": "Ungültiger Name",
+      "invalidCardNumber": "Ungültige Kartennummer",
+      "invalidExpiry": "Ungültiges Datum",
+      "invalidCvv": "Ungültiger CVV",
+      "formError": "Bitte Fehler korrigieren",
+
+      "errors": {
+        "emptyName": "Bitte Karteninhaber eingeben",
+        "invalidName": "Ungültiger Name",
+        "invalidCardNumber": "Ungültige Kartennummer",
+        "incompleteCardNumber": "Unvollständige Kartennummer",
+        "invalidExpiry": "Ungültiges Ablaufdatum",
+        "invalidCvc": "Ungültiger Sicherheitscode",
+        "paymentFailed": "Zahlung fehlgeschlagen",
+        "paymentNotCompleted": "Zahlung nicht abgeschlossen",
+        "serverError": "Serverfehler, bitte erneut versuchen"
+      }
+    },
+
+    "success": {
+      "title": "Zahlung erfolgreich",
+      "message": "Ihre Zahlung wurde bestätigt.",
+      "amount": "Betrag",
+      "date": "Datum",
+      "order": "Bestellung",
+      "reference": "Referenz",
+      "finish": "Fertig",
+
+      "amountLabel": "Betrag",
+      "dateLabel": "Datum",
+      "orderLabel": "Bestellung",
+      "referenceLabel": "Referenz",
+
+      "processing": "Aufladung läuft... bitte warten ⏳",
+      "done": "Aufladung erfolgreich gesendet ✅"
+    },
+
+    "empty": {
+      "title": "Keine Zahlungsmethode",
+      "desc": "Fügen Sie eine Zahlungsmethode hinzu, um schneller zu bezahlen.",
+      "cta": "Aufladen"
+    }
+  },
+
+  "country": {
+    "af": "Afghanistan",
+    "fr": "Frankreich",
+    "us": "Vereinigte Staaten",
+    "de": "Deutschland",
+    "it": "Italien",
+    "es": "Spanien"
+  },
+
+  "history": {
+    "empty": "Kein Verlauf"
+  },
+
+  "menu": {
+    "history": "Verlauf"
+  },
+
+  "about": {
+    "description": "Einfache und schnelle Auflade-App.",
+    "privacy": "Datenschutzrichtlinie",
+    "terms": "Nutzungsbedingungen"
+  },
+
+  "profile": {
+    "name": "Name",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "birthdate": "Geburtsdatum",
+    "not_defined": "Nicht definiert"
+  }
+}

@@ -14,7 +14,8 @@ ALLOWED_LANGS = {
     "fa",
     "ps",
     "uz",
-    "tr"
+    "tr",
+    "de"  # ✅ allemand ajouté
 }
 
 # Langues RTL
@@ -28,7 +29,8 @@ LANGUAGE_LABELS = {
     "fa": "فارسی",
     "ps": "پښتو",
     "uz": "اوزبیکچه (افغانستان)",
-    "tr": "Türkçe"
+    "tr": "Türkçe",
+    "de": "Deutsch"
 }
 
 
