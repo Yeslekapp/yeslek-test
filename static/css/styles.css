@@ -1929,3 +1929,10 @@ pointer-events:none;
   background: #111;
   color: #fff;
 }
+.tz-seo-block {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  opacity: 0;
+}
+

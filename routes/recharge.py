@@ -287,12 +287,23 @@ def lookup_number():
         }
     )
 
-# ---------------------------
-# Enter number (GET)
-# ---------------------------
-
 @recharge_bp.get("/enter-number")
 def enter_number_get():
+
+    # ---------------------------
+    # AUTO LANGUAGE (EN DEFAULT)
+    # ---------------------------
+    if not session.get("lang"):
+
+        lang = request.accept_languages.best_match(['fr', 'en', 'tr'])
+
+        if not lang:
+            lang = 'en'
+
+        if lang not in ['fr', 'en', 'tr']:
+            lang = 'en'
+
+        session["lang"] = lang
 
     # ---------------------------
     # RESET FLOW (IMPORTANT)
@@ -302,6 +313,9 @@ def enter_number_get():
     session.pop("recharge_amount", None)
     session.pop("recharge_total_amount", None)
 
+    # ---------------------------
+    # NORMAL FLOW
+    # ---------------------------
     initial_phone = session.get("recharge_phone", "+93")
     country_iso = detect_country_iso_from_phone(initial_phone) or "AF"
     city = get_city_for_country(country_iso)

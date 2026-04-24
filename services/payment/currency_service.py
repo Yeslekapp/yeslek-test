@@ -113,3 +113,21 @@ class CurrencyService:
             return f"{value:.2f}".rstrip("0").rstrip(".")
         except Exception:
             return "0"
+        
+        # ---------------------------
+# Feature: LIVE FX conversion
+# ---------------------------
+
+import requests
+
+def convert_live(amount: float, to_currency: str) -> float:
+    try:
+        url = f"https://api.exchangerate.host/convert?from=EUR&to={to_currency}&amount={amount}"
+        res = requests.get(url, timeout=3)
+        data = res.json()
+
+        return round(data.get("result", amount), 2)
+
+    except Exception:
+        # fallback sécurité
+        return amount

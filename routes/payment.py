@@ -436,6 +436,15 @@ def card_get():
 @payment_bp.get("/method")
 def method_get():
 
+    # ---------------------------
+    # LOGIN REQUIRED (WALLET SAFE)
+    # ---------------------------
+    if not session.get("user_id"):
+        return redirect(url_for("auth.login", next=request.full_path))
+
+    # ---------------------------
+    # Amount from wallet link
+    # ---------------------------
     amount_param = request.args.get("amount")
 
     if amount_param:
@@ -488,6 +497,20 @@ def method_get():
             quote=quote
         )
 
+# ---------------------------
+# LIVE CURRENCY DISPLAY
+# ---------------------------
+    from services.payment.currency_service import CurrencyService
+
+    country_iso = session.get("country_iso")
+
+    currency = CurrencyService.currency_from_country(country_iso)
+
+    converted_amount = CurrencyService.convert_live(
+    ctx["final_amount"],
+    currency
+)
+
     return render_template(
         "payment/method.html",
         phone=ctx["phone"],
@@ -501,7 +524,9 @@ def method_get():
         save_card=session.get("payment_save_card", True),
         is_forfait_minutes=False,
         received_display=received_display,
-        from_wallet=from_wallet   # IMPORTANT
+        from_wallet=from_wallet,
+        currency=currency,
+        converted_amount=converted_amount
     )
 
 @payment_bp.post("/method")
