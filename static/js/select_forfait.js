@@ -1,159 +1,355 @@
 // ---------------------------
-// Select forfait (FINAL PRODUCTION)
+// Feature: Select forfait (FINAL PRODUCTION CLEAN)
 // ---------------------------
 
-async function selectForfait(btn){
+(function () {
 
-  if(!btn) return;
+  const form = document.getElementById("selectForfaitForm");
+  const optionsWrap = document.getElementById("forfaitOptionsWrap");
 
-  const gb = btn.dataset.gb || "";
-  const price = parseFloat(btn.dataset.price || "0");
-  const planId = btn.dataset.id;
-
-  // 🔥 sécurité stricte
-  if(!planId || price <= 0){
-    console.warn("Invalid forfait data");
+  if (!form || !optionsWrap) {
+    initCloseButton();
     return;
   }
 
-  const cards = document.querySelectorAll(".tz-forfait-card");
+  // ---------------------------
+  // Elements
+  // ---------------------------
+
+  const selectedDisplay = document.getElementById("selectedForfaitDisplay");
+  const selectedPlanId = document.getElementById("selectedPlanId");
+  const selectedPlanGb = document.getElementById("selectedPlanGb");
+  const selectedPlanPrice = document.getElementById("selectedPlanPrice");
+
+  const continueBtn = document.getElementById("continueForfaitBtn");
+
+  const rowReceived = document.getElementById("rowForfaitReceived");
+  const rowAmount = document.getElementById("rowForfaitAmount");
+  const rowTax = document.getElementById("rowForfaitTax");
+
+  const accordionBtn = document.getElementById("forfaitAccordionBtn");
+  const panel = document.getElementById("forfaitPanel");
+  const chevron = document.getElementById("forfaitChevron");
+
+  const userCurrency = "€";
+
+  let selectedButton = null;
+  let isSubmitting = false;
+  let scrollTimeout = null;
+  let isAutoSelecting = false;
 
   // ---------------------------
-  // UX: loading state
+  // Helpers
   // ---------------------------
-  cards.forEach(b=>{
-    b.classList.remove("is-selected");
-    b.disabled = true;
-    b.style.opacity = "0.6";
-  });
 
-  btn.classList.add("is-selected");
-  btn.style.opacity = "1";
+  function fmt2(value) {
+    return (Math.round(Number(value || 0) * 100) / 100).toFixed(2);
+  }
 
-  try{
+  function setMoneyOpen(open) {
+    if (!panel || !accordionBtn) return;
 
-    const res = await fetch("/recharge/select-forfait",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        id: planId,
-        gb: gb,
-        price: price
-      })
-    });
+    panel.style.display = open ? "block" : "none";
+    accordionBtn.setAttribute("aria-expanded", String(open));
 
-    if(!res.ok){
-      throw new Error("Network error");
-    }
-
-    const data = await res.json();
-
-    if(data.ok){
-      // 🔥 UX: micro delay smooth
-      setTimeout(()=>{
-        window.location.href = "/recharge/select-amount";
-      }, 120);
-      return;
-    }
-
-    throw new Error("API error");
-
-  } catch(e){
-
-    console.error("❌ forfait selection error:", e);
-
-    // ---------------------------
-    // rollback UX
-    // ---------------------------
-    cards.forEach(b=>{
-      b.disabled = false;
-      b.style.opacity = "1";
-      b.classList.remove("is-selected");
-    });
-
-    // toast si dispo
-    if(typeof tzToast === "function"){
-      tzToast("Erreur, réessayez");
+    if (chevron) {
+      chevron.textContent = open ? "▴" : "▾";
     }
   }
-}
 
+  function scrollToDetails() {
+    setTimeout(() => {
+      panel?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }, 120);
+  }
 
-// ---------------------------
-// Tabs filter (FINAL CLEAN)
-// ---------------------------
+  function setContinueState(enabled, totalPrice) {
+    if (!continueBtn) return;
 
-document.addEventListener("DOMContentLoaded", () => {
+    continueBtn.disabled = !enabled;
+    continueBtn.setAttribute("aria-disabled", String(!enabled));
+    continueBtn.style.opacity = enabled ? "1" : "0.5";
 
-  const tabs = document.querySelectorAll(".tz-tab");
-  const plans = document.querySelectorAll(".tz-forfait-card");
-
-  if(!tabs.length || !plans.length) return;
-
-  const matchPlan = (type, planType) => {
-
-    if(type === "DATA") return planType.includes("DATA");
-
-    if(type === "VOICE"){
-      return planType.includes("VOICE") || planType.includes("MIN");
+    if (enabled) {
+      const template = continueBtn.dataset.payText || "Payer {amount}";
+      continueBtn.textContent =
+        template.replace("{amount}", `${fmt2(totalPrice)} ${userCurrency}`);
+    } else {
+      continueBtn.textContent = continueBtn.dataset.payText || "Continuer";
     }
+  }
 
-    if(type === "SMS") return planType.includes("SMS");
+  function setLoading(loading) {
+    isSubmitting = loading;
 
-    if(type === "COMBO"){
-      return planType.includes("COMBO") || planType.includes("BUNDLE");
+    document.querySelectorAll(".tz-forfait-option").forEach(btn => {
+      btn.disabled = loading;
+      btn.style.opacity = loading && btn !== selectedButton ? "0.5" : "1";
+    });
+
+    if (continueBtn) {
+      continueBtn.disabled = loading;
+      continueBtn.classList.toggle("is-loading", loading);
     }
+  }
 
-    return true;
-  };
+  function animateSelectedDisplay(value) {
+    if (!selectedDisplay) return;
 
-  tabs.forEach(tab => {
+    selectedDisplay.textContent = value || "—";
+    selectedDisplay.style.transform = "scale(1.08)";
+    selectedDisplay.style.opacity = "0.7";
 
-    tab.addEventListener("click", () => {
+    setTimeout(() => {
+      selectedDisplay.style.transform = "scale(1)";
+      selectedDisplay.style.opacity = "1";
+    }, 140);
+  }
 
-      const type = (tab.dataset.type || "").toUpperCase();
+  function centerSelectedButton(btn) {
+    requestAnimationFrame(() => {
+      btn.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest"
+      });
+    });
+  }
 
-      // active tab
-      tabs.forEach(t => t.classList.remove("is-active"));
-      tab.classList.add("is-active");
+  // ---------------------------
+  // Fees API (SYNC BACKEND)
+  // ---------------------------
 
-      // filter plans
-      plans.forEach(plan => {
+  async function updateFees(price) {
 
-        const planType = (plan.dataset.planType || "").toUpperCase();
+    try {
 
-        const show = matchPlan(type, planType);
-
-        plan.style.display = show ? "block" : "none";
+      const res = await fetch("/recharge/api/fees", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ amount: price })
       });
 
-    });
+      const data = await res.json();
+      if (!data.ok) return;
+
+      const amount = Number(data.amount || price);
+      const tax = Number(data.tax || 0);
+      const total = Number(data.total || price);
+
+      if (rowAmount)
+        rowAmount.textContent = `${fmt2(amount)} ${userCurrency}`;
+
+      if (rowTax)
+        rowTax.textContent = `${fmt2(tax)} ${userCurrency}`;
+
+      setContinueState(true, total);
+
+    } catch (e) {
+      console.error("fees error", e);
+    }
+  }
+
+  // ---------------------------
+  // Selection
+  // ---------------------------
+
+  function applySelection(btn, options = {}) {
+
+    if (!btn || isSubmitting) return;
+
+    const planId = btn.dataset.id || "";
+    const gb = btn.dataset.gb || "";
+    const price = Number(btn.dataset.price || 0);
+
+    if (!planId || price <= 0) return;
+
+    selectedButton = btn;
+
+    document.querySelectorAll(".tz-forfait-option").forEach(el =>
+      el.classList.remove("is-selected")
+    );
+
+    btn.classList.add("is-selected");
+
+    if (!options.skipCenter) {
+      centerSelectedButton(btn);
+    }
+
+    selectedPlanId.value = planId;
+    selectedPlanGb.value = gb;
+    selectedPlanPrice.value = fmt2(price);
+
+    animateSelectedDisplay(gb);
+
+    if (rowReceived)
+      rowReceived.textContent = gb || "—";
+
+    updateFees(price);
+
+    setMoneyOpen(true);
+
+    if (!options.skipDetailsScroll) {
+      scrollToDetails();
+    }
+  }
+
+  // ---------------------------
+  // Submit
+  // ---------------------------
+
+  async function submitSelection() {
+
+    if (isSubmitting || !selectedButton) return;
+
+    const planId = selectedPlanId.value;
+    const gb = selectedPlanGb.value;
+    const price = Number(selectedPlanPrice.value);
+
+    if (!planId || price <= 0) return;
+
+    setLoading(true);
+
+    try {
+
+      // Save forfait
+      const res = await fetch("/recharge/select-forfait", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: planId, gb, price })
+      });
+
+      const data = await res.json();
+
+      if (!data.ok) throw new Error();
+
+      // Inject amount
+      const amountRes = await fetch("/recharge/select-amount", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: new URLSearchParams({
+          amount: price.toString()
+        })
+      });
+
+      const amountData = await amountRes.json();
+
+      if (amountRes.status === 401 && amountData?.redirect) {
+        window.location.href = amountData.redirect;
+        return;
+      }
+
+      if (!amountData?.ok) throw new Error();
+
+      window.location.href = "/payment/method";
+
+    } catch (e) {
+      console.error(e);
+      setLoading(false);
+
+      if (typeof tzToast === "function") {
+        tzToast("Erreur, réessayez");
+      }
+    }
+  }
+
+  // ---------------------------
+  // Events
+  // ---------------------------
+
+  optionsWrap.addEventListener("click", e => {
+    const btn = e.target.closest(".tz-forfait-option");
+    if (!btn) return;
+    applySelection(btn);
+  });
+
+  optionsWrap.addEventListener("scroll", () => {
+
+    if (isSubmitting || isAutoSelecting) return;
+
+    clearTimeout(scrollTimeout);
+
+    scrollTimeout = setTimeout(() => {
+
+      const cards = [...optionsWrap.querySelectorAll(".tz-forfait-slide")];
+      let closest = null;
+      let min = Infinity;
+
+      const center = optionsWrap.scrollLeft + optionsWrap.offsetWidth / 2;
+
+      cards.forEach(card => {
+        const offset = Math.abs(
+          (card.offsetLeft + card.offsetWidth / 2) - center
+        );
+
+        if (offset < min) {
+          min = offset;
+          closest = card;
+        }
+      });
+
+      if (closest && closest !== selectedButton) {
+        isAutoSelecting = true;
+
+        applySelection(closest, {
+          skipCenter: true,
+          skipDetailsScroll: true
+        });
+
+        setTimeout(() => {
+          isAutoSelecting = false;
+        }, 80);
+      }
+
+    }, 140);
 
   });
 
-  // 🔥 auto trigger
-  document.querySelector(".tz-tab.is-active")?.click();
-});
+  accordionBtn?.addEventListener("click", () => {
+    const open = panel.style.display !== "none";
+    setMoneyOpen(!open);
+  });
+
+  continueBtn?.addEventListener("click", submitSelection);
+
+  // ---------------------------
+  // Init
+  // ---------------------------
+
+  setMoneyOpen(true);
+  setContinueState(false, 0);
+
+  const first = optionsWrap.querySelector(".tz-forfait-option");
+  if (first) {
+    setTimeout(() => applySelection(first, { skipDetailsScroll: true }), 120);
+  }
+
+  initCloseButton();
+
+})();
+
 
 // ---------------------------
-// Close forfait -> enter number
+// Close forfait
 // ---------------------------
-document.addEventListener("DOMContentLoaded", () => {
 
+function initCloseButton() {
   const btn = document.getElementById("closeForfaitBtn");
-  if(!btn) return;
+  if (!btn) return;
 
   btn.addEventListener("click", async () => {
-
-    try{
-      await fetch("/recharge/clear-forfait",{
-        method:"POST"
-      });
-    }catch(e){}
+    try {
+      await fetch("/recharge/clear-forfait", { method: "POST" });
+    } catch (_) {}
 
     window.location.href = "/recharge/enter-number";
   });
-
-});
+}

@@ -1,5 +1,5 @@
 {# ---------------------------
-   Feature: Select Forfait (FINAL PRODUCTION STABLE)
+   Feature: Select Forfait (PRO Flutter-like)
 --------------------------- #}
 {% extends "base.html" %}
 {% block title %}{{ t("recharge.selectForfait.title") }}{% endblock %}
@@ -14,194 +14,217 @@
   <h1 class="tz-title">
     {{ t("recharge.selectForfait.title") }}
   </h1>
-<div class="tz-row" style="margin-bottom:10px;">
-<button
-  type="button"
-  class="tz-link-btn tz-muted"
-  id="closeForfaitBtn"
->
-    {{ t("common.close") }}
-  </button>
-</div>
-  {# ---------------------------
-     Operator Card
-  --------------------------- #}
-  <section class="tz-card tz-card--soft">
-    <div class="tz-row">
 
-      {% if operator and operator.logo_url %}
-      <img
-        src="{{ operator.logo_url }}"
-        class="tz-operator-logo"
-        alt="{{ operator.name }}"
-        loading="lazy"
-      />
-      {% else %}
-      <span class="tz-muted">📶</span>
-      {% endif %}
+  <div class="tz-row" style="margin-bottom:10px;">
+    <button
+      type="button"
+      class="tz-link-btn tz-muted"
+      id="closeForfaitBtn"
+    >
+      {{ t("common.close") }}
+    </button>
+  </div>
 
-      <div class="tz-grow">
-        <div class="tz-strong">
-          {{ operator.name if operator else "" }}
+  <form class="tz-stack" id="selectForfaitForm">
+
+    {# ---------------------------
+       Phone + Operator Card
+    --------------------------- #}
+    <section class="tz-card">
+      <div class="tz-row">
+
+        <div class="tz-grow">
+          <div class="tz-strong" style="font-size:15px;">
+            {{ phone }}
+            <a
+              class="tz-link"
+              style="margin-left:8px;"
+              href="{{ url_for('recharge.enter_number_get') }}"
+            >✎</a>
+          </div>
+
+          <div class="tz-small tz-muted" style="margin-top:4px;">
+            {% if operator and operator.name %}
+              {{ operator.name }}
+            {% else %}
+              {{ t("recharge.selectAmount.operatorNotDetected") }}
+            {% endif %}
+          </div>
         </div>
 
-        <div class="tz-small tz-muted">
-          {{ phone }}
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  {# ---------------------------
-     Plans list
-  --------------------------- #}
-  <div class="tz-stack" id="plansList">
-
-    {% if plans and plans|length > 0 %}
-
-      {% for f in plans %}
-
-      <button
-        class="tz-card tz-forfait-card tz-clickable"
-        type="button"
-        role="button"
-        tabindex="0"
-
-        data-plan-type="{{ f.type }}"
-        data-id="{{ f.id }}"
-        data-gb="{{ f.gb or f.description }}"
-        data-validity="{{ f.validity or '' }}"
-        data-price="{{ f.amount }}"
-
-        onclick="selectForfait(this)"
-
-        aria-label="{{ f.name }} {{ f.amount }} {{ f.currency }}"
-      >
-
-        <div class="tz-row">
-
-          {% if operator and operator.logo_url %}
+        {% if operator and operator.logo_url %}
           <img
             src="{{ operator.logo_url }}"
             class="tz-operator-logo"
-            alt=""
+            alt="{{ operator.name }}"
             loading="lazy"
           />
-          {% endif %}
-
-          <div class="tz-forfait-icon">📶</div>
-
-          <div class="tz-grow">
-
-            <div class="tz-strong">
-              {{ f.gb if f.gb else f.name }}
-            </div>
-
-            <div class="tz-small tz-muted">
-
-              {% if f.type == "AIRTIME" %}
-                {{ t("recharge.airtime") }}
-
-              {% elif f.gb and f.validity %}
-                {{ f.gb }} • {{ f.validity }}
-
-              {% elif f.gb %}
-                {{ f.gb }}
-
-              {% elif f.validity %}
-                {{ f.validity }}
-
-              {% else %}
-                {{ f.description }}
-
-              {% endif %}
-
-            </div>
-
-          </div>
-
-          <div class="tz-forfait-price">
-            {{ "%.2f"|format(f.amount or 0) }} €
-          </div>
-
-        </div>
-
-      </button>
-
-      {% endfor %}
-
-    {% else %}
-
-      {# ---------------------------
-         No plans fallback (UX PRO)
-      --------------------------- #}
-      <div class="tz-card tz-card--soft tz-muted">
-
-        <div style="text-align:center; padding:10px;">
-          📶 {{ t("recharge.noInternetPlans") }}
-        </div>
-
-        <a href="{{ url_for('recharge.select_amount_get') }}"
-           class="tz-primary-btn"
-           style="margin-top:12px;">
-          {{ t("recharge.continueWithAirtime") }}
-        </a>
+        {% else %}
+          <span class="tz-muted" aria-hidden="true">📶</span>
+        {% endif %}
 
       </div>
+    </section>
 
-    {% endif %}
+    {# ---------------------------
+       Selected Forfait Card
+    --------------------------- #}
+    <section
+      class="tz-card tz-card--highlight"
+      id="forfaitAmountCard"
+      data-empty="{{ t('recharge.selectAmount.chooseInternetPlan') }}"
+    >
+
+      <div class="tz-card__title">
+        {{ t("recharge.selectAmount.chooseInternetPlan") }}
+      </div>
+
+      <div class="tz-amount" id="selectedForfaitDisplay">
+        —
+      </div>
+
+      {% if plans and plans|length > 0 %}
+
+        <div class="tz-forfait-slider" id="forfaitOptionsWrap">
+
+          {% for f in plans %}
+            <button
+              class="tz-forfait-slide tz-forfait-option"
+              type="button"
+
+              data-plan-type="{{ f.type }}"
+              data-id="{{ f.id }}"
+              data-gb="{{ f.gb or f.description or f.name }}"
+              data-validity="{{ f.validity or '' }}"
+              data-price="{{ f.amount }}"
+              data-currency="{{ f.currency or '€' }}"
+              data-name="{{ f.name }}"
+            >
+
+              <div class="tz-forfait-title">
+                {{ f.gb if f.gb else f.name }}
+              </div>
+
+              {% if f.validity %}
+                <div class="tz-forfait-validity">
+                  {{ f.validity }}
+                </div>
+              {% endif %}
+
+              <div class="tz-forfait-price">
+                {{ "%.2f"|format(f.amount or 0) }} €
+              </div>
+
+            </button>
+          {% endfor %}
+
+        </div>
+
+      {% else %}
+
+        <div class="tz-card tz-card--soft tz-muted" style="margin-top:10px;">
+          <div style="text-align:center; padding:10px;">
+            📶 {{ t("recharge.noInternetPlans") }}
+          </div>
+
+          <a
+            href="{{ url_for('recharge.select_amount_get') }}"
+            class="tz-primary-btn"
+            style="margin-top:12px; position:static; width:100%;"
+          >
+            {{ t("recharge.continueWithAirtime") }}
+          </a>
+        </div>
+
+      {% endif %}
+
+      <input type="hidden" id="selectedPlanId" value="">
+      <input type="hidden" id="selectedPlanGb" value="">
+      <input type="hidden" id="selectedPlanPrice" value="">
+
+    </section>
+
+{# ---------------------------
+   Feature: Money Accordion Card (FINAL PROD)
+--------------------------- #}
+{% if plans and plans|length > 0 %}
+<section class="tz-card tz-card--green" id="forfaitMoneyCard">
+
+  <button
+    type="button"
+    class="tz-accordion"
+    id="forfaitAccordionBtn"
+    aria-expanded="true"
+  >
+    <div class="tz-check">
+      <span aria-hidden="true">👛</span>
+      <div class="tz-strong">
+        {{ t("recharge.selectAmount.creditAndTotal") }}
+      </div>
+    </div>
+
+    <div class="tz-muted" id="forfaitChevron">▴</div>
+  </button>
+
+  <div class="tz-accordion__panel" id="forfaitPanel">
+
+    <div class="tz-divider"></div>
+
+    {# ---------------------------
+       Montant
+    --------------------------- #}
+    <div class="tz-row">
+      <div class="tz-muted">
+        {{ t("recharge.selectAmount.amountRow") }}
+      </div>
+      <div class="tz-strong" id="rowForfaitAmount">—</div>
+    </div>
+
+    {# ---------------------------
+       Taxes
+    --------------------------- #}
+    <div class="tz-row" style="margin-top:10px;">
+      <div class="tz-muted">
+        {{ t("recharge.selectAmount.taxesRow") }}
+      </div>
+      <div class="tz-strong" id="rowForfaitTax">—</div>
+    </div>
+
+    {# ---------------------------
+       Separator UX
+    --------------------------- #}
+    <div class="tz-divider" style="margin:12px 0;"></div>
+
+    {# ---------------------------
+       Received (highlight)
+    --------------------------- #}
+    <div class="tz-row tz-highlight">
+      <div class="tz-strong">
+        {{ t("recharge.selectAmount.receivedAmountTitle") }}
+      </div>
+      <div class="tz-strong" id="rowForfaitReceived">—</div>
+    </div>
 
   </div>
 
-</div>
+</section>
 
 {# ---------------------------
-   Micro-interactions PRO
+   CTA BUTTON
 --------------------------- #}
-<style>
+<button
+  type="button"
+  class="tz-primary-btn"
+  id="continueForfaitBtn"
+  disabled
+  aria-disabled="true"
+  data-pay-text="{{ t('payment.method.pay') }}"
+>
+  {{ t("common.continue") }}
+</button>
+{% endif %}
 
-.tz-clickable {
-  transition: transform 0.08s ease, box-shadow 0.15s ease, border 0.15s ease;
-  border: 1px solid transparent;
-}
+  </form>
 
-/* Hover desktop */
-.tz-clickable:hover {
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-}
-
-/* Active mobile */
-.tz-clickable:active {
-  transform: scale(0.96);
-}
-
-/* Focus accessibility */
-.tz-clickable:focus {
-  outline: none;
-  border: 1px solid #2196f3;
-}
-
-/* Selected state */
-.tz-forfait-card.is-selected {
-  border: 1.5px solid #2196f3;
-  box-shadow: 0 6px 18px rgba(33,150,243,0.15);
-  background: rgba(33,150,243,0.04);
-}
-
-/* Price highlight */
-.tz-forfait-price {
-  font-weight: 700;
-  color: #111;
-}
-
-/* 🔥 MOBILE TAP FEEDBACK */
-@media (max-width: 768px) {
-  .tz-clickable:active {
-    transform: scale(0.95);
-  }
-}
-
-</style>
-
+</div>
 {% endblock %}

@@ -1936,3 +1936,141 @@ pointer-events:none;
   opacity: 0;
 }
 
+/* ---------------------------
+# Feature: Inline forfait slider
+--------------------------- */
+
+.tz-forfait-selected {
+  margin-top: 16px;
+}
+
+.tz-forfait-selected-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #7c3aed;
+}
+
+.tz-forfait-slider {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 10px 0 20px;
+}
+
+.tz-forfait-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.tz-forfait-slide {
+  min-width: 160px;
+  scroll-snap-align: center;
+
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: #fff;
+
+  padding: 16px 12px;
+  text-align: center;
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    background .25s ease,
+    color .25s ease;
+
+  transform: scale(.88);
+}
+
+.tz-forfait-slide.is-selected {
+  transform: scale(1);
+  background: #7c3aed;
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(124,58,237,.25);
+}
+
+.tz-forfait-slide-price {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Selected title (comme Flutter) */
+.tz-forfait-selected-title {
+  font-size: 26px;
+  font-weight: 900;
+  color: #7c3aed;
+}
+
+/* =========================
+FORFAIT SLIDER (SAFE)
+========================= */
+
+.tz-forfait-slider{
+  display:flex;
+  gap:12px;
+  overflow-x:auto;
+  padding:12px 0 18px;
+
+  scroll-snap-type:x mandatory;
+}
+
+.tz-forfait-slider::-webkit-scrollbar{
+  display:none;
+}
+
+.tz-forfait-slide{
+  min-width:130px;
+  scroll-snap-align:center;
+
+  border-radius:16px;
+  padding:14px;
+
+  background:#fff;
+  border:1px solid rgba(0,0,0,.12);
+
+  text-align:center;
+
+  transform:scale(.88);
+  opacity:.7;
+
+  transition:all .25s ease;
+}
+
+/* selected */
+.tz-forfait-slide.is-selected{
+  transform:scale(1);
+  opacity:1;
+
+  background:#2196f3;
+  color:#fff;
+
+  box-shadow:0 10px 24px rgba(33,150,243,.25);
+}
+
+/* text */
+.tz-forfait-title{
+  font-weight:800;
+  font-size:14px;
+}
+
+.tz-forfait-price{
+  margin-top:6px;
+  font-size:12px;
+  font-weight:600;
+}
+
+.tz-highlight {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.tz-highlight {
+  font-size: 15px;
+  color: #0f9d58; /* vert succès */
+}
+
+#creditUsedRow {
+  color: #16a34a;
+  font-weight: 600;
+}

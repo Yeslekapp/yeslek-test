@@ -24,6 +24,8 @@ const saveCardInput = document.getElementById("saveCardInput");
 const finalAmountText = document.getElementById("finalAmountText");
 const walletBalance = document.getElementById("walletBalance");
 const payBtn = document.getElementById("payBtn");
+const creditUsedRow = document.getElementById("creditUsedRow");
+const creditUsedText = document.getElementById("creditUsedText");
 
 function format(v){
 return (Math.round(v * 100)/100).toFixed(2);
@@ -44,6 +46,19 @@ creditUsed = Math.min(credit, amount);
 finalAmount = amount - creditUsed;
 
 remaining = credit - creditUsed;
+
+}
+// ---------------------------
+// Credit used UI (NEW)
+// ---------------------------
+if (creditUsedRow && creditUsedText) {
+
+  if (useCredit && creditUsed > 0) {
+    creditUsedRow.style.display = "flex";
+    creditUsedText.textContent = `- ${format(creditUsed)} €`;
+  } else {
+    creditUsedRow.style.display = "none";
+  }
 
 }
 
@@ -136,10 +151,8 @@ compute();
   </div>
 </section>
 
-{# ---------------------------
-   Recap Card
---------------------------- #}
 <section class="tz-card tz-card--soft">
+
   <div class="tz-row">
     {% if not is_forfait_minutes %}
     <div class="tz-grow tz-strong"
@@ -148,16 +161,26 @@ compute();
     </div>
     {% endif %}
 
-    <div class="tz-amount-sm" id="finalAmountText">
-      {% if forfait_display %}
-        {{ forfait_display }}
-      {% else %}
-        {{ received_display if received_display else "%.2f"|format(final_amount) ~ " €" }}
-      {% endif %}
-    </div>
+<div class="tz-amount-sm" id="finalAmountText">
+  {% if forfait_display %}
+    {{ forfait_display }} • {{ "%.2f"|format(final_amount) }} €
+  {% else %}
+    {{ "%.2f"|format(final_amount) }} €
+  {% endif %}
+</div>
   </div>
-</section>
 
+  {# 🔥 AJOUT ICI (INSIDE CARD) #}
+  <div class="tz-row"
+       id="creditUsedRow"
+       style="margin-top:8px; display:none;">
+    <div class="tz-muted">
+      {{ t("wallet.creditUsed") }}
+    </div>
+    <div class="tz-strong" id="creditUsedText">—</div>
+  </div>
+
+</section>
 {# ---------------------------
    Save Card
 --------------------------- #}

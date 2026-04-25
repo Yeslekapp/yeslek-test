@@ -287,23 +287,12 @@ def lookup_number():
         }
     )
 
+# ---------------------------
+# Enter number (GET)
+# ---------------------------
+
 @recharge_bp.get("/enter-number")
 def enter_number_get():
-
-    # ---------------------------
-    # AUTO LANGUAGE (EN DEFAULT)
-    # ---------------------------
-    if not session.get("lang"):
-
-        lang = request.accept_languages.best_match(['fr', 'en', 'tr'])
-
-        if not lang:
-            lang = 'en'
-
-        if lang not in ['fr', 'en', 'tr']:
-            lang = 'en'
-
-        session["lang"] = lang
 
     # ---------------------------
     # RESET FLOW (IMPORTANT)
@@ -313,9 +302,6 @@ def enter_number_get():
     session.pop("recharge_amount", None)
     session.pop("recharge_total_amount", None)
 
-    # ---------------------------
-    # NORMAL FLOW
-    # ---------------------------
     initial_phone = session.get("recharge_phone", "+93")
     country_iso = detect_country_iso_from_phone(initial_phone) or "AF"
     city = get_city_for_country(country_iso)
@@ -525,59 +511,119 @@ def select_amount_get():
 
 
 # ---------------------------
-# Select amount (POST)
+# Select amount (POST) FINAL SAFE
 # ---------------------------
 
 @recharge_bp.post("/select-amount")
 def select_amount_post():
 
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+    # ---------------------------
     # 🔒 LOGIN CHECK
+    # ---------------------------
     if not session.get("user_id"):
+
+        if is_ajax:
+            return jsonify({
+                "ok": False,
+                "redirect": url_for("auth.login", next=url_for("payment.method_get"))
+            }), 401
+
         return redirect(url_for("auth.login", next=request.path))
 
+    # ---------------------------
+    # PHONE CHECK
+    # ---------------------------
     phone = session.get("recharge_phone")
 
     if not phone:
+        if is_ajax:
+            return jsonify({"ok": False}), 400
         return redirect(url_for("recharge.enter_number_get"))
 
     amount = request.form.get("amount")
 
+    # ---------------------------
+    # 🔥 SUPPORT FORFAIT
+    # ---------------------------
+    forfait = session.get("recharge_forfait")
+
     try:
         amount = float(amount)
     except Exception:
-        return redirect(url_for("recharge.select_amount_get"))
+        if isinstance(forfait, dict) and forfait.get("price"):
+            try:
+                amount = float(forfait.get("price"))
+            except Exception:
+                if is_ajax:
+                    return jsonify({"ok": False}), 400
+                return redirect(url_for("recharge.select_amount_get"))
+        else:
+            if is_ajax:
+                return jsonify({"ok": False}), 400
+            return redirect(url_for("recharge.select_amount_get"))
 
     # ---------------------------
-    # Feature: Amount validation
+    # VALIDATION
     # ---------------------------
-
     MIN_AMOUNT = 2.0
     MAX_AMOUNT = 40.0
 
     if amount < MIN_AMOUNT or amount > MAX_AMOUNT:
+        if is_ajax:
+            return jsonify({"ok": False}), 400
         return redirect(url_for("recharge.select_amount_get"))
 
-    # clamp sécurisé
     amount = max(MIN_AMOUNT, min(MAX_AMOUNT, amount))
 
     # ---------------------------
     # Currency & breakdown
     # ---------------------------
-
     currency = CurrencyService.currency_from_phone(phone)
     breakdown = FeesService.breakdown(amount, currency)
 
     # ---------------------------
-    # Session
+    # RECEIVED DISPLAY
     # ---------------------------
-    session.pop("received_display", None)
+    try:
+        from services.reloadly.data_service import get_reloadly_quote
+
+        operator = session.get("recharge_operator") or {}
+        operator_id = operator.get("id")
+        country_iso = session.get("country_iso")
+
+        quote = None
+
+        if operator_id:
+            quote = get_reloadly_quote(
+                operator_id=operator_id,
+                amount=amount,
+                phone=phone,
+                country_iso=country_iso,
+            )
+
+        received_display = CurrencyService.received_display_value(
+            phone=phone,
+            amount=amount,
+            selected_forfait=forfait,
+            quote=quote,
+        )
+
+        session["received_display"] = received_display
+
+    except Exception:
+        session["received_display"] = None
+
+    # ---------------------------
+    # SESSION
+    # ---------------------------
     session["recharge_amount"] = float(amount)
     session["recharge_total_amount"] = float(breakdown["total"])
 
     # ---------------------------
-    # 🔥 FIX CRITIQUE IDEMPOTENCY (STRIPE)
+    # RESET STRIPE IDEMPOTENCY
     # ---------------------------
-
     session.pop("payment_idempotency_key", None)
     session.pop("last_payment_amount", None)
     session.pop("payment_hash", None)
@@ -585,9 +631,17 @@ def select_amount_post():
     session.modified = True
 
     # ---------------------------
-    # FLOW → METHOD
+    # ✅ AJAX RESPONSE (CRITICAL)
     # ---------------------------
+    if is_ajax:
+        return jsonify({
+            "ok": True,
+            "amount": amount
+        })
 
+    # ---------------------------
+    # NORMAL FLOW
+    # ---------------------------
     return redirect(url_for("payment.method_get"))
 
 # ---------------------------
@@ -741,4 +795,53 @@ def api_quote():
         "destinationCurrency": currency,
         "min": MIN_AMOUNT,
         "max": MAX_AMOUNT
+    })
+
+# ---------------------------
+# API Fees (FORFAIT + AMOUNT UI)
+# ---------------------------
+
+@recharge_bp.post("/api/fees")
+def api_fees():
+
+    phone = session.get("recharge_phone")
+
+    if not phone:
+        return jsonify({"ok": False}), 400
+
+    data = request.get_json(silent=True) or {}
+    amount = data.get("amount")
+
+    try:
+        amount = float(amount)
+    except Exception:
+        return jsonify({"ok": False}), 400
+
+    # ---------------------------
+    # VALIDATION (same as select_amount)
+    # ---------------------------
+    MIN_AMOUNT = 2.0
+    MAX_AMOUNT = 40.0
+
+    if amount < MIN_AMOUNT or amount > MAX_AMOUNT:
+        return jsonify({
+            "ok": False,
+            "min": MIN_AMOUNT,
+            "max": MAX_AMOUNT
+        }), 400
+
+    amount = max(MIN_AMOUNT, min(MAX_AMOUNT, amount))
+
+    # ---------------------------
+    # FEES SERVICE (SOURCE UNIQUE)
+    # ---------------------------
+    currency = CurrencyService.currency_from_phone(phone)
+    breakdown = FeesService.breakdown(amount, currency)
+
+    return jsonify({
+        "ok": True,
+        "amount": breakdown["amount"],
+        "tax": breakdown["tax"],
+        "total": breakdown["total"],
+        "currency": currency
     })

@@ -123,7 +123,7 @@
         onclick="goToForfait(this)">
   <div class="tz-row">
     <div class="tz-check">
-      <span aria-hidden="true">📶</span>
+      <span aria-hidden="true">📡</span>
       <div class="tz-strong" id="forfaitTitle">
         {% if session.get("recharge_forfait") %}
           {{ session.get("recharge_forfait").gb }} • {{ session.get("recharge_forfait").price }} €
@@ -145,15 +145,23 @@
 </section>
 
 {# ---------------------------
-   Money Accordion Card
+   Feature: Money Accordion Card (FINAL PROD)
 --------------------------- #}
-<section class="tz-card tz-card--green" id="moneyCard" data-received="{{ received_display or '' }}"></section>
+<section class="tz-card tz-card--green" id="moneyCard">
 
-  <button type="button" class="tz-accordion" id="moneyAccordionBtn" aria-expanded="true">
+  <button
+    type="button"
+    class="tz-accordion"
+    id="moneyAccordionBtn"
+    aria-expanded="true"
+  >
     <div class="tz-check">
-      <span aria-hidden="true">👛</span>
-      <div class="tz-strong">{{ t("recharge.selectAmount.creditAndTotal") }}</div>
+      <span aria-hidden="true">💳</span>
+      <div class="tz-strong">
+        {{ t("recharge.selectAmount.creditAndTotal") }}
+      </div>
     </div>
+
     <div class="tz-muted" id="moneyChevron">▴</div>
   </button>
 
@@ -161,34 +169,52 @@
 
     <div class="tz-divider"></div>
 
-    <!-- Amount -->
+    {# ---------------------------
+       Montant
+    --------------------------- #}
     <div class="tz-row">
-      <div class="tz-muted">{{ t("recharge.selectAmount.amountRow") }}</div>
+      <div class="tz-muted">
+        {{ t("recharge.selectAmount.amountRow") }}
+      </div>
       <div class="tz-strong" id="rowAmount">
         {{ "%.2f"|format(amount) }} €
       </div>
     </div>
 
-    <!-- Taxes -->
+    {# ---------------------------
+       Taxes
+    --------------------------- #}
     <div class="tz-row" style="margin-top:10px;">
-      <div class="tz-muted">{{ t("recharge.selectAmount.taxesRow") }}</div>
+      <div class="tz-muted">
+        {{ t("recharge.selectAmount.taxesRow") }}
+      </div>
       <div class="tz-strong" id="rowTax">
-        {{ "%.2f"|format(amount * tax_rate) }} €
+        {{ "%.2f"|format(tax) }} €
       </div>
     </div>
 
-    <!-- Received -->
-    <div class="tz-row" style="margin-top:10px;">
-      <div class="tz-muted">{{ t("recharge.selectAmount.receivedAmountTitle") }}</div>
-<div class="tz-strong" id="rowReceived">
-  {% if session.get("recharge_forfait") %}
-    {{ session.get("recharge_forfait").gb }}
-  {% elif received_display and received_display != "—" %}
-    {{ received_display }} {{ destination_currency }}
-  {% else %}
-    —
-  {% endif %}
-</div>
+    {# ---------------------------
+       Separator UX
+    --------------------------- #}
+    <div class="tz-divider" style="margin:12px 0;"></div>
+
+    {# ---------------------------
+       Reçu (PRIORITÉ UX)
+    --------------------------- #}
+    <div class="tz-row tz-highlight">
+      <div class="tz-strong">
+        {{ t("recharge.selectAmount.receivedAmountTitle") }}
+      </div>
+
+      <div class="tz-strong" id="rowReceived">
+        {% if session.get("recharge_forfait") %}
+          {{ session.get("recharge_forfait").gb }}
+        {% elif received_display and received_display != "—" %}
+          {{ received_display }} {{ destination_currency }}
+        {% else %}
+          —
+        {% endif %}
+      </div>
     </div>
 
   </div>

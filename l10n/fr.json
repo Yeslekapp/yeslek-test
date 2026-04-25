@@ -130,7 +130,8 @@
       "receivedAmountTitle": "Ils/Elles reçoivent",
       "goToPay": "Payer",
       "operatorPickerSoon": "Sélection opérateur bientôt disponible",
-      "choose": "Choisir"
+      "choose": "Choisir",
+      "creditUsed": "Crédit utilisé"
     }
   },
 
@@ -278,6 +279,16 @@
     "privacy": "Politique de confidentialité",
     "terms": "Conditions d'utilisation"
   },
+  
+  "time": {
+    "day": "jour",
+    "days": "jours",
+    "week": "semaine",
+    "weeks": "semaines",
+    "month": "mois",
+    "months": "mois"
+  },
+
 
   "profile": {
     "name": "Nom",
@@ -285,5 +296,6 @@
     "phone": "Téléphone",
     "birthdate": "Date de naissance",
     "not_defined": "Non défini"
+
   }
 }

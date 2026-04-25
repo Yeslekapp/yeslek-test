@@ -436,15 +436,6 @@ def card_get():
 @payment_bp.get("/method")
 def method_get():
 
-    # ---------------------------
-    # LOGIN REQUIRED (WALLET SAFE)
-    # ---------------------------
-    if not session.get("user_id"):
-        return redirect(url_for("auth.login", next=request.full_path))
-
-    # ---------------------------
-    # Amount from wallet link
-    # ---------------------------
     amount_param = request.args.get("amount")
 
     if amount_param:
@@ -497,20 +488,6 @@ def method_get():
             quote=quote
         )
 
-# ---------------------------
-# LIVE CURRENCY DISPLAY
-# ---------------------------
-    from services.payment.currency_service import CurrencyService
-
-    country_iso = session.get("country_iso")
-
-    currency = CurrencyService.currency_from_country(country_iso)
-
-    converted_amount = CurrencyService.convert_live(
-    ctx["final_amount"],
-    currency
-)
-
     return render_template(
         "payment/method.html",
         phone=ctx["phone"],
@@ -524,9 +501,7 @@ def method_get():
         save_card=session.get("payment_save_card", True),
         is_forfait_minutes=False,
         received_display=received_display,
-        from_wallet=from_wallet,
-        currency=currency,
-        converted_amount=converted_amount
+        from_wallet=from_wallet   # IMPORTANT
     )
 
 @payment_bp.post("/method")
@@ -589,10 +564,11 @@ def card_post():
 
 
 # ---------------------------
-# Stripe webhook
+# Stripe webhook (FINAL PROD SAFE)
 # ---------------------------
 @payment_bp.post("/webhook")
 def stripe_webhook_post():
+
     payload = request.get_data()
     sig_header = request.headers.get("Stripe-Signature", "")
 
@@ -605,6 +581,9 @@ def stripe_webhook_post():
     event_type = event.get("type")
     event_data = (event.get("data") or {}).get("object") or {}
 
+    # ---------------------------
+    # Only handle success payments
+    # ---------------------------
     if event_type != "payment_intent.succeeded":
         return jsonify({"ok": True}), 200
 
@@ -619,27 +598,23 @@ def stripe_webhook_post():
         return jsonify({"ok": False, "error": "missing_idempotency_key"}), 400
 
     # ---------------------------
-    # Idempotency check (APRES validation Stripe)
+    # Idempotency (SAFE)
     # ---------------------------
     existing = IdempotencyService.get_result(idem_key)
     if existing:
         return jsonify({"ok": True, "deduplicated": True}), 200
 
-    # ---------------------------
-    # Hard deduplication (transaction level)
-    # ---------------------------
     payment_reference = _safe_str(event_data.get("id"))
     session["last_payment_intent_id"] = payment_reference
 
     existing_tx = get_existing_transaction(payment_reference)
     if existing_tx:
-        logger.warning("⚠️ Duplicate recharge prevented (existing transaction)")
+        logger.warning("⚠️ Duplicate recharge prevented")
         return jsonify({"ok": True, "deduplicated": True}), 200
 
-    stripe_status = _safe_str(event_data.get("status"))
-    if stripe_status != "succeeded":
-        return jsonify({"ok": True}), 200
-
+    # ---------------------------
+    # Extract metadata
+    # ---------------------------
     phone = _safe_str(metadata.get("recharge_phone"))
     country_iso = _safe_str(metadata.get("country_iso")).upper()
     forfait_id_raw = _safe_str(metadata.get("forfait_id"))
@@ -654,6 +629,9 @@ def stripe_webhook_post():
     charged_amount = _safe_float(metadata.get("charged_amount"), 0.0)
     credit_used = _safe_float(metadata.get("credit_used"), 0.0)
 
+    # ---------------------------
+    # Validation
+    # ---------------------------
     if not phone or base_amount <= 0:
         IdempotencyService.store_result(
             idem_key,
@@ -678,8 +656,11 @@ def stripe_webhook_post():
         )
         return jsonify({"ok": True}), 200
 
+    # ---------------------------
+    # PROCESS RECHARGE
+    # ---------------------------
     try:
-        print("FORFAIT DEBUG:", forfait_id_raw)
+
         result = process_recharge(
             payment_reference=payment_reference,
             phone=phone,
@@ -698,38 +679,52 @@ def stripe_webhook_post():
         payload_obj = _build_success_payload(
             base_amount=base_amount,
             charged_amount=charged_amount,
-              credit_used=credit_used,
+            credit_used=credit_used,
             transaction_id=result.transaction_id,
             transaction_reference=result.custom_identifier,
-       )
+        )
 
-        CreditService.add_credit(
-          user_id=user_id,
-         amount=charged_amount
-       )
-        
         # ---------------------------
-        # Refresh wallet session
+        # FAILED CASE
         # ---------------------------
-        try:
-            new_balance = CreditService.get_balance(user_id)
-            session["user_balance"] = new_balance
-        except Exception:
-            pass
-
         if result.status in {"FAILED", "REFUNDED"}:
             payload_obj["status"] = "FAILED"
             payload_obj["reason"] = "recharge_failed"
 
+        # ---------------------------
+        # ✅ WALLET CASHBACK
+        # ---------------------------
+        if user_id and result.status == "SUCCESS":
+            try:
+                cashback = round(charged_amount * 0.025, 2)
+
+                if cashback > 0:
+                    CreditService.add_credit(
+                        user_id=user_id,
+                        amount=cashback
+                    )
+
+            except Exception as wallet_error:
+                logger.exception("Wallet cashback error: %s", wallet_error)
+
+        # ---------------------------
+        # SAVE RESULT
+        # ---------------------------
         IdempotencyService.store_result(idem_key, payload_obj)
         _store_payment_success_payload(payload_obj)
 
         # ---------------------------
-        # Email success
+        # REFRESH WALLET SESSION
         # ---------------------------
+        try:
+            if user_id:
+                session["user_balance"] = CreditService.get_balance(user_id)
+        except Exception:
+            pass
+
         # ---------------------------
-# Email success (ONLY when reloadly success)
-# ---------------------------
+        # EMAIL
+        # ---------------------------
         if user_email and result.status == "SUCCESS":
             try:
                 EmailService.send_payment_success(
