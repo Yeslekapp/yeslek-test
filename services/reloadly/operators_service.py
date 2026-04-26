@@ -151,7 +151,7 @@ def lookup_phone_number(phone: str, country: str) -> Optional[Dict[str, Any]]:
                 extra={
                     "status_code": response.status_code,
                     "country": normalized_country,
-                    "message": _extract_reloadly_error(response),
+                    "error": _extract_reloadly_error(response),  # ✅ FIX
                 },
             )
             return None

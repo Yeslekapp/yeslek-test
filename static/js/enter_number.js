@@ -54,10 +54,11 @@
   function digitsOnly(value) {
     return String(value || "").replace(/[^\d]/g, "");
   }
-function digitsOnly(value) {
-  return String(value || "").replace(/[^\d]/g, "");
+function setPhoneValue(value) {
+  _isProgrammaticUpdate = true;
+  phoneInput.value = value;
+  _isProgrammaticUpdate = false;
 }
-
 // ---------------------------
 // Phone rules validation
 // ---------------------------
@@ -202,17 +203,6 @@ function validateByCountry(iso, e164) {
     }
   }
 
-function setCityByIso(iso) {
-  if (!cityImage) return;
-
-  const normalizedIso = sanitizeIso(iso);
-
-  cityImage.src =
-    "https://source.unsplash.com/1200x600/?" +
-    normalizedIso +
-    ",capital,city";
-}
-
   function formatForDisplay(e164) {
     return e164 ? e164.replace(/\s+/g, "") : "";
   }
@@ -284,48 +274,74 @@ function setCityByIso(iso) {
     return cleaned;
   }
 
-  // ---------------------------
-  // Country state
-  // ---------------------------
-  function applyCountry(country, options = {}) {
-    if (!country) {
-      return;
-    }
-
-    const iso = sanitizeIso(country.iso || country.iso2);
-    const dial = country.dial || "";
-    const shouldSetPrefix = !!options.setPrefixIfEmpty;
-
-    syncCountryIso(iso);
-    syncCountryCode(dial);
-
-    if (countryFlag) {
-      countryFlag.textContent = country.flag || "";
-    }
-
-    setCityByIso(iso);
-
-    if (shouldSetPrefix && phoneInput) {
-      const nextValue = formatForDisplay(dial);
-      setPhoneValue(nextValue);
-      syncHiddenE164(dial);
-    }
+// ---------------------------
+// Country state
+// ---------------------------
+function applyCountry(country, options = {}) {
+  if (!country) {
+    return;
   }
 
-  function syncCountryFromPhone(value) {
-    const country = findCountryByDialPrefix(value);
+  const iso = sanitizeIso(country.iso || country.iso2);
+  const dial = country.dial || "";
 
-    if (!country) {
-      return;
-    }
+  const shouldSetPrefix = !!options.setPrefixIfEmpty;
+  const forceReplace = !!options.forceReplaceDial;
 
-    const currentIso = getSelectedIso();
-    const nextIso = sanitizeIso(country.iso || country.iso2);
+  syncCountryIso(iso);
+  syncCountryCode(dial);
 
-    if (currentIso !== nextIso) {
-      applyCountry(country, { setPrefixIfEmpty: false });
-    }
+  if (countryFlag) {
+    countryFlag.textContent = country.flag || "";
   }
+
+  setCityByIso(iso);
+
+  if (!phoneInput) return;
+
+  const current = phoneInput.value || "";
+
+  // ---------------------------
+  // FORCE replace (user change country)
+  // ---------------------------
+  if (forceReplace) {
+    const digits = digitsOnly(current);
+    const newDial = digitsOnly(dial || "");
+
+    // supprime ancien code (1 à 4 chiffres)
+    const rest = digits.replace(/^\d{1,4}/, "");
+
+    const next = "+" + newDial + rest;
+
+    setPhoneValue(next);
+    syncHiddenE164(next);
+    return;
+  }
+
+  // ---------------------------
+  // Initial prefix (empty input)
+  // ---------------------------
+  if (shouldSetPrefix && !current.trim()) {
+    const nextValue = formatForDisplay(dial);
+    setPhoneValue(nextValue);
+    syncHiddenE164(dial);
+  }
+}
+
+function syncCountryFromPhone(value) {
+  const country = findCountryByDialPrefix(value);
+
+  if (!country) {
+    return;
+  }
+
+  const currentIso = getSelectedIso();
+  const nextIso = sanitizeIso(country.iso || country.iso2);
+
+  if (currentIso !== nextIso) {
+    applyCountry(country, { setPrefixIfEmpty: false });
+  }
+}
 
   // ---------------------------
   // UI states
@@ -489,11 +505,12 @@ function setCityByIso(iso) {
       return;
     }
 
-    text = sanitizeToPhoneInput(text);
+text = sanitizeToPhoneInput(text);
 
-    if (!text.startsWith("+")) {
-      text = "+" + digitsOnly(text);
-    }
+// force affichage du "+" immédiatement (UX mobile clean)
+if (phoneInput.value !== text) {
+  setPhoneValue(text);
+}
 
     const digitsBeforeNormalize = digitsOnly(text);
     if (digitsBeforeNormalize.length > 15) {
@@ -578,60 +595,144 @@ function setCityByIso(iso) {
     }
   }
 
+// ---------------------------
+// Events (FINAL SAFE)
+// ---------------------------
+function bindEvents() {
+
   // ---------------------------
-  // Events
+  // Input typing
   // ---------------------------
-  function bindEvents() {
-    phoneInput?.addEventListener("input", () => {
-      if (_isProgrammaticUpdate) {
-        return;
-      }
+  phoneInput?.addEventListener("input", () => {
+    if (_isProgrammaticUpdate) return;
 
-      lastLookupKey = "";
-      lastLookupValid = false;
-      validateAndSync();
-    });
+    lastLookupKey = "";
+    lastLookupValid = false;
 
-    phoneInput?.addEventListener("blur", () => {
-      tzLookupNumber();
-    });
+    validateAndSync();
+    updateButtonPosition(); // bouton dynamique
+  });
+  // ---------------------------
+// Prevent removing +
+// ---------------------------
+phoneInput?.addEventListener("keydown", (e) => {
+  if (!phoneInput.value.startsWith("+")) return;
 
-    contactBtn?.addEventListener("click", pickContact);
-
-    document.addEventListener("tz:country-selected", (event) => {
-      const country = event.detail?.country;
-      if (!country) {
-        return;
-      }
-
-      applyCountry(country, { setPrefixIfEmpty: true });
-      lastLookupKey = "";
-      lastLookupValid = false;
-      validateAndSync();
-      phoneInput?.focus();
-    });
-
-    form?.addEventListener("submit", async (e) => {
-      validateAndSync();
-
-      if (!phoneE164?.value) {
-        e.preventDefault();
-        return;
-      }
-
-      if (lastLookupValid) {
-        return;
-      }
-
-      e.preventDefault();
-      await tzLookupNumber();
-
-      if (lastLookupValid) {
-        form.submit();
-      }
-    });
+  if (
+    (e.key === "Backspace" && phoneInput.selectionStart === 1) ||
+    (e.key === "Delete" && phoneInput.selectionStart === 0)
+  ) {
+    e.preventDefault();
   }
 
+  if (
+    phoneInput.selectionStart === 0 &&
+    (e.key === "ArrowLeft" || e.key === "Home")
+  ) {
+    e.preventDefault();
+  }
+});
+
+phoneInput?.addEventListener("paste", (e) => {
+  e.preventDefault();
+
+  const paste = (e.clipboardData || window.clipboardData).getData("text");
+
+  let cleaned = sanitizeToPhoneInput(paste);
+
+  setPhoneValue(cleaned);
+  validateAndSync();
+});
+
+  // ---------------------------
+  // Blur → force validation API
+  // ---------------------------
+  phoneInput?.addEventListener("blur", () => {
+    tzLookupNumber();
+
+    // clavier fermé
+    document.body.classList.remove("tz-keyboard-open");
+  });
+
+  // ---------------------------
+  // Focus → clavier ouvert
+  // ---------------------------
+  phoneInput?.addEventListener("focus", () => {
+    document.body.classList.add("tz-keyboard-open");
+  });
+
+  // ---------------------------
+  // Contact picker
+  // ---------------------------
+  contactBtn?.addEventListener("click", pickContact);
+
+  // ---------------------------
+  // Country selected
+  // ---------------------------
+  document.addEventListener("tz:country-selected", (event) => {
+    const country = event.detail?.country;
+    if (!country) return;
+
+    applyCountry(country, { forceReplaceDial: true });
+
+    lastLookupKey = "";
+    lastLookupValid = false;
+
+    validateAndSync();
+    updateButtonPosition();
+
+    phoneInput?.focus();
+  });
+
+  // ---------------------------
+  // Submit
+  // ---------------------------
+  form?.addEventListener("submit", async (e) => {
+    validateAndSync();
+
+    if (!phoneE164?.value) {
+      e.preventDefault();
+      return;
+    }
+
+    if (lastLookupValid) {
+      return;
+    }
+
+    e.preventDefault();
+
+    await tzLookupNumber();
+
+    if (lastLookupValid) {
+      form.submit();
+    }
+  });
+
+}
+
+
+// ---------------------------
+// Keyboard follow (REAL mobile behavior)
+// ---------------------------
+
+function bindKeyboardFollow() {
+  if (!continueBtn) return;
+
+  let initialHeight = window.innerHeight;
+
+  window.addEventListener("resize", () => {
+    const currentHeight = window.innerHeight;
+
+    // clavier ouvert (écran plus petit)
+    if (currentHeight < initialHeight - 100) {
+      continueBtn.classList.add("is-active");
+      document.body.classList.add("tz-keyboard-open");
+    } else {
+      continueBtn.classList.remove("is-active");
+      document.body.classList.remove("tz-keyboard-open");
+    }
+  });
+}
   // ---------------------------
   // Init
   // ---------------------------
@@ -670,7 +771,7 @@ function setCityByIso(iso) {
 
     validateAndSync();
     bindEvents();
-
+    bindKeyboardFollow();
     requestAnimationFrame(() => {
       phoneInput.focus();
       try {
@@ -680,6 +781,20 @@ function setCityByIso(iso) {
       }
     });
   }
-
   init();
+  // ---------------------------
+// Dynamic button position (FINAL FIX)
+// ---------------------------
+
+function updateButtonPosition() {
+  if (!phoneInput || !continueBtn) return;
+
+  const value = phoneInput.value.trim();
+
+  if (value.length > 3) {
+    continueBtn.classList.add("is-active"); // monte
+  } else {
+    continueBtn.classList.remove("is-active"); // reste en bas
+  }
+}
 })();
