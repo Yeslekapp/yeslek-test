@@ -75,7 +75,9 @@ def google_login():
 
     flow.redirect_uri = GOOGLE_REDIRECT_URI
 
-    auth_url, _ = flow.authorization_url(prompt="consent")
+    auth_url, _ = flow.authorization_url(
+    prompt="select_account"
+)
 
     return redirect(auth_url)
 
@@ -84,49 +86,70 @@ def google_login():
 # ============================================================
 @auth_bp.route("/google/callback")
 def google_callback():
+    try:
+        flow = Flow.from_client_config(
+            {
+                "web": {
+                    "client_id": GOOGLE_CLIENT_ID,
+                    "client_secret": GOOGLE_CLIENT_SECRET,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": [GOOGLE_REDIRECT_URI]
+                }
+            },
+            scopes=[
+                "https://www.googleapis.com/auth/userinfo.email",
+                "https://www.googleapis.com/auth/userinfo.profile",
+                "openid"
+            ]
+        )
 
-    flow = Flow.from_client_config(
-        {
-            "web": {
-                "client_id": GOOGLE_CLIENT_ID,
-                "client_secret": GOOGLE_CLIENT_SECRET,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [GOOGLE_REDIRECT_URI]
-            }
-        },
-        scopes=[
-            "https://www.googleapis.com/auth/userinfo.email",
-            "https://www.googleapis.com/auth/userinfo.profile",
-            "openid"
-        ]
-    )
+        flow.redirect_uri = GOOGLE_REDIRECT_URI
 
-    flow.redirect_uri = GOOGLE_REDIRECT_URI
+        # 🔥 sécurité : utilisateur annule / erreur Google
+        if "error" in request.args:
+            print("GOOGLE ERROR:", request.args)
+            return redirect(url_for("auth.login"))
 
-    flow.fetch_token(authorization_response=request.url)
+        # 🔥 échange token
+        flow.fetch_token(authorization_response=request.url)
 
-    credentials = flow.credentials
+        credentials = flow.credentials
 
-    userinfo = requests.get(
-        "https://www.googleapis.com/oauth2/v2/userinfo",
-        headers={"Authorization": f"Bearer {credentials.token}"}
-    ).json()
+        # 🔥 appel userinfo sécurisé
+        res = requests.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {credentials.token}"},
+            timeout=5
+        )
 
-    email = userinfo.get("email")
-    name = userinfo.get("name")
-    if not email:
-     return redirect(url_for("auth.login"))
+        if res.status_code != 200:
+            print("USERINFO ERROR:", res.text)
+            return redirect(url_for("auth.login"))
 
-    # ✅ USER DB (comme ton flow email)
-    user = get_or_create_user(email=email, name=name)
+        userinfo = res.json()
 
-    session["user_id"] = user.id
-    session["user_email"] = email
-    session["user_name"] = name
-    session.permanent = True
+        email = userinfo.get("email")
+        name = userinfo.get("name")
 
-    return redirect("/")
+        # 🔥 sécurité email obligatoire
+        if not email:
+            return redirect(url_for("auth.login"))
+
+        # ✅ USER DB
+        user = get_or_create_user(email=email, name=name)
+
+        # ✅ SESSION
+        session["user_id"] = user.id
+        session["user_email"] = email
+        session["user_name"] = name
+        session.permanent = True
+
+        return redirect("/")
+
+    except Exception as e:
+        print("GOOGLE CALLBACK ERROR:", str(e))
+        return redirect(url_for("auth.login"))
 
 # ============================================================
 # LOGIN EMAIL
