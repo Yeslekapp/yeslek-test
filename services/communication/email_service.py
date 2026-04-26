@@ -133,7 +133,7 @@ class EmailService:
 
         amount = payload.get("amount") or 0
         charged_amount = payload.get("charged_amount") or amount
-        points_used = payload.get("points_used") or 0
+        credit_used = payload.get("credit_used") or 0
 
         reference = payload.get("reference")
         date = payload.get("date")
@@ -260,8 +260,8 @@ Yeslek
 <tr><td style="height:6px"></td></tr>
 
 <tr>
-<td style="color:#9ca3af;">Points utilisés :</td>
-<td style="text-align:right;">-{points_used:.2f} €</td>
+<td style="color:#9ca3af;">Crédit utilisé :</td>
+<td style="text-align:right;">-{credit_used:.2f} €</td>
 </tr>
 
 <tr><td style="height:10px"></td></tr>
