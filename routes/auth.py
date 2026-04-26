@@ -6,6 +6,9 @@ from flask import Blueprint, render_template, request, session, redirect, url_fo
 import re
 import time
 
+from google_auth_oauthlib.flow import Flow
+import requests
+
 from services.communication.email_otp_service import EmailOTPService
 from services.communication.sms_service import SMSService
 from services.communication.otp_service import OtpService
@@ -17,7 +20,14 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 # CONFIG OTP
 # ---------------------------
 OTP_RESEND_COOLDOWN = 30
-
+# ---------------------------
+# GOOGLE CONFIG
+# ---------------------------
+from config import (
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI
+)
 
 # ---------------------------
 # Helpers
@@ -40,6 +50,83 @@ def _mask_phone(phone: str) -> str:
         return "****"
     return f"{p[:3]} **** {p[-2:]}"
 
+# ============================================================
+# GOOGLE LOGIN
+# ============================================================
+@auth_bp.route("/google/login")
+def google_login():
+
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": [GOOGLE_REDIRECT_URI]
+            }
+        },
+        scopes=[
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "openid"
+        ]
+    )
+
+    flow.redirect_uri = GOOGLE_REDIRECT_URI
+
+    auth_url, _ = flow.authorization_url(prompt="consent")
+
+    return redirect(auth_url)
+
+# ============================================================
+# GOOGLE CALLBACK
+# ============================================================
+@auth_bp.route("/google/callback")
+def google_callback():
+
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": [GOOGLE_REDIRECT_URI]
+            }
+        },
+        scopes=[
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "openid"
+        ]
+    )
+
+    flow.redirect_uri = GOOGLE_REDIRECT_URI
+
+    flow.fetch_token(authorization_response=request.url)
+
+    credentials = flow.credentials
+
+    userinfo = requests.get(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        headers={"Authorization": f"Bearer {credentials.token}"}
+    ).json()
+
+    email = userinfo.get("email")
+    name = userinfo.get("name")
+    if not email:
+     return redirect(url_for("auth.login"))
+
+    # ✅ USER DB (comme ton flow email)
+    user = get_or_create_user(email=email, name=name)
+
+    session["user_id"] = user.id
+    session["user_email"] = email
+    session["user_name"] = name
+    session.permanent = True
+
+    return redirect("/")
 
 # ============================================================
 # LOGIN EMAIL
@@ -188,11 +275,11 @@ def otp():
 
         session["user_id"] = user.id
         session["user_phone"] = phone_value
-        session.permanent = True  # 🔥 AJOUTE ÇA
+        session.permanent = True
         session.pop("pending_phone", None)
 
         next_url = request.args.get("next")
-    return redirect(next_url or "/", code=303) 
+        return redirect(next_url or "/", code=303)
 
     masked_phone = _mask_phone(phone_value)
 
@@ -201,7 +288,6 @@ def otp():
         phone=phone_value,
         masked_phone=masked_phone
     )
-
 
 # ============================================================
 # LOGOUT

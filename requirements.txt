@@ -23,3 +23,8 @@ python-dotenv==1.2.1
 # SMS (Telnyx)
 # ---------------------------
 telnyx==4.108.0
+# ---------------------------
+# Google OAuth
+# ---------------------------
+google-auth-oauthlib==1.2.0
+google-auth==2.35.0

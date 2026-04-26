@@ -116,3 +116,14 @@ MAX_CONTENT_LENGTH = 2 * 1024 * 1024
 if not IS_PROD:
     print("[RELOADLY]", RELOADLY_BASE_URL)
     print("[STRIPE MODE]", STRIPE_MODE)
+
+    # ---------------------------
+# Google OAuth
+# ---------------------------
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_REDIRECT_URI = os.getenv(
+    "GOOGLE_REDIRECT_URI",
+    "https://yeslek.com/auth/google/callback"
+)
