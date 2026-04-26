@@ -2074,3 +2074,28 @@ FORFAIT SLIDER (SAFE)
   color: #16a34a;
   font-weight: 600;
 }
+
+
+/* ---------------------------
+# Mobile spacing FIX
+--------------------------- */
+
+@media (max-width: 767px) {
+
+  .tz-container {
+    padding: 12px; /* plus serré */
+  }
+
+  .tz-page {
+    padding: 6px 0 100px;
+  }
+
+  .tz-card {
+    padding: 14px; /* réduit légèrement */
+  }
+
+  .tz-navbar-inner {
+    padding: 10px 12px;
+  }
+
+}
