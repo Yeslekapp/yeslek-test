@@ -97,3 +97,24 @@ class UserService:
         user.avatar = avatar_url
 
         db.commit()
+
+    # ---------------------------
+    # Get all users (ADMIN)
+    # ---------------------------
+    @staticmethod
+    def get_all():
+
+        db = SessionLocal()
+
+        users = db.query(User).all()
+
+        result = []
+
+        for u in users:
+            result.append({
+                "user_id": u.id,
+                "email": u.email,
+                "name": u.name,
+            })
+
+        return result

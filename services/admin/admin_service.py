@@ -15,11 +15,9 @@ from services.order.order_service import OrderService
 from services.core.utils import mask_phone
 
 
-class AdminService:
 
-    # ---------------------------
-    # Helpers
-    # ---------------------------
+
+class AdminService:
     @staticmethod
     def _safe_float(value, default=0.0):
         try:
@@ -46,9 +44,6 @@ class AdminService:
                 continue
 
         return None
-
-class AdminService:
-
     # ---------------------------
     # Convert DB -> dict
     # ---------------------------
@@ -80,8 +75,8 @@ class AdminService:
 
     @staticmethod
     def _users_map():
-        users = UserService._load() or []
-        return {u["user_id"]: u for u in users if u.get("user_id")}
+     users = UserService.get_all() or []
+     return {u["user_id"]: u for u in users if u.get("user_id")}
 
     @staticmethod
     def _transaction_reference(phone, amount, date):
@@ -230,17 +225,17 @@ class AdminService:
     def get_user_full_detail(user_id):
 
         history = HistoryService.get_all()
-        users = UserService._load()
+        users = UserService.get_all()
         cards = OrderService.get_saved_cards()
 
         user = next((u for u in users if u["user_id"] == user_id), None)
 
         user_history = [
-            h for h in history if h.get("user_id") == user_id
-        ]
+        h for h in history if h.user_id == user_id
+      ]
 
         total = sum(
-            AdminService._safe_float(h["amount"])
+            AdminService._safe_float(h.amount)
             for h in user_history
         )
 
@@ -248,9 +243,9 @@ class AdminService:
         avg = round(total / count, 2) if count else 0
 
         countries = [
-            h.get("country")
-            for h in user_history if h.get("country")
-        ]
+         h.country
+        for h in user_history if h.country
+     ]
 
         country_stats = {}
         for c in countries:

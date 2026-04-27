@@ -2169,3 +2169,36 @@ Keyboard animation smooth
 body.tz-keyboard-open .tz-btn-dynamic{
   transform: translateY(-10px);
 }
+
+/* ---------------------------
+LOGOUT FIX (isolé propre)
+--------------------------- */
+
+.tz-logout-actions{
+  display:flex;
+  gap:10px;
+  margin-top:16px;
+}
+
+.tz-logout-btn-primary,
+.tz-logout-btn-secondary{
+  height:52px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  text-decoration:none;
+
+  position: static !important; /* 🔥 FIX CRITIQUE */
+}
+
+.tz-logout-btn-primary{
+  background:#000;
+  color:#fff;
+}
+
+.tz-logout-btn-secondary{
+  background:#eee;
+  color:#111;
+}

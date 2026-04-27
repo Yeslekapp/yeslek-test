@@ -12,17 +12,18 @@
       </div>
     </div>
 
-<div class="tz-row tz-row--gap">
+    <!-- BUTTONS -->
+    <div class="tz-row tz-row--gap tz-logout-actions">
 
-  <a href="{{ url_for('recharge.enter_number_get') }}" class="tz-primary-btn tz-btn-secondary tz-grow">
-    {{ t("common.no") }}
-  </a>
+      <a href="{{ url_for('recharge.enter_number_get') }}"
+         class="tz-logout-btn-secondary tz-grow">
+        {{ t("common.no") }}
+      </a>
 
-  <a href="{{ url_for('auth.logout') }}" class="tz-primary-btn tz-grow">
-    {{ t("common.yes") }}
-  </a>
-
-</div>
+      <a href="{{ url_for('auth.logout') }}"
+         class="tz-logout-btn-primary tz-grow">
+        {{ t("common.yes") }}
+      </a>
 
     </div>
 
