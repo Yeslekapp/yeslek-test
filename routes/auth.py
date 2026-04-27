@@ -144,6 +144,7 @@ def google_callback():
         session["user_email"] = email
         session["user_name"] = name
         session.permanent = True
+        print("SESSION AFTER GOOGLE LOGIN:", dict(session))
 
         return redirect("/")
 

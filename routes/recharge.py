@@ -293,6 +293,7 @@ def lookup_number():
 
 @recharge_bp.get("/enter-number")
 def enter_number_get():
+    print("SESSION ENTER NUMBER:", dict(session))
 
     # ---------------------------
     # RESET FLOW (IMPORTANT)
