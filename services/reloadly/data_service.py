@@ -426,15 +426,20 @@ def get_reloadly_quote(
 
 
 # ---------------------------
-# Send Data Topup
+# Send Data Topup (FINAL FIXED)
 # ---------------------------
 
 def send_data_topup(
     phone: str,
     plan_id: int,
     country_iso: str,
+    operator_id: int,  # 🔥 FIX CRITIQUE
     custom_identifier: str | None = None,
 ) -> Dict[str, Any]:
+
+    # ---------------------------
+    # Normalize
+    # ---------------------------
     normalized_phone = _normalize_phone(phone)
     normalized_country = _normalize_country_iso(country_iso)
 
@@ -452,26 +457,42 @@ def send_data_topup(
     if normalized_plan_id <= 0:
         raise RuntimeError("Invalid plan id")
 
-    operator_data = _lookup_operator(normalized_phone, normalized_country)
+    try:
+        normalized_operator_id = int(operator_id)
+    except Exception as exc:
+        raise RuntimeError("Invalid operator id") from exc
 
+    if normalized_operator_id <= 0:
+        raise RuntimeError("Invalid operator id")
+
+    # ---------------------------
+    # Auth
+    # ---------------------------
     token = get_reloadly_token()
     headers = _build_headers(token)
 
     url = f"{RELOADLY_V1_URL}/topups"
 
+    # ---------------------------
+    # 🔥 FIX PAYLOAD (NO LOOKUP)
+    # ---------------------------
     payload = {
-        "operatorId": operator_data["operator_id"],
+        "operatorId": normalized_operator_id,  # ✅ FIX PRINCIPAL
         "productId": normalized_plan_id,
-        "customIdentifier": str(custom_identifier or "").strip() or None,
         "recipientPhone": {
-            "countryCode": operator_data["country_code"],
+            "countryCode": normalized_country,
             "number": _extract_local_number(normalized_phone),
         },
     }
 
-    if not payload["customIdentifier"]:
-        payload.pop("customIdentifier", None)
+    # optional custom id
+    custom_id = str(custom_identifier or "").strip()
+    if custom_id:
+        payload["customIdentifier"] = custom_id
 
+    # ---------------------------
+    # API CALL
+    # ---------------------------
     res = _request_with_token_refresh(
         "POST",
         url,
@@ -481,19 +502,24 @@ def send_data_topup(
     )
 
     if res.status_code not in (200, 201):
-        raise RuntimeError(f"Reloadly DATA topup failed: {_extract_error_message(res)}")
+        raise RuntimeError(
+            f"Reloadly DATA topup failed: {_extract_error_message(res)}"
+        )
 
     data = _safe_json(res)
     if not isinstance(data, dict):
         raise RuntimeError("Invalid Reloadly DATA response")
 
+    # ---------------------------
+    # RESPONSE
+    # ---------------------------
     transaction_id = data.get("transactionId")
-    returned_custom_id = data.get("customIdentifier") or payload.get("customIdentifier")
+    returned_custom_id = data.get("customIdentifier") or custom_id
 
     return {
         "transaction_id": transaction_id,
         "custom_id": returned_custom_id,
-        "status": _normalize_status(data.get("status")) if data.get("status") else "PROCESSING",
-        "operator_id": data.get("operatorId") or operator_data["operator_id"],
+        "status": _normalize_status(data.get("status")),
+        "operator_id": data.get("operatorId") or normalized_operator_id,
         "raw": data,
     }
