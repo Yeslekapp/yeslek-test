@@ -1768,19 +1768,8 @@ html, body {
     touch-action: manipulation;
     overscroll-behavior: none;
 }
-.tz-page .tz-primary-btn{
-position:fixed;
-bottom:20px;
-left:16px;
-right:16px;
-width:auto;
-max-width:520px;
-margin:auto;
-z-index:100;
-}
-.tz-page{
-padding:8px 0 110px;
-}
+
+
 /* ---------------------------
 Enter number background FIX
 --------------------------- */
@@ -2108,24 +2097,6 @@ Enter Number page spacing
 }
 
 /* ---------------------------
-Button default (bottom)
---------------------------- */
-.tz-primary-btn{
-  position: fixed;
-  bottom: 20px;
-  left: 16px;
-  right: 16px;
-
-  width: auto;
-  max-width: 520px;
-  margin: auto;
-
-  z-index: 100;
-
-  transition: all .25s ease;
-}
-
-/* ---------------------------
 Enter Number page spacing
 --------------------------- */
 .tz-page--enter{
@@ -2202,3 +2173,4 @@ LOGOUT FIX (isolé propre)
   background:#eee;
   color:#111;
 }
+

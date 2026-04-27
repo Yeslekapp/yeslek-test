@@ -564,7 +564,7 @@ def card_post():
 
 
 # ---------------------------
-# Stripe webhook (FINAL PROD SAFE)
+# Stripe webhook (FINAL PRODUCTION ULTRA SAFE)
 # ---------------------------
 @payment_bp.post("/webhook")
 def stripe_webhook_post():
@@ -572,10 +572,13 @@ def stripe_webhook_post():
     payload = request.get_data()
     sig_header = request.headers.get("Stripe-Signature", "")
 
+    # ---------------------------
+    # Verify Stripe signature
+    # ---------------------------
     try:
         event = StripeService.construct_webhook_event(payload, sig_header)
     except Exception as exc:
-        print("❌ Stripe webhook signature error:", exc)
+        logger.exception("❌ Stripe signature error: %s", exc)
         return jsonify({"ok": False}), 400
 
     event_type = event.get("type")
@@ -587,18 +590,17 @@ def stripe_webhook_post():
     if event_type != "payment_intent.succeeded":
         return jsonify({"ok": True}), 200
 
-    stripe_status = _safe_str(event_data.get("status"))
-    if stripe_status != "succeeded":
+    if _safe_str(event_data.get("status")) != "succeeded":
         return jsonify({"ok": True}), 200
 
-    metadata = event_data.get("metadata", {}) or {}
+    metadata = event_data.get("metadata") or {}
     idem_key = _safe_str(metadata.get("payment_idempotency_key"))
 
     if not idem_key:
         return jsonify({"ok": False, "error": "missing_idempotency_key"}), 400
 
     # ---------------------------
-    # Idempotency (SAFE)
+    # Idempotency protection
     # ---------------------------
     existing = IdempotencyService.get_result(idem_key)
     if existing:
@@ -607,8 +609,7 @@ def stripe_webhook_post():
     payment_reference = _safe_str(event_data.get("id"))
     session["last_payment_intent_id"] = payment_reference
 
-    existing_tx = get_existing_transaction(payment_reference)
-    if existing_tx:
+    if get_existing_transaction(payment_reference):
         logger.warning("⚠️ Duplicate recharge prevented")
         return jsonify({"ok": True, "deduplicated": True}), 200
 
@@ -617,8 +618,10 @@ def stripe_webhook_post():
     # ---------------------------
     phone = _safe_str(metadata.get("recharge_phone"))
     country_iso = _safe_str(metadata.get("country_iso")).upper()
+
     forfait_id_raw = _safe_str(metadata.get("forfait_id"))
     operator_id_raw = _safe_str(metadata.get("operator_id"))
+
     operator_name = _safe_str(metadata.get("operator_name"))
     operator_logo = _safe_str(metadata.get("operator_logo"))
 
@@ -630,7 +633,7 @@ def stripe_webhook_post():
     credit_used = _safe_float(metadata.get("credit_used"), 0.0)
 
     # ---------------------------
-    # Validation
+    # Validation sécurité
     # ---------------------------
     if not phone or base_amount <= 0:
         IdempotencyService.store_result(
@@ -639,7 +642,7 @@ def stripe_webhook_post():
         )
         return jsonify({"ok": True}), 200
 
-    stripe_amount_received = _safe_float(event_data.get("amount_received"), 0.0) / 100.0
+    stripe_amount = _safe_float(event_data.get("amount_received"), 0.0) / 100.0
     stripe_currency = _safe_str(event_data.get("currency")).lower()
 
     if stripe_currency != "eur":
@@ -649,12 +652,31 @@ def stripe_webhook_post():
         )
         return jsonify({"ok": True}), 200
 
-    if abs(stripe_amount_received - charged_amount) > 0.01:
+    if abs(stripe_amount - charged_amount) > 0.01:
         IdempotencyService.store_result(
             idem_key,
             {"status": "FAILED", "reason": "amount_mismatch"},
         )
         return jsonify({"ok": True}), 200
+
+    # ---------------------------
+    # 🔒 FORFAIT SAFETY (CRITIQUE)
+    # ---------------------------
+    if forfait_id_raw:
+        try:
+            plan_id = int(forfait_id_raw)
+        except Exception:
+            IdempotencyService.store_result(
+                idem_key,
+                {"status": "FAILED", "reason": "invalid_plan_id"},
+            )
+            return jsonify({"ok": True}), 200
+
+        amount_value = None  # DATA
+
+    else:
+        plan_id = None
+        amount_value = round(base_amount, 2)  # AIRTIME
 
     # ---------------------------
     # PROCESS RECHARGE
@@ -665,8 +687,8 @@ def stripe_webhook_post():
             payment_reference=payment_reference,
             phone=phone,
             country_iso=country_iso,
-            amount=None if forfait_id_raw else round(base_amount, 2),
-            plan_id=int(forfait_id_raw) if forfait_id_raw else None,
+            amount=amount_value,
+            plan_id=plan_id,
             operator_id=int(operator_id_raw) if operator_id_raw else None,
             user_id=user_id or session.get("user_id"),
             metadata={
@@ -685,37 +707,30 @@ def stripe_webhook_post():
         )
 
         # ---------------------------
-        # FAILED CASE
+        # Gestion erreurs recharge
         # ---------------------------
         if result.status in {"FAILED", "REFUNDED"}:
             payload_obj["status"] = "FAILED"
             payload_obj["reason"] = "recharge_failed"
 
         # ---------------------------
-        # ✅ WALLET CASHBACK
+        # Cashback wallet
         # ---------------------------
         if user_id and result.status == "SUCCESS":
             try:
                 cashback = round(charged_amount * 0.025, 2)
-
                 if cashback > 0:
-                    CreditService.add_credit(
-                        user_id=user_id,
-                        amount=cashback
-                    )
-
-            except Exception as wallet_error:
-                logger.exception("Wallet cashback error: %s", wallet_error)
+                    CreditService.add_credit(user_id=user_id, amount=cashback)
+            except Exception:
+                logger.exception("Wallet cashback error")
 
         # ---------------------------
-        # SAVE RESULT
+        # Save result
         # ---------------------------
         IdempotencyService.store_result(idem_key, payload_obj)
         _store_payment_success_payload(payload_obj)
 
-        # ---------------------------
-        # REFRESH WALLET SESSION
-        # ---------------------------
+        # refresh balance
         try:
             if user_id:
                 session["user_balance"] = CreditService.get_balance(user_id)
@@ -723,7 +738,7 @@ def stripe_webhook_post():
             pass
 
         # ---------------------------
-        # EMAIL
+        # Email
         # ---------------------------
         if user_email and result.status == "SUCCESS":
             try:
@@ -735,11 +750,11 @@ def stripe_webhook_post():
                     operator_name=operator_name,
                     operator_logo=operator_logo,
                 )
-            except Exception as email_error:
-                print("❌ Email error:", email_error)
+            except Exception:
+                logger.exception("Email error")
 
-    except TransactionServiceError as process_error:
-        print("❌ Recharge processing error:", process_error)
+    except TransactionServiceError as e:
+        logger.exception("Recharge error: %s", e)
 
         IdempotencyService.store_result(
             idem_key,
@@ -748,12 +763,12 @@ def stripe_webhook_post():
 
         return jsonify({"ok": True}), 200
 
-    except Exception as process_error:
-        print("❌ Webhook processing error:", process_error)
+    except Exception as e:
+        logger.exception("Webhook unexpected error: %s", e)
 
         IdempotencyService.store_result(
             idem_key,
-            {"status": "FAILED", "reason": "unexpected_webhook_error"},
+            {"status": "FAILED", "reason": "unexpected_error"},
         )
 
         return jsonify({"ok": True}), 200

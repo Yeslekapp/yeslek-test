@@ -1,8 +1,10 @@
 {% extends "base.html" %}
+
 {% block content %}
 
 <div class="tz-auth">
 
+  <!-- ================= HEADER ================= -->
   <div class="tz-auth__header">
     <h1 class="tz-auth__title">
       {{ t("auth.otp_title") }}
@@ -14,10 +16,12 @@
     </p>
   </div>
 
+  <!-- ================= CARD ================= -->
   <div class="tz-auth-card">
 
-    <form method="post" data-tz-form>
+    <form method="post" id="otp-form" data-tz-form>
 
+      <!-- INPUT -->
       <div class="tz-field">
 
         <label class="tz-label" for="code">
@@ -50,10 +54,7 @@
 
       </div>
 
-      <button type="submit" class="tz-primary-btn" data-tz-submit>
-        {{ t("common.continue") }}
-      </button>
-
+      <!-- CHANGE EMAIL -->
       <div class="tz-resend" style="margin-top:15px;">
         <a class="tz-link-btn" href="{{ url_for('auth.login') }}">
           {{ t("auth.change_email") }}
@@ -64,19 +65,58 @@
 
   </div>
 
+  <!-- ================= FIXED BUTTON ================= -->
+  <div class="tz-auth-submit-fixed">
+    <button type="submit" form="otp-form" class="tz-primary-btn">
+      {{ t("common.continue") }}
+    </button>
+  </div>
+
 </div>
+
+<!-- ================= JS ================= -->
 
 <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 
 <script>
-  // 🔥 empêche retour vers OTP
-  window.history.replaceState(null, "", window.location.href);
+/* ---------------------------
+OTP UX + Security
+--------------------------- */
 
-  window.addEventListener("pageshow", function (event) {
-    if (event.persisted) {
-      window.location.href = "/";
+// 🔒 bloque retour arrière
+history.replaceState(null, "", location.href);
+window.addEventListener("popstate", () => {
+  history.pushState(null, "", location.href);
+});
+
+// 🔄 reload si page restaurée (mobile cache)
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
+
+// ⚡ auto-submit si 6 chiffres
+document.addEventListener("input", function (e) {
+  if (e.target.matches("[data-tz-otp]")) {
+    if (e.target.value.length === 6) {
+      document.getElementById("otp-form").submit();
     }
+  }
+});
+
+// 🎯 micro animation focus
+const input = document.querySelector("[data-tz-otp]");
+if (input) {
+  input.addEventListener("focus", () => {
+    input.style.transition = "0.2s";
+    input.style.transform = "scale(1.02)";
   });
+
+  input.addEventListener("blur", () => {
+    input.style.transform = "scale(1)";
+  });
+}
 </script>
 
 {% endblock %}
