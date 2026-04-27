@@ -331,7 +331,7 @@ def _db_update_status(
 
 
 # ---------------------------
-# Execute recharge (FINAL FIXED DATA)
+# Execute recharge (FINAL YESLEK STABLE)
 # ---------------------------
 
 def process_recharge(
@@ -454,28 +454,19 @@ def process_recharge(
         try:
 
             # ---------------------------
-            # 🔥 CORE FIX DATA vs AIRTIME
+            # 🔥 FIX FINAL RELOADLY
             # ---------------------------
-            if plan_id is not None:
+            # Tous les cas → topup (airtime + data fake)
+            # IMPORTANT : amount doit être le prix réel (ex: 3.32)
+            if amount is None:
+                raise TransactionServiceError("Amount requis pour recharge")
 
-                if not operator_id:
-                    raise TransactionServiceError("Missing operator_id for DATA recharge")
-
-                raw_result = send_data_topup(
-                    phone=phone,
-                    plan_id=int(plan_id),
-                    operator_id=int(operator_id),  # 🔥 FIX CRITIQUE
-                    country_iso=country_iso,
-                    custom_identifier=reference,
-                )
-
-            else:
-                raw_result = send_topup(
-                    phone=phone,
-                    amount=float(amount),
-                    country_iso=country_iso,
-                    custom_identifier=reference,
-                )
+            raw_result = send_topup(
+                phone=phone,
+                amount=float(amount),
+                country_iso=country_iso,
+                custom_identifier=reference,
+            )
 
             # ---------------------------
             # Normalize result
@@ -510,7 +501,6 @@ def process_recharge(
                     status="SUCCESS",
                     transaction_id=reloadly_transaction_id,
                     custom_identifier=reference,
-                    is_duplicate=False,
                     message="Recharge réussie",
                     raw=raw_result,
                 )
@@ -526,7 +516,6 @@ def process_recharge(
                     status="PROCESSING",
                     transaction_id=reloadly_transaction_id,
                     custom_identifier=reference,
-                    is_duplicate=False,
                     message="Recharge en cours",
                     raw=raw_result,
                 )
@@ -541,7 +530,6 @@ def process_recharge(
                 status=raw_status,
                 transaction_id=reloadly_transaction_id,
                 custom_identifier=reference,
-                is_duplicate=False,
                 message="Recharge échouée",
                 raw=raw_result,
             )

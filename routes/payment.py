@@ -633,6 +633,11 @@ def stripe_webhook_post():
     credit_used = _safe_float(metadata.get("credit_used"), 0.0)
 
     # ---------------------------
+    # 🔥 DEBUG IMPORTANT
+    # ---------------------------
+    logger.info("WEBHOOK DEBUG | operator_id_raw=%s | forfait_id=%s", operator_id_raw, forfait_id_raw)
+
+    # ---------------------------
     # Validation sécurité
     # ---------------------------
     if not phone or base_amount <= 0:
@@ -660,7 +665,7 @@ def stripe_webhook_post():
         return jsonify({"ok": True}), 200
 
     # ---------------------------
-    # 🔒 FORFAIT SAFETY (CRITIQUE)
+    # 🔒 FORFAIT / DATA LOGIC
     # ---------------------------
     if forfait_id_raw:
         try:
@@ -673,10 +678,26 @@ def stripe_webhook_post():
             return jsonify({"ok": True}), 200
 
         amount_value = None  # DATA
-
     else:
         plan_id = None
         amount_value = round(base_amount, 2)  # AIRTIME
+
+    # ---------------------------
+    # 🔥 FIX CRITIQUE OPERATOR ID
+    # ---------------------------
+    try:
+        operator_id = int(operator_id_raw)
+    except Exception:
+        operator_id = None
+
+    # sécurité DATA
+    if plan_id and not operator_id:
+        logger.error("❌ Missing operator_id for DATA recharge")
+        IdempotencyService.store_result(
+            idem_key,
+            {"status": "FAILED", "reason": "missing_operator_id"},
+        )
+        return jsonify({"ok": True}), 200
 
     # ---------------------------
     # PROCESS RECHARGE
@@ -689,7 +710,7 @@ def stripe_webhook_post():
             country_iso=country_iso,
             amount=amount_value,
             plan_id=plan_id,
-            operator_id=int(operator_id_raw) if operator_id_raw else None,
+            operator_id=operator_id,  # ✅ FIX FINAL
             user_id=user_id or session.get("user_id"),
             metadata={
                 "flow": "stripe_webhook",
