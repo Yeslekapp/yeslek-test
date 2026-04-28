@@ -544,6 +544,8 @@ def card_post():
 
     metadata = _build_checkout_metadata(idem_key)
     print("PAYMENT METADATA DEBUG:", metadata)
+    print("SESSION FORFAIT:", session.get("recharge_forfait"))
+    print("SESSION OPERATOR:", session.get("recharge_operator"))
     try:
         intent = StripeService.create_payment_intent(
             amount=ctx["final_amount"],

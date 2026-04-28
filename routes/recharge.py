@@ -169,6 +169,8 @@ def select_forfait_get():
     if operator_id:
         plans = get_reloadly_plans(operator)
 
+        print("FORFAITS FINAL:", plans)
+
     # ---------------------------
     # fallback UX
     # ---------------------------
@@ -344,6 +346,38 @@ def enter_number_post():
 
     session["recharge_phone"] = phone
     session["country_iso"] = country_iso.upper()
+
+    # ---------------------------
+    # 🔥 FIX: PRELOAD OPERATOR + DATA + AMOUNTS
+    # ---------------------------
+    try:
+        operator = lookup_phone_number(phone, country_iso)
+
+        if operator:
+            session["recharge_operator"] = operator
+
+            # 👉 DATA plans (forfaits)
+            if operator.get("supports_data"):
+                try:
+                    plans = get_reloadly_plans(operator)
+                except Exception:
+                    plans = []
+            else:
+                plans = []
+
+            session["recharge_data_plans"] = plans
+
+            # 👉 Amounts
+            try:
+                amounts = get_reloadly_operator_amounts(operator.get("id"))
+            except Exception:
+                amounts = {}
+
+            session["recharge_amounts"] = amounts
+
+    except Exception:
+        session["recharge_data_plans"] = []
+        session["recharge_amounts"] = {}
 
     return redirect(url_for("recharge.select_amount_get"))
 
