@@ -27,6 +27,7 @@ from routes.account import account_bp
 from routes.history import history_bp
 from routes.admin import admin_bp
 from routes.wallet import wallet_bp
+from routes.reloadly import reloadly_bp
 # ---------------------------
 # Create tables (TEMP)
 # ---------------------------
@@ -244,6 +245,7 @@ def create_app() -> Flask:
     app.register_blueprint(history_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(wallet_bp)
+    app.register_blueprint(reloadly_bp)
 
     return app
 

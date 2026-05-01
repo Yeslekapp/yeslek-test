@@ -226,6 +226,57 @@ def select_forfait_post():
 
     return jsonify({"ok": True})
 
+# ---------------------------
+# API: get forfaits live (OPTIMIZED)
+# ---------------------------
+@recharge_bp.post("/api/forfaits")
+def api_forfaits():
+
+    operator = session.get("recharge_operator")
+    country_iso = session.get("country_iso")
+
+    if not operator:
+        return jsonify({"error": "no_operator"}), 400
+
+    # ---------------------------
+    # 🔒 CACHE (ULTRA IMPORTANT)
+    # ---------------------------
+    cached_plans = session.get("recharge_data_plans")
+
+    if cached_plans:
+        return jsonify({"plans": cached_plans})
+
+    # ---------------------------
+    # 🔥 FIX CRITIQUE : FORCER OPERATOR DATA
+    # ---------------------------
+    if not operator.get("supports_data"):
+
+        operators = get_reloadly_operators_by_country(country_iso)
+
+        base_name = (operator.get("name") or "").lower()
+
+        data_operator = next(
+            (
+                op for op in operators
+                if op.get("supports_data")
+                and base_name.split("(")[0].strip()
+                in (op.get("name") or "").lower()
+            ),
+            None
+        )
+
+        if data_operator:
+            operator = data_operator
+            session["recharge_operator"] = operator  # 🔒 IMPORTANT
+
+    # ---------------------------
+    # Get plans (LIVE - 1 seule fois)
+    # ---------------------------
+    plans = get_reloadly_plans(operator)
+
+    session["recharge_data_plans"] = plans
+
+    return jsonify({"plans": plans})
 
 # ---------------------------
 # API Phone Lookup

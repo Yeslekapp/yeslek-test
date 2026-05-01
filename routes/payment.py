@@ -570,7 +570,7 @@ def card_post():
 # ---------------------------
 @payment_bp.post("/webhook")
 def stripe_webhook_post():
-
+    print("🔥 WEBHOOK CALLED")
     payload = request.get_data()
     sig_header = request.headers.get("Stripe-Signature", "")
 
@@ -679,7 +679,7 @@ def stripe_webhook_post():
             )
             return jsonify({"ok": True}), 200
 
-        amount_value = None  # DATA
+        amount_value = round(base_amount, 2)  # DATA aussi: obligatoire pour DB
     else:
         plan_id = None
         amount_value = round(base_amount, 2)  # AIRTIME
@@ -798,7 +798,6 @@ def stripe_webhook_post():
 
     return jsonify({"ok": True}), 200
 
-
 # ---------------------------
 # Payment status
 # ---------------------------
@@ -807,9 +806,8 @@ def payment_status():
     status = _resolve_payment_status()
     return jsonify(status)
 
-
 # ---------------------------
-# Payment success page
+# Payment success page (FINAL PRODUCTION STABLE)
 # ---------------------------
 @payment_bp.get("/success")
 def payment_success():
@@ -826,11 +824,10 @@ def payment_success():
     forfait_display = _get_forfait_display()
 
     # ---------------------------
-    # Cas 1 : pas encore de payload
+    # 🔒 PROTECTION
     # ---------------------------
-    if not payload:
+    if not payment_intent_id:
         ctx = _get_payment_context()
-
         return render_template(
             "payment/success.html",
             status="processing",
@@ -843,35 +840,105 @@ def payment_success():
         )
 
     # ---------------------------
-    # Cas 2 : payload final
+    # 🔥 AFFICHAGE IMMÉDIAT (UNIQUE PAR PAYMENT)
+    # ---------------------------
+    if not payload:
+
+        import hashlib
+
+        # 👉 ref basée sur Stripe (stable + unique)
+        raw = payment_intent_id.encode()
+        hash_val = int(hashlib.sha256(raw).hexdigest(), 16)
+
+        formatted_ref = str(hash_val % 10**12).zfill(12)
+
+        payload = {
+            "status": "PROCESSING",
+            "amount": _safe_float(session.get("recharge_amount")),
+            "date": datetime.utcnow().strftime("%d/%m/%Y %H:%M"),
+
+            # même valeur partout
+            "order_number": formatted_ref,
+            "reference": formatted_ref,
+            "transaction_reference": formatted_ref,
+
+            "transaction_id": None,
+        }
+
+        session["payment_success_payload"] = payload
+
+        return render_template(
+            "payment/success.html",
+            status="processing",
+            amount=payload["amount"],
+            date=payload["date"],
+            order_number=payload["order_number"],
+            reference=payload["reference"],
+            forfait_display=forfait_display,
+            received_display=received_display,
+        )
+
+    # ---------------------------
+    # 🔄 SYNC STATUS
+    # ---------------------------
+    try:
+        transaction_id = payload.get("transaction_id")
+        reference = payload.get("transaction_reference")
+
+        if transaction_id or reference:
+
+            tx = refresh_transaction_status(
+                reference=reference,
+                transaction_id=transaction_id,
+            )
+
+            payload["transaction_id"] = tx.transaction_id
+
+            session["payment_success_payload"] = payload
+
+            if tx.status == "PROCESSING":
+                return render_template(
+                    "payment/success.html",
+                    status="processing",
+                    amount=payload["amount"],
+                    date=payload["date"],
+                    order_number=payload["order_number"],
+                    reference=payload["reference"],
+                    forfait_display=forfait_display,
+                    received_display=received_display,
+                )
+
+            if tx.status in {"FAILED", "REFUNDED"}:
+                return render_template(
+                    "payment/success.html",
+                    status="failed",
+                    amount=payload["amount"],
+                    date=payload["date"],
+                    order_number=payload["order_number"],
+                    reference=payload["reference"],
+                    forfait_display=forfait_display,
+                    received_display=received_display,
+                )
+
+    except Exception as e:
+        print("⚠️ STATUS REFRESH ERROR:", e)
+
+    # ---------------------------
+    # ✅ SUCCESS FINAL
     # ---------------------------
     return render_template(
         "payment/success.html",
-        status="success" if _safe_str(payload.get("status"), "SUCCESS") != "FAILED" else "failed",
-        amount=payload.get("amount"),
-        date=payload.get("date"),
-        order_number=payload.get("order_number"),
-        reference=payload.get("transaction_reference") or payload.get("reference"),
+        status="success",
+        amount=payload["amount"],
+        date=payload["date"],
+        order_number=payload["order_number"],
+        reference=payload["reference"],
         forfait_display=forfait_display,
         received_display=received_display,
     )
 
-    # ---------------------------
-    # Cas 2 : payload dispo → affichage final
-    # ---------------------------
-    return render_template(
-    "payment/success.html",
-    status="success" if _safe_str(payload.get("status"), "SUCCESS") != "FAILED" else "failed",
-    amount=payload.get("amount"),
-    forfait_display=_get_forfait_display(),
-    date=payload.get("date"),
-    order_number=payload.get("order_number"),
-    reference=payload.get("transaction_reference") or payload.get("reference"),
-)
-
-
 # ---------------------------
-# Payment success finish
+# payment_bp.post
 # ---------------------------
 @payment_bp.post("/success/finish")
 def success_finish_post():

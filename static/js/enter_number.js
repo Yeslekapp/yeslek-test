@@ -687,26 +687,34 @@ phoneInput?.addEventListener("paste", (e) => {
   // ---------------------------
   // Submit
   // ---------------------------
-  form?.addEventListener("submit", async (e) => {
-    validateAndSync();
+form?.addEventListener("submit", async (e) => {
+  validateAndSync();
 
-    if (!phoneE164?.value) {
-      e.preventDefault();
-      return;
-    }
-
-    if (lastLookupValid) {
-      return;
-    }
-
+  if (!phoneE164?.value) {
     e.preventDefault();
+    return;
+  }
 
-    await tzLookupNumber();
+  if (lastLookupValid) {
 
-    if (lastLookupValid) {
-      form.submit();
-    }
-  });
+    // 🔥 RESET forfaits cache (CRITICAL)
+    sessionStorage.removeItem("forfaits_loaded");
+
+    return;
+  }
+
+  e.preventDefault();
+
+  await tzLookupNumber();
+
+  if (lastLookupValid) {
+
+    // 🔥 RESET forfaits cache (CRITICAL)
+    sessionStorage.removeItem("forfaits_loaded");
+
+    form.submit();
+  }
+});
 
 }
 

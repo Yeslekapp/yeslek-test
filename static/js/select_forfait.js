@@ -2,7 +2,7 @@
 // Feature: Select forfait (FINAL PRODUCTION CLEAN)
 // ---------------------------
 
-(function () {
+(async function () {
 
   const form = document.getElementById("selectForfaitForm");
   const optionsWrap = document.getElementById("forfaitOptionsWrap");
@@ -37,6 +37,7 @@
   let isSubmitting = false;
   let scrollTimeout = null;
   let isAutoSelecting = false;
+  let forfaitsLoaded = false;
 
   // ---------------------------
   // Helpers
@@ -296,7 +297,7 @@
         }
       });
 
-      if (closest && closest !== selectedButton) {
+      if (closest && selectedButton && closest !== selectedButton) {
         isAutoSelecting = true;
 
         applySelection(closest, {
@@ -319,20 +320,59 @@
   });
 
   continueBtn?.addEventListener("click", submitSelection);
+// ---------------------------
+// Load forfaits LIVE (SYNC ONLY - NO UI BREAK)
+// ---------------------------
 
-  // ---------------------------
-  // Init
-  // ---------------------------
+async function loadForfaits() {
 
-  setMoneyOpen(true);
-  setContinueState(false, 0);
+  // 🔒 anti double call
+  if (sessionStorage.getItem("forfaits_loaded") === "1") return;
+  sessionStorage.setItem("forfaits_loaded", "1");
 
-  const first = optionsWrap.querySelector(".tz-forfait-option");
-  if (first) {
-    setTimeout(() => applySelection(first, { skipDetailsScroll: true }), 120);
+  try {
+
+    const res = await fetch("/recharge/api/forfaits", {
+      method: "POST"
+    });
+
+    const data = await res.json();
+
+    if (!data.plans || !data.plans.length) return;
+
+    // 👉 sync silencieux (prod clean)
+    console.log("forfaits synced");
+
+  } catch (e) {
+    console.error("forfaits sync error", e);
   }
+}
 
-  initCloseButton();
+// ---------------------------
+// Init
+// ---------------------------
+
+setMoneyOpen(true);
+setContinueState(false, 0);
+
+// 👉 RESET UI (important)
+if (rowAmount) rowAmount.textContent = "—";
+if (rowTax) rowTax.textContent = "—";
+if (rowReceived) rowReceived.textContent = "—";
+
+// 👉 utiliser HTML existant (instant UX)
+const first = optionsWrap.querySelector(".tz-forfait-option");
+
+if (first) {
+  applySelection(first, {
+    skipDetailsScroll: true
+  });
+}
+
+// 👉 API en background (sans casser UI)
+loadForfaits();
+
+initCloseButton();
 
 })();
 

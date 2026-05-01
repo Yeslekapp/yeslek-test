@@ -433,7 +433,8 @@ def send_data_topup(
     phone: str,
     plan_id: int,
     country_iso: str,
-    operator_id: int,  # 🔥 FIX CRITIQUE
+    operator_id: int, 
+    amount: float, # 🔥 FIX CRITIQUE
     custom_identifier: str | None = None,
 ) -> Dict[str, Any]:
 
@@ -471,7 +472,7 @@ def send_data_topup(
     token = get_reloadly_token()
     headers = _build_headers(token)
 
-    url = f"{RELOADLY_V1_URL}/topups"
+    url = f"{RELOADLY_BASE_URL}/topups"
 
     # ---------------------------
     # 🔥 FIX PAYLOAD (NO LOOKUP)
@@ -479,6 +480,8 @@ def send_data_topup(
     payload = {
         "operatorId": normalized_operator_id,  # ✅ FIX PRINCIPAL
         "productId": normalized_plan_id,
+        "amount": float(amount),
+        "senderCurrencyCode": "EUR",
         "recipientPhone": {
             "countryCode": normalized_country,
             "number": _extract_local_number(normalized_phone),

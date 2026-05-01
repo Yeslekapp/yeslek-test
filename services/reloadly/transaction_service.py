@@ -331,7 +331,7 @@ def _db_update_status(
 
 
 # ---------------------------
-# Execute recharge (FINAL YESLEK STABLE)
+# Execute recharge (FINAL YESLEK STABLE FIXED)
 # ---------------------------
 
 def process_recharge(
@@ -351,9 +351,6 @@ def process_recharge(
     repo_mark_failed: Callable[[str, Optional[Dict[str, Any]]], None] = _mem_mark_failed,
 ) -> TransactionResult:
 
-    # ---------------------------
-    # Validation
-    # ---------------------------
     _validate_inputs(
         phone=phone,
         country_iso=country_iso,
@@ -374,42 +371,21 @@ def process_recharge(
 
     with lock:
 
-        # ---------------------------
-        # Duplicate protection
-        # ---------------------------
-        existing_mem = repo_find(reference)
-        existing_db = _db_find_by_reference(reference)
-
-        existing = existing_db or existing_mem
+        existing = _db_find_by_reference(reference) or repo_find(reference)
 
         if existing:
-            existing_status = normalize_reloadly_status(existing.get("status"))
+            status = normalize_reloadly_status(existing.get("status"))
 
-            if existing_status in {"SUCCESS", "PROCESSING"}:
-                return TransactionResult(
-                    ok=(existing_status == "SUCCESS"),
-                    status=existing_status,
-                    transaction_id=existing.get("reloadly_transaction_id"),
-                    custom_identifier=reference,
-                    is_duplicate=True,
-                    message="Transaction déjà traitée",
-                    raw=existing,
-                )
+            return TransactionResult(
+                ok=(status == "SUCCESS"),
+                status=status,
+                transaction_id=existing.get("reloadly_transaction_id"),
+                custom_identifier=reference,
+                is_duplicate=True,
+                message="Transaction déjà traitée",
+                raw=existing,
+            )
 
-            if existing_status in {"FAILED", "REFUNDED"}:
-                return TransactionResult(
-                    ok=False,
-                    status=existing_status,
-                    transaction_id=existing.get("reloadly_transaction_id"),
-                    custom_identifier=reference,
-                    is_duplicate=True,
-                    message="Transaction déjà échouée",
-                    raw=existing,
-                )
-
-        # ---------------------------
-        # DB create
-        # ---------------------------
         db_result = _db_create_or_get_processing(
             reference=reference,
             user_id=user_id,
@@ -421,11 +397,11 @@ def process_recharge(
         )
 
         if not db_result["created"]:
-            existing_status = normalize_reloadly_status(db_result.get("status"))
+            status = normalize_reloadly_status(db_result.get("status"))
 
             return TransactionResult(
-                ok=(existing_status == "SUCCESS"),
-                status=existing_status,
+                ok=(status == "SUCCESS"),
+                status=status,
                 transaction_id=db_result.get("reloadly_transaction_id"),
                 custom_identifier=reference,
                 is_duplicate=True,
@@ -433,104 +409,73 @@ def process_recharge(
                 raw=db_result,
             )
 
-        # ---------------------------
-        # Pending state
-        # ---------------------------
-        pending_payload = _build_store_payload(
-            reference=reference,
-            phone=phone,
-            country_iso=country_iso,
-            amount=amount,
-            plan_id=plan_id,
-            operator_id=operator_id,
-            user_id=user_id,
-            metadata=metadata,
-            status="PENDING",
-        )
+        repo_create_pending({
+            "reference": reference,
+            "status": "PENDING",
+        })
 
-        repo_create_pending(pending_payload)
         repo_mark_processing(reference, {"metadata": metadata or {}})
 
         try:
 
             # ---------------------------
-            # 🔥 FIX FINAL RELOADLY
+            # 🔥 CORE FIX (DATA vs AIRTIME)
             # ---------------------------
-            # Tous les cas → topup (airtime + data fake)
-            # IMPORTANT : amount doit être le prix réel (ex: 3.32)
-            if amount is None:
-                raise TransactionServiceError("Amount requis pour recharge")
+            if plan_id is not None:
+                if not operator_id:
+                    raise TransactionServiceError("operator_id requis pour DATA")
 
-            raw_result = send_topup(
-                phone=phone,
-                amount=float(amount),
-                country_iso=country_iso,
-                custom_identifier=reference,
-            )
+                raw_result = send_data_topup(
+                    phone=phone,
+                    plan_id=int(plan_id),
+                    country_iso=country_iso,
+                    operator_id=int(operator_id),
+                    amount=amount,  
+                    custom_identifier=reference,
+                )
+                print("🔥 RELOADLY DATA RESULT:", raw_result)
 
-            # ---------------------------
-            # Normalize result
-            # ---------------------------
+            else:
+                if amount is None:
+                    raise TransactionServiceError("amount requis pour airtime")
+
+                raw_result = send_topup(
+                    phone=phone,
+                    amount=float(amount),
+                    country_iso=country_iso,
+                    custom_identifier=reference,
+                )
+
             reloadly_transaction_id = raw_result.get("transaction_id")
-            raw_status = normalize_reloadly_status(raw_result.get("status"))
+            status = normalize_reloadly_status(raw_result.get("status"))
 
-            if raw_status == "UNKNOWN":
-                raw_status = "PROCESSING"
+            if status == "UNKNOWN":
+                status = "PROCESSING"
 
             _db_update_status(
                 reference=reference,
-                status=raw_status,
+                status=status,
                 reloadly_transaction_id=reloadly_transaction_id,
             )
 
-            common_payload = {
-                "status": raw_status,
+            payload = {
+                "status": status,
                 "reloadly_transaction_id": reloadly_transaction_id,
                 "raw": raw_result,
-                "metadata": metadata or {},
             }
 
-            # ---------------------------
-            # SUCCESS
-            # ---------------------------
-            if raw_status == "SUCCESS":
-                repo_mark_success(reference, common_payload)
-
-                return TransactionResult(
-                    ok=True,
-                    status="SUCCESS",
-                    transaction_id=reloadly_transaction_id,
-                    custom_identifier=reference,
-                    message="Recharge réussie",
-                    raw=raw_result,
-                )
-
-            # ---------------------------
-            # PROCESSING
-            # ---------------------------
-            if raw_status == "PROCESSING":
-                repo_mark_processing(reference, common_payload)
-
-                return TransactionResult(
-                    ok=False,
-                    status="PROCESSING",
-                    transaction_id=reloadly_transaction_id,
-                    custom_identifier=reference,
-                    message="Recharge en cours",
-                    raw=raw_result,
-                )
-
-            # ---------------------------
-            # FAILED
-            # ---------------------------
-            repo_mark_failed(reference, common_payload)
+            if status == "SUCCESS":
+                repo_mark_success(reference, payload)
+            elif status == "PROCESSING":
+                repo_mark_processing(reference, payload)
+            else:
+                repo_mark_failed(reference, payload)
 
             return TransactionResult(
-                ok=False,
-                status=raw_status,
+                ok=(status == "SUCCESS"),
+                status=status,
                 transaction_id=reloadly_transaction_id,
                 custom_identifier=reference,
-                message="Recharge échouée",
                 raw=raw_result,
             )
 
@@ -539,17 +484,12 @@ def process_recharge(
             _db_update_status(
                 reference=reference,
                 status="FAILED",
-                reloadly_transaction_id=None,
             )
 
-            repo_mark_failed(
-                reference,
-                {
-                    "status": "FAILED",
-                    "metadata": metadata or {},
-                    "error": str(exc),
-                },
-            )
+            repo_mark_failed(reference, {
+                "status": "FAILED",
+                "error": str(exc),
+            })
 
             raise TransactionServiceError(str(exc)) from exc
 
