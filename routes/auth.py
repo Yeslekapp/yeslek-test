@@ -155,7 +155,8 @@ def google_callback():
         session.pop("google_oauth_state", None)
 
         print("SESSION AFTER GOOGLE LOGIN:", dict(session))
-
+        print("CALLBACK ARGS:", request.args)
+        print("SESSION STATE:", session.get("google_oauth_state"))
         return redirect("/")
 
     except Exception as e:

@@ -18,16 +18,27 @@ ENV = os.getenv("ENV", "production")
 IS_PROD = ENV == "production"
 
 # ---------------------------
-# Flask
+# Flask (FINAL PRODUCTION SAFE)
 # ---------------------------
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = "None"
 SESSION_PERMANENT = True
-PERMANENT_SESSION_LIFETIME = 60 * 60 * 24 * 365
+PERMANENT_SESSION_LIFETIME = 60 * 60 * 24 * 365  # 1 an
+
+# ---------------------------
+# Cookies (FIX Google OAuth)
+# ---------------------------
+
+if IS_PROD:
+    # ✅ Production (HTTPS obligatoire)
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = "None"
+else:
+    # ✅ Localhost / dev
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SAMESITE = "Lax"
 
 # ---------------------------
 # Database
