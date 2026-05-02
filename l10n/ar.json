@@ -1,0 +1,290 @@
+{
+  "common": {
+    "continue": "متابعة",
+    "remove": "حذف",
+    "hello": "مرحباً",
+    "user": "إعادة شحن الهاتف دولياً",
+    "goodMorning": "صباح الخير",
+    "goodEvening": "مساء الخير",
+    "goodAfternoon": "مساء الخير",
+    "language": "اللغة",
+    "save": "حفظ",
+    "back": "رجوع",
+    "yes": "نعم",
+    "no": "لا",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "copyFailed": "فشل النسخ",
+    "removed": "تم الحذف",
+    "close": "إغلاق"
+  },
+
+  "account": {
+    "profile": "معلوماتي",
+    "settings": "إعدادات الحساب",
+    "balance": "رصيد yeslek",
+    "payment_methods": "طرق الدفع",
+    "about": "حول"
+  },
+
+  "auth": {
+    "name": "الاسم",
+    "name_placeholder": "اسمك أو اسمك الأول",
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "choose": "اختر طريقة",
+    "choose_hint": "الوصول إلى حسابك خلال ثوانٍ",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "email_required": "البريد الإلكتروني مطلوب",
+    "email_invalid": "بريد إلكتروني غير صالح",
+    "phone_required": "الرقم مطلوب",
+    "security_hint": "رمز لمرة واحدة. نحن لا نشارك معلوماتك أبداً.",
+    "email_hint": "سنرسل لك رمز تحقق",
+    "email_label": "عنوان البريد الإلكتروني",
+    "email_placeholder": "name@gmail.com",
+    "email_help": "تحقق من الكتابة. يصل الرمز بسرعة.",
+    "phone_hint": "سنرسل لك رمزاً عبر SMS",
+    "phone_label": "رقم الهاتف",
+    "phone_placeholder": "رقم الهاتف",
+    "phone_help": "استخدم الصيغة الدولية (مثال: +33...).",
+    "invalid_phone": "رقم غير صالح",
+    "otp_title": "التحقق",
+    "otp_sent_to": "تم إرسال الرمز إلى",
+    "otp_label": "الرمز",
+    "otp_placeholder": "أدخل الرمز",
+    "otp_help": "يمكنك لصق الرمز. يستخدم مرة واحدة.",
+    "otp_invalid": "رمز غير صالح أو منتهي الصلاحية",
+    "continue_google": "المتابعة باستخدام Google",
+    "continue_facebook": "المتابعة باستخدام Facebook",
+    "continue_phone": "باستخدام الهاتف",
+    "continue_email": "البريد الإلكتروني",
+    "resend": "إعادة الإرسال",
+    "change_email": "تغيير البريد الإلكتروني",
+    "change_phone": "تغيير الرقم",
+    "logout_confirm": "هل تريد تسجيل الخروج؟",
+    "or_continue": "أو المتابعة باستخدام",
+    "legal_notice": "بالمتابعة، فإنك توافق على شروط الاستخدام وسياسة الخصوصية."
+  },
+
+  "lang": {
+    "fr": "الفرنسية",
+    "en": "الإنجليزية"
+  },
+
+  "recharge": {
+    "enterNumber": {
+      "title": "أدخل الرقم",
+      "beneficiaryNumber": "رقم المستلم",
+      "phoneExample": "+33…",
+      "enterNumber": "أدخل رقماً",
+      "validNumber": "رقم صالح",
+      "invalidNumber": "رقم غير صالح",
+      "enterValidNumber": "أدخل رقماً صالحاً",
+      "searchCountry": "بحث…",
+      "contacts": "جهات الاتصال",
+      "noInternetPlans": "لا توجد باقات إنترنت لهذا المشغل"
+    },
+
+    "selectOperator": {
+      "title": "اختر المشغل",
+      "emptyTitle": "لم يتم العثور على مشغل",
+      "emptyMessage": "لم يتم العثور على مشغل لهذا الرقم."
+    },
+
+    "selectForfait": {
+      "title": "اختر الباقة",
+      "internet": "إنترنت",
+      "days": "{days} أيام"
+    },
+
+    "selectAmount": {
+      "title": "اختر المبلغ",
+      "operatorNotDetected": "لم يتم التعرف على المشغل",
+      "editOperator": "تغيير المشغل",
+      "amountLabel": "المبلغ",
+      "chooseInternetPlan": "اختر باقة إنترنت",
+      "amountRow": "المبلغ",
+      "taxesRow": "الضرائب",
+      "receivedAmountTitle": "سيستلمون",
+      "goToPay": "الدفع",
+      "operatorPickerSoon": "اختيار المشغل قريباً",
+      "choose": "اختر",
+      "instant": "شحن فوري",
+      "secure": "دفع آمن"
+    }
+  },
+
+  "payment": {
+    "method": {
+      "title": "طريقة الدفع",
+      "points": "النقاط",
+      "saveCard": "حفظ البطاقة",
+      "chooseMethod": "اختر طريقة",
+      "cardPayment": "الدفع بالبطاقة",
+      "cardPaymentDesc": "دفع آمن",
+      "applePay": "Apple Pay",
+      "applePayDesc": "قريباً",
+      "googlePay": "Google Pay",
+      "googlePayDesc": "قريباً",
+      "paypal": "PayPal",
+      "paypalDesc": "قريباً",
+      "wallet": "المحفظة",
+      "walletDesc": "قريباً",
+      "methodSelected": "الطريقة المختارة",
+      "methodUnavailable": "الطريقة غير متاحة",
+      "paypalComingSoon": "قريباً",
+      "pay": "ادفع {amount}",
+      "pointsAvailable": "النقاط المتاحة: {points}",
+      "setDefault": "تعيين كطريقة دفع افتراضية",
+      "payment.method.title": "طريقة الدفع",
+      "payment.points.title": "النقاط",
+      "payment.points.available": "النقاط المتاحة: {points}",
+      "payment.saveCard": "حفظ البطاقة",
+      "payment.chooseMethod": "اختر طريقة الدفع",
+      "payment.methods.card.title": "الدفع بالبطاقة",
+      "payment.methods.card.desc": "ادفع باستخدام Visa أو Mastercard",
+      "payment.methodSelected": "الطريقة المختارة",
+      "payment.pay": "ادفع {amount} €",
+      "currency.eur": "€",
+
+      "legacy_errors": {
+        "emptyName": "يرجى إدخال الاسم على البطاقة",
+        "invalidName": "اسم غير صالح",
+        "invalidCardNumber": "رقم بطاقة غير صالح",
+        "incompleteCardNumber": "رقم البطاقة غير مكتمل",
+        "invalidExpiry": "تاريخ انتهاء غير صالح",
+        "invalidCvc": "رمز أمان غير صالح",
+        "paymentFailed": "فشل الدفع",
+        "paymentNotCompleted": "لم يكتمل الدفع",
+        "serverError": "خطأ في الخادم، يرجى المحاولة مرة أخرى",
+        "expiry": "ينتهي في",
+        "default": "افتراضي"
+      }
+    },
+
+    "points": {
+      "title": "النقاط",
+      "available": "النقاط المتاحة: {points}"
+    },
+
+    "methods": {
+      "card": {
+        "title": "الدفع بالبطاقة",
+        "desc": "ادفع باستخدام Visa أو Mastercard"
+      }
+    },
+
+    "saveCard": "حفظ البطاقة",
+    "chooseMethod": "اختر طريقة الدفع",
+    "methodSelected": "الطريقة المختارة",
+    "pay": "ادفع {amount} €",
+
+    "card": {
+      "title": "الدفع بالبطاقة",
+      "securityNotice": "معلومات الدفع الخاصة بك محمية.",
+      "invalidForm": "نموذج غير صالح.",
+      "genericError": "حدث خطأ.",
+      "holderName": "اسم حامل البطاقة",
+      "number": "رقم البطاقة",
+      "expiry": "MM/YY",
+      "cvv": "CVV",
+      "payAmount": "ادفع {amount} €",
+      "scanTooltip": "مسح البطاقة",
+      "invalidCardHolderName": "اسم غير صالح",
+      "invalidCardNumber": "رقم بطاقة غير صالح",
+      "invalidExpiry": "تاريخ غير صالح",
+      "invalidCvv": "CVV غير صالح",
+      "formError": "يرجى تصحيح الأخطاء",
+
+      "errors": {
+        "emptyName": "يرجى إدخال الاسم على البطاقة",
+        "invalidName": "اسم غير صالح",
+        "invalidCardNumber": "رقم بطاقة غير صالح",
+        "incompleteCardNumber": "رقم البطاقة غير مكتمل",
+        "invalidExpiry": "تاريخ انتهاء غير صالح",
+        "invalidCvc": "رمز أمان غير صالح",
+        "paymentFailed": "فشل الدفع",
+        "paymentNotCompleted": "لم يكتمل الدفع",
+        "serverError": "خطأ في الخادم، يرجى المحاولة مرة أخرى"
+      }
+    },
+
+    "success": {
+      "title": "تم الدفع بنجاح",
+      "message": "تم تأكيد عملية الدفع.",
+      "amount": "المبلغ",
+      "date": "التاريخ",
+      "order": "الطلب",
+      "reference": "المرجع",
+      "finish": "إنهاء",
+      "amountLabel": "المبلغ",
+      "dateLabel": "التاريخ",
+      "orderLabel": "الطلب",
+      "referenceLabel": "المرجع",
+      "processing": "جاري الشحن... يرجى الانتظار ⏳",
+      "done": "تم إرسال الشحن بنجاح ✅"
+    },
+
+    "empty": {
+      "title": "لا توجد طريقة دفع",
+      "desc": "أضف طريقة دفع للدفع بشكل أسرع.",
+      "cta": "إجراء شحن"
+    }
+  },
+
+  "country": {
+    "af": "أفغانستان",
+    "fr": "فرنسا",
+    "us": "الولايات المتحدة",
+    "de": "ألمانيا",
+    "it": "إيطاليا",
+    "es": "إسبانيا"
+  },
+
+  "history": {
+    "title": "السجل",
+    "empty": "لا توجد معاملات حالياً",
+
+    "status": {
+      "success": "ناجح",
+      "pending": "قيد الانتظار",
+      "failed": "فشل",
+      "all": "الكل"
+    },
+
+    "labels": {
+      "amount": "المبلغ",
+      "date": "التاريخ",
+      "country": "الدولة",
+      "phone": "الرقم"
+    }
+  },
+
+  "menu": {
+    "history": "السجل"
+  },
+
+  "about": {
+    "description": "تطبيق بسيط وسريع لشحن الهاتف.",
+    "privacy": "سياسة الخصوصية",
+    "terms": "شروط الاستخدام"
+  },
+
+  "time": {
+    "day": "يوم",
+    "days": "أيام",
+    "week": "أسبوع",
+    "weeks": "أسابيع",
+    "month": "شهر",
+    "months": "أشهر"
+  },
+
+  "profile": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "birthdate": "تاريخ الميلاد",
+    "not_defined": "غير محدد"
+  }
+}

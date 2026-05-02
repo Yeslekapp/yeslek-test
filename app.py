@@ -60,34 +60,44 @@ def create_app() -> Flask:
     app = Flask(__name__)
 
     from datetime import timedelta
+
+    # ---------------------------
+    # Session lifetime
+    # ---------------------------
     app.permanent_session_lifetime = timedelta(days=365 * 5)
 
-    # Proxy
+    # ---------------------------
+    # Proxy (IMPORTANT HTTPS / Cloud)
+    # ---------------------------
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
-
-# ---------------------------
-# Security Config (FINAL SESSION FIX)
-# ---------------------------
+    # ---------------------------
+    # Security Config (FINAL FIX)
+    # ---------------------------
     app.secret_key = config.SECRET_KEY or os.getenv("FLASK_SECRET_KEY")
 
     if not app.secret_key:
-     raise RuntimeError("SECRET_KEY must be set")
+        raise RuntimeError("SECRET_KEY must be set")
 
-     app.config["SESSION_COOKIE_NAME"] = "yeslek_session"
-     app.config["SESSION_COOKIE_HTTPONLY"] = True
-     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=365 * 5)
+    app.config["SESSION_COOKIE_NAME"] = "yeslek_session"
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=365 * 5)
 
-# ✅ Cookies session: local vs production
+    # ---------------------------
+    # Cookies (LOCAL vs PROD)
+    # ---------------------------
     if os.getenv("ENV") == "production":
-     app.config["SESSION_COOKIE_SAMESITE"] = "None"
-     app.config["SESSION_COOKIE_SECURE"] = True
+        app.config["SESSION_COOKIE_SAMESITE"] = "None"
+        app.config["SESSION_COOKIE_SECURE"] = True
     else:
-     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-     app.config["SESSION_COOKIE_SECURE"] = False
+        app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+        app.config["SESSION_COOKIE_SECURE"] = False
 
-     app.config["PREFERRED_URL_SCHEME"] = "https"
-     app.config["MAX_CONTENT_LENGTH"] = config.MAX_CONTENT_LENGTH
+    # ---------------------------
+    # Global config (TOUJOURS ACTIF)
+    # ---------------------------
+    app.config["PREFERRED_URL_SCHEME"] = "https"
+    app.config["MAX_CONTENT_LENGTH"] = config.MAX_CONTENT_LENGTH
 
     # ---------------------------
     # Inject current time
