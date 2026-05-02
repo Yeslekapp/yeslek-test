@@ -1,3 +1,7 @@
+# ---------------------------
+# OrderService — FINAL SAFE (NO BREAK)
+# ---------------------------
+
 import uuid
 import json
 import os
@@ -9,10 +13,6 @@ CARDS_FILE = "data/saved_cards.json"
 
 
 class OrderService:
-    """
-    Construit la réponse succès paiement
-    et gère les cartes enregistrées.
-    """
 
     # ---------------------------
     # Success payload
@@ -53,7 +53,7 @@ class OrderService:
 
         card = {
             "id": uuid.uuid4().hex,
-            "user_id": user_id,  # ✅ sécurisé
+            "user_id": user_id,
             "token": token,
             "last4": last4,
             "expiry": expiry,
@@ -75,8 +75,11 @@ class OrderService:
         cards = OrderService.get_saved_cards()
         cards.append(card)
 
-        with open(CARDS_FILE, "w", encoding="utf-8") as f:
-            json.dump(cards, f, indent=2)
+        try:
+            with open(CARDS_FILE, "w", encoding="utf-8") as f:
+                json.dump(cards, f, indent=2)
+        except Exception as e:
+            print("SAVE CARD ERROR:", e)
 
     # ---------------------------
     # Get saved cards
@@ -96,7 +99,8 @@ class OrderService:
 
             return cards
 
-        except Exception:
+        except Exception as e:
+            print("READ CARD ERROR:", e)
             return []
 
     # ---------------------------
@@ -112,8 +116,11 @@ class OrderService:
             if not (c["id"] == card_id and c.get("user_id") == user_id)
         ]
 
-        with open(CARDS_FILE, "w", encoding="utf-8") as f:
-            json.dump(cards, f, indent=2)
+        try:
+            with open(CARDS_FILE, "w", encoding="utf-8") as f:
+                json.dump(cards, f, indent=2)
+        except Exception as e:
+            print("DELETE CARD ERROR:", e)
 
     # ---------------------------
     # Get card
@@ -130,19 +137,31 @@ class OrderService:
         return None
 
     # ---------------------------
-    # Set default card
+    # Set default card (SAFE FIX)
     # ---------------------------
     @staticmethod
     def set_default_card(user_id, card_id):
 
         cards = OrderService.get_saved_cards()
 
+        found = False
+
         for c in cards:
             if c.get("user_id") == user_id:
-                c["is_default"] = c["id"] == card_id
+                if c["id"] == card_id:
+                    c["is_default"] = True
+                    found = True
+                else:
+                    c["is_default"] = False
 
-        with open(CARDS_FILE, "w", encoding="utf-8") as f:
-            json.dump(cards, f, indent=2)
+        if not found:
+            return  # sécurité
+
+        try:
+            with open(CARDS_FILE, "w", encoding="utf-8") as f:
+                json.dump(cards, f, indent=2)
+        except Exception as e:
+            print("DEFAULT CARD ERROR:", e)
 
     # ---------------------------
     # Update saved card
@@ -167,5 +186,8 @@ class OrderService:
                 if expiry:
                     c["expiry"] = expiry
 
-        with open(CARDS_FILE, "w", encoding="utf-8") as f:
-            json.dump(cards, f, indent=2)
+        try:
+            with open(CARDS_FILE, "w", encoding="utf-8") as f:
+                json.dump(cards, f, indent=2)
+        except Exception as e:
+            print("UPDATE CARD ERROR:", e)

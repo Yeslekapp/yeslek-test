@@ -25,6 +25,7 @@
     "balance": "Solde yeslek",
     "payment_methods": "Moyens de paiement",
     "about": "À propos"
+   
   },
 
 "wallet": {
@@ -178,7 +179,9 @@
       "invalidCvc": "Code de sécurité invalide",
       "paymentFailed": "Paiement échoué",
       "paymentNotCompleted": "Paiement non complété",
-      "serverError": "Erreur serveur, veuillez réessayer"
+      "serverError": "Erreur serveur, veuillez réessayer",
+      "expiry": "Expire le",
+      "default": "Par défaut"
     }
   },
 
@@ -266,9 +269,24 @@
     "es": "Espagne"
   },
 
-  "history": {
-    "empty": "Aucun historique"
+"history": {
+  "title": "Historique",
+  "empty": "Aucune transaction pour le moment",
+
+  "status": {
+    "success": "Réussi",
+    "pending": "En attente",
+    "failed": "Échoué",
+     "all": "Tous"
   },
+
+  "labels": {
+    "amount": "Montant",
+    "date": "Date",
+    "country": "Pays",
+    "phone": "Numéro"
+  }
+},
 
   "menu": {
     "history": "Historique"

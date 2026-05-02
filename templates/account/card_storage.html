@@ -10,89 +10,93 @@
 
 <section class="tz-card">
 
-<div class="tz-page-header">
-  <button class="tz-page-close" onclick="history.back()">✕</button>
-</div>
-
-<h1 class="tz-title">
-  {{ t("account.payment_methods") }}
-</h1>
-
-{% if not cards %}
-
-<div class="tz-empty">
-
-  <div class="tz-empty-icon">💳</div>
-
-  <div class="tz-empty-title">
-    {{ t("payment.empty.title") }}
+  <!-- ================= HEADER ================= -->
+  <div class="tz-page-header">
+    <button class="tz-page-close" onclick="history.back()">✕</button>
   </div>
 
-  <div class="tz-empty-desc">
-    {{ t("payment.empty.desc") }}
-  </div>
+  <h1 class="tz-title">
+    {{ t("account.payment_methods") }}
+  </h1>
 
-  <a href="{{ url_for('recharge.enter_number_get') }}" class="tz-btn tz-btn-primary">
-    {{ t("payment.empty.cta") }}
-  </a>
+  <!-- ================= EMPTY ================= -->
+  {% if not cards %}
 
-</div>
+  <div class="tz-empty">
+    <div class="tz-empty-icon">💳</div>
 
-{% else %}
-
-<div class="tz-list">
-
-{% for card in cards %}
-<div class="tz-card-item">
-
-  <div class="tz-card-item-left">💳</div>
-
-  <div class="tz-card-item-center">
-
-    <div class="tz-card-item-title">
-      {{ card.brand|default("Card") }} •••• {{ card.last4 }}
+    <div class="tz-empty-title">
+      {{ t("payment.empty.title") }}
     </div>
 
-    <div class="tz-card-item-sub">
-      {{ t("payment.card.expiry") }} {{ card.expiry }}
+    <div class="tz-empty-desc">
+      {{ t("payment.empty.desc") }}
     </div>
+
+    <a href="{{ url_for('recharge.enter_number_get') }}" class="tz-primary-btn">
+      {{ t("payment.empty.cta") }}
+    </a>
+  </div>
+
+  {% else %}
+
+  <!-- ================= CARDS LIST ================= -->
+  <div class="tz-list">
+
+    {% for card in cards %}
+    <div class="tz-card-item pro {% if card.is_default %}is-default{% endif %}">
+
+      <!-- LEFT -->
+      <div class="tz-card-item-left">
+        💳
+      </div>
+
+      <!-- CENTER -->
+      <div class="tz-card-item-center">
+
+        <div class="tz-card-item-title">
+          {{ card.brand|default("Card") }} •••• {{ card.last4 }}
+        </div>
+
+        <div class="tz-card-item-sub">
+          {{ t("payment.card.expiry") }} {{ card.expiry }}
+        </div>
+
+        {% if card.is_default %}
+        <div class="tz-card-badge">
+          ⭐ {{ t("payment.default") }}
+        </div>
+        {% endif %}
+
+      </div>
+
+      <!-- RIGHT ACTIONS -->
+      <div class="tz-card-item-right">
+
+        <!-- SET DEFAULT -->
+        <form method="post"
+              action="{{ url_for('payment.set_default_card_post', card_id=card.id) }}">
+          <button type="submit" class="tz-icon-btn">
+            ⭐
+          </button>
+        </form>
+
+        <!-- DELETE -->
+        <form method="post"
+              action="{{ url_for('payment.delete_card_post', card_id=card.id) }}">
+          <button type="submit" class="tz-icon-btn danger">
+            🗑
+          </button>
+        </form>
+
+      </div>
+
+    </div>
+    {% endfor %}
 
   </div>
 
-  <!-- ACTION MENU -->
-  <div class="tz-card-item-right tz-menu">
-
-    <button type="button"
-            class="tz-menu-btn"
-            aria-label="{{ t('common.actions') }}">
-      ⋯
-    </button>
-
-    <div class="tz-menu-dropdown">
-
-      <a href="{{ url_for('payment.edit_card_get', card_id=card.id) }}"
-         class="tz-menu-item">
-        ✏️ {{ t("common.edit") }}
-      </a>
-
-      <form method="post"
-            action="{{ url_for('payment.delete_card_post', card_id=card.id) }}">
-        <button type="submit"
-                class="tz-menu-item tz-menu-danger">
-          🗑 {{ t("common.remove") }}
-        </button>
-      </form>
-
-    </div>
-
-  </div>
-
-</div>
-{% endfor %}
-
-</div>
-
-{% endif %}
+  {% endif %}
 
 </section>
 

@@ -156,6 +156,7 @@ def _build_checkout_metadata(idem_key: str) -> Dict[str, str]:
         "operator_id": _safe_str(operator.get("id")),
         "operator_name": _safe_str(operator.get("name")),
         "operator_logo": _safe_str(operator.get("logo_url")),
+        "save_card": str(session.get("payment_save_card", True)).lower(),
     }
 
 
@@ -712,7 +713,7 @@ def stripe_webhook_post():
             country_iso=country_iso,
             amount=amount_value,
             plan_id=plan_id,
-            operator_id=operator_id,  # ✅ FIX FINAL
+            operator_id=operator_id,
             user_id=user_id or session.get("user_id"),
             metadata={
                 "flow": "stripe_webhook",
@@ -753,7 +754,33 @@ def stripe_webhook_post():
         IdempotencyService.store_result(idem_key, payload_obj)
         _store_payment_success_payload(payload_obj)
 
-        # refresh balance
+        # ---------------------------
+        # Save card (Stripe metadata)
+        # ---------------------------
+        try:
+            save_card = metadata.get("save_card") == "true"
+
+            if save_card and user_id:
+                payment_method = event_data.get("payment_method")
+
+                if payment_method:
+                    pm = StripeService.retrieve_payment_method(payment_method)
+                    card_data = getattr(pm, "card", None)
+
+                    if card_data:
+                        OrderService.maybe_store_card_tokenized(
+                            user_id=user_id,
+                            save_card=True,
+                            number=str(card_data.last4),
+                            expiry=f"{card_data.exp_month}/{card_data.exp_year}",
+                        )
+
+        except Exception as e:
+            logger.exception("CARD SAVE ERROR: %s", e)
+
+        # ---------------------------
+        # Refresh balance
+        # ---------------------------
         try:
             if user_id:
                 session["user_balance"] = CreditService.get_balance(user_id)

@@ -2174,3 +2174,215 @@ LOGOUT FIX (isolé propre)
   color:#111;
 }
 
+/* =========================
+   HISTORY — PRO UPGRADE
+========================= */
+
+.tz-history-card.pro{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:14px;
+  border-radius:16px;
+
+  background:rgba(255,255,255,0.9);
+  backdrop-filter:blur(10px);
+
+  box-shadow:0 6px 18px rgba(0,0,0,0.06);
+
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    background .18s ease;
+}
+
+@media (hover:hover){
+  .tz-history-card.pro:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 24px rgba(0,0,0,0.08);
+  }
+}
+
+.tz-history-left{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.tz-history-meta{
+  font-size:12px;
+  opacity:.6;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.tz-history-country{
+  font-weight:600;
+  opacity:.7;
+}
+
+.tz-history-right{
+  text-align:right;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+}
+
+.tz-history-amount{
+  font-weight:700;
+  font-size:15px;
+}
+
+/* =========================
+   STATUS BADGES (FINTECH)
+========================= */
+
+.tz-status{
+  margin-top:4px;
+  font-size:11px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-weight:700;
+  letter-spacing:.02em;
+
+  display:inline-block;
+
+  transition:all .2s ease;
+}
+
+/* SUCCESS */
+.tz-status.success{
+  background:rgba(22,163,74,.12);
+  color:#16a34a;
+}
+
+/* PENDING */
+.tz-status.pending{
+  background:rgba(245,158,11,.12);
+  color:#f59e0b;
+}
+
+/* FAILED */
+.tz-status.failed{
+  background:rgba(239,68,68,.12);
+  color:#ef4444;
+}
+
+/* =========================
+   MICRO ANIMATION (LOAD)
+========================= */
+
+.tz-history-card.pro{
+  animation:tzFadeIn .3s ease;
+}
+
+@keyframes tzFadeIn{
+  from{
+    opacity:0;
+    transform:translateY(6px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+/* =========================
+   HISTORY FILTERS
+========================= */
+
+.tz-history-filters{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding-bottom:6px;
+}
+
+.tz-filter-btn{
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid rgba(0,0,0,.12);
+  background:#fff;
+  font-size:13px;
+  cursor:pointer;
+  white-space:nowrap;
+
+  transition:all .2s ease;
+}
+
+.tz-filter-btn:hover{
+  transform:translateY(-1px);
+}
+
+.tz-filter-btn:active{
+  transform:scale(.95);
+}
+
+.tz-filter-btn.is-active{
+  background:#111;
+  color:#fff;
+  border-color:#111;
+}
+
+/* =========================
+   CARDS PRO UI
+========================= */
+
+.tz-card-item.pro{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  padding:14px;
+  border-radius:16px;
+
+  background:#fff;
+  box-shadow:0 8px 20px rgba(0,0,0,0.06);
+
+  transition:all .2s ease;
+}
+
+.tz-card-item.pro:hover{
+  transform:translateY(-2px);
+}
+
+/* default card */
+.tz-card-item.is-default{
+  border:2px solid #111;
+}
+
+.tz-card-badge{
+  margin-top:6px;
+  font-size:11px;
+  font-weight:700;
+  color:#111;
+}
+
+/* actions */
+.tz-card-item-right{
+  display:flex;
+  gap:6px;
+}
+
+.tz-icon-btn{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  border:none;
+  background:#f5f5f5;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+
+.tz-icon-btn:hover{
+  background:#eee;
+}
+
+.tz-icon-btn:active{
+  transform:scale(.9);
+}
+
+.tz-icon-btn.danger{
+  color:#d32f2f;
+}

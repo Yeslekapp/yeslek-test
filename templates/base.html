@@ -69,27 +69,27 @@ Yeslek - Recharge mobile internationale instantanée
 <div class="side-menu-content">
 
   <!-- USER HEADER -->
-  <a href="#" class="tz-menu-user">
+<a href="{{ url_for('account.profile') }}" class="tz-menu-user">
 
-    <div class="tz-menu-avatar">
-      {% if session.get("user_avatar") %}
-        <img src="{{ session.get('user_avatar') }}">
-      {% else %}
-        <div class="tz-menu-avatar-placeholder">👤</div>
-      {% endif %}
+  <div class="tz-menu-avatar">
+    {% if session.get("user_avatar") %}
+      <img src="{{ session.get('user_avatar') }}">
+    {% else %}
+      <div class="tz-menu-avatar-placeholder">👤</div>
+    {% endif %}
+  </div>
+
+  <div class="tz-menu-user-info">
+    <div class="tz-menu-user-name">
+      {{ session.get("user_name", "Mon compte") }}
     </div>
 
-    <div class="tz-menu-user-info">
-      <div class="tz-menu-user-name">
-        {{ session.get("user_name", "Mon compte") }}
-      </div>
-
-      <div class="tz-menu-user-sub">
-        {{ t("account.profile") }}
-      </div>
+    <div class="tz-menu-user-sub">
+      {{ t("account.profile") }}
     </div>
+  </div>
 
-  </a>
+</a>
 
       <!-- HISTORY -->
       <a href="{{ url_for('history.index_get') }}" class="tz-menu-item">
@@ -118,14 +118,20 @@ Yeslek - Recharge mobile internationale instantanée
         <div class="tz-menu-arrow">›</div>
       </a>
 
-      <!-- SETTINGS -->
-      <a href="#" class="tz-menu-item">
-        <div class="tz-menu-left">⚙️</div>
-        <div class="tz-menu-center">
-          <div class="tz-menu-title">{{ t("account.settings") }}</div>
-        </div>
-        <div class="tz-menu-arrow">›</div>
-      </a>
+<!-- SETTINGS -->
+<a href="{{ url_for('account.profile') }}" class="tz-menu-item">
+
+  <div class="tz-menu-left">⚙️</div>
+
+  <div class="tz-menu-center">
+    <div class="tz-menu-title">
+      {{ t("account.settings") }}
+    </div>
+  </div>
+
+  <div class="tz-menu-arrow">›</div>
+
+</a>
 
       <!-- PAYMENT METHODS -->
       <a href="{{ url_for('account.payment_methods') }}" class="tz-menu-item">

@@ -1,32 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t("menu.history") }}{% endblock %}
+{% block title %}{{ t("history.title") }}{% endblock %}
 
 {% block content %}
 
 <div class="tz-stack">
 
   <!-- =========================
-       Header avec bouton retour
+       HEADER
   ========================== -->
   <div class="tz-history-header">
-
     <button 
       onclick="window.history.back()" 
       class="tz-close-btn"
-      aria-label="Back"
+      aria-label="{{ t('common.back') }}"
     >
       ✕
     </button>
 
     <h2 class="tz-page-title">
-      {{ t("menu.history") }}
+      {{ t("history.title") }}
     </h2>
+  </div>
+
+
+  <!-- =========================
+       FILTERS
+  ========================== -->
+  <div class="tz-history-filters">
+
+    <button class="tz-filter-btn is-active" data-filter="all">
+      {{ t("common.all") }}
+    </button>
+
+    <button class="tz-filter-btn" data-filter="success">
+      {{ t("history.status.success") }}
+    </button>
+
+    <button class="tz-filter-btn" data-filter="pending">
+      {{ t("history.status.pending") }}
+    </button>
+
+    <button class="tz-filter-btn" data-filter="failed">
+      {{ t("history.status.failed") }}
+    </button>
 
   </div>
 
+
   <!-- =========================
-       Empty state
+       EMPTY
   ========================== -->
   {% if not items %}
 
@@ -40,24 +63,51 @@
   {% else %}
 
     <!-- =========================
-         History list
+         LIST
     ========================== -->
     {% for item in items %}
 
-      <div class="tz-history-card">
+      <div class="tz-history-card pro" data-status="{{ item.status }}">
 
+        <!-- LEFT -->
         <div class="tz-history-left">
+
           <div class="tz-history-phone">
             {{ item.phone }}
           </div>
 
-          <div class="tz-history-date">
-            {{ item.date }}
+          <div class="tz-history-meta">
+
+            <span class="tz-history-date">
+              {{ item.created_at.strftime("%d %b %Y · %H:%M") }}
+            </span>
+
+            {% if item.country_iso %}
+              <span class="tz-history-country">
+                {{ item.country_iso }}
+              </span>
+            {% endif %}
+
           </div>
+
         </div>
 
-        <div class="tz-history-amount">
-          + {{ "%.2f"|format(item.amount|float) }} €
+        <!-- RIGHT -->
+        <div class="tz-history-right">
+
+          <div class="tz-history-amount">
+            + {{ "%.2f"|format(item.amount|float) }} €
+          </div>
+
+          <div class="tz-status 
+            {% if item.status == 'success' %}success
+            {% elif item.status == 'pending' %}pending
+            {% else %}failed
+            {% endif %}
+          ">
+            {{ t("history.status." + item.status|lower) }}
+          </div>
+
         </div>
 
       </div>
@@ -67,5 +117,39 @@
   {% endif %}
 
 </div>
+
+
+<!-- =========================
+     SCRIPT FILTER
+========================= -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const buttons = document.querySelectorAll(".tz-filter-btn");
+  const cards = document.querySelectorAll(".tz-history-card");
+
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+
+      buttons.forEach(b => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+
+      const filter = btn.dataset.filter;
+
+      cards.forEach(card => {
+        const status = card.dataset.status;
+
+        if (filter === "all" || status === filter) {
+          card.style.display = "flex";
+        } else {
+          card.style.display = "none";
+        }
+      });
+
+    });
+  });
+
+});
+</script>
 
 {% endblock %}
