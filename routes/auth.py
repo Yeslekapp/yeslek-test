@@ -1,10 +1,14 @@
 # ---------------------------
-# Auth Routes — FINAL CLEAN (OTP + Redis)
+# Auth Routes — FINAL CLEAN (OTP + Google FIX)
 # ---------------------------
 
 from flask import Blueprint, render_template, request, session, redirect, url_for
 import re
 import time
+import os
+
+# 🔥 FIX GOOGLE LOCAL (HTTP autorisé en dev)
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 from google_auth_oauthlib.flow import Flow
 import requests
@@ -20,6 +24,7 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 # CONFIG OTP
 # ---------------------------
 OTP_RESEND_COOLDOWN = 30
+
 # ---------------------------
 # GOOGLE CONFIG
 # ---------------------------
@@ -38,7 +43,6 @@ def _valid_email(email: str):
 
     email = email.strip().lower()
     pattern = r"^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$"
-
     return re.match(pattern, email) is not None
 
 
@@ -49,6 +53,7 @@ def _mask_phone(phone: str) -> str:
     if len(p) <= 4:
         return "****"
     return f"{p[:3]} **** {p[-2:]}"
+
 
 # ============================================================
 # GOOGLE LOGIN
@@ -75,13 +80,13 @@ def google_login():
 
     flow.redirect_uri = GOOGLE_REDIRECT_URI
 
-    # ✅ IMPORTANT: récupérer state
+    # 🔥 IMPORTANT: récupérer state + PKCE
     auth_url, state = flow.authorization_url(
         prompt="select_account"
     )
 
-    # ✅ stocker state en session
     session["google_oauth_state"] = state
+    session["code_verifier"] = flow.code_verifier   # ✅ FIX CRITIQUE
 
     return redirect(auth_url)
 
@@ -107,11 +112,13 @@ def google_callback():
                 "https://www.googleapis.com/auth/userinfo.profile",
                 "openid"
             ],
-            # ✅ CRITIQUE: restaurer state
             state=session.get("google_oauth_state")
         )
 
         flow.redirect_uri = GOOGLE_REDIRECT_URI
+
+        # 🔥 RESTORE PKCE
+        flow.code_verifier = session.get("code_verifier")
 
         # sécurité erreur Google
         if "error" in request.args:
@@ -151,17 +158,18 @@ def google_callback():
         session["user_name"] = name
         session.permanent = True
 
-        # cleanup state
+        # cleanup
         session.pop("google_oauth_state", None)
+        session.pop("code_verifier", None)
 
         print("SESSION AFTER GOOGLE LOGIN:", dict(session))
-        print("CALLBACK ARGS:", request.args)
-        print("SESSION STATE:", session.get("google_oauth_state"))
+
         return redirect("/")
 
     except Exception as e:
         print("GOOGLE CALLBACK ERROR:", str(e))
         return redirect(url_for("auth.login"))
+
 
 # ============================================================
 # LOGIN EMAIL
@@ -180,16 +188,13 @@ def login():
         if name:
             session["user_name"] = name
 
-        # cooldown anti spam
         last_sent = session.get("email_last_sent")
         if last_sent and time.time() - last_sent < OTP_RESEND_COOLDOWN:
             return render_template("auth/email_login.html", error=True)
 
         try:
-         lang = session.get("lang", "fr")
-
-         EmailOTPService.send_verification(email_value, lang)
-
+            lang = session.get("lang", "fr")
+            EmailOTPService.send_verification(email_value, lang)
         except Exception as e:
             print("EMAIL ERROR:", e)
             return render_template("auth/email_login.html", error=True)
@@ -226,17 +231,16 @@ def email_code():
                 error=True
             )
 
-        # ✅ USER DB
         user = get_or_create_user(email=email_value)
 
         session["user_id"] = user.id
         session["user_email"] = email_value
-        session.permanent = True  # 🔥 AJOUTE ÇA
+        session.permanent = True
+
         session.pop("pending_email", None)
         session.pop("email_last_sent", None)
 
-        next_url = request.args.get("next")
-        return redirect(next_url or "/", code=303)
+        return redirect("/", code=303)
 
     return render_template("auth/email_code.html", email=email_value)
 
@@ -263,7 +267,6 @@ def phone():
 
         try:
             code = OtpService.generate_code()
-
             OtpService.store_otp("sms", phone_number, code)
 
             SMSService.send_sms(
@@ -311,18 +314,17 @@ def otp():
         session["user_id"] = user.id
         session["user_phone"] = phone_value
         session.permanent = True
+
         session.pop("pending_phone", None)
 
-        next_url = request.args.get("next")
-        return redirect(next_url or "/", code=303)
-
-    masked_phone = _mask_phone(phone_value)
+        return redirect("/", code=303)
 
     return render_template(
         "auth/otp.html",
         phone=phone_value,
-        masked_phone=masked_phone
+        masked_phone=_mask_phone(phone_value)
     )
+
 
 # ============================================================
 # LOGOUT
