@@ -200,12 +200,12 @@ def facebook_login():
 def facebook_callback():
 
     code = request.args.get("code")
+    state = request.args.get("state")
 
-    if not code:
+    if not code or state != session.get("fb_oauth_state"):
         return redirect(url_for("auth.login"))
 
     try:
-        # 🔁 échange token
         token_url = (
             "https://graph.facebook.com/v18.0/oauth/access_token"
             f"?client_id={FACEBOOK_APP_ID}"
@@ -220,7 +220,6 @@ def facebook_callback():
         if not access_token:
             return redirect(url_for("auth.login"))
 
-        # 👤 user info
         user_res = requests.get(
             "https://graph.facebook.com/me",
             params={
@@ -232,19 +231,23 @@ def facebook_callback():
         email = user_res.get("email")
         name = user_res.get("name")
         avatar = user_res.get("picture", {}).get("data", {}).get("url")
-
+        if not email:
+         email = f"{user_res.get('id')}@facebook.com"
+         
         if not email:
             return redirect(url_for("auth.login"))
 
-        # DB
         user = get_or_create_user(email=email, name=name)
 
-        # SESSION
         session["user_id"] = user.id
         session["user_email"] = email
         session["user_name"] = name
         session["user_avatar"] = avatar
         session.permanent = True
+
+        session.pop("fb_oauth_state", None)
+
+        print("SESSION AFTER FACEBOOK LOGIN:", dict(session))
 
         return redirect(url_for("recharge.enter_number_get"))
 
