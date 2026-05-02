@@ -66,7 +66,7 @@ def create_app() -> Flask:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
 # ---------------------------
-# Security Config (FINAL PRO)
+# Security Config (FINAL FIX GOOGLE)
 # ---------------------------
     app.secret_key = config.SECRET_KEY or os.getenv("FLASK_SECRET_KEY")
 
@@ -75,16 +75,12 @@ def create_app() -> Flask:
 
     app.config["SESSION_COOKIE_HTTPONLY"] = True
 
-# 🔥 Gestion OAuth + cookies (Google compatible)
-    if os.getenv("ENV") == "production":
-      app.config["SESSION_COOKIE_SAMESITE"] = "None"   # obligatoire pour Google OAuth
-      app.config["SESSION_COOKIE_SECURE"] = True       # HTTPS only
-    else:
-       app.config["SESSION_COOKIE_SAMESITE"] = "Lax"    # OK en local
-       app.config["SESSION_COOKIE_SECURE"] = False      # HTTP local
+# 🔥 TOUJOURS compatible OAuth
+    app.config["SESSION_COOKIE_SAMESITE"] = "None"
+    app.config["SESSION_COOKIE_SECURE"] = True
 
-       app.config["PREFERRED_URL_SCHEME"] = os.getenv("PREFERRED_URL_SCHEME", "https")
-       app.config["MAX_CONTENT_LENGTH"] = config.MAX_CONTENT_LENGTH
+    app.config["PREFERRED_URL_SCHEME"] = "https"
+    app.config["MAX_CONTENT_LENGTH"] = config.MAX_CONTENT_LENGTH
 
     # ---------------------------
     # Inject current time
