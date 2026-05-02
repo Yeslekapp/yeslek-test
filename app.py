@@ -271,11 +271,21 @@ def robots():
 
     return Response("\n".join(content), mimetype="text/plain")
 
+# ---------------------------
+# Apple Pay domain verification
+# ---------------------------
+from flask import send_from_directory
+
+@app.route('/.well-known/apple-developer-merchantid-domain-association')
+def apple_pay_verification():
+    return send_from_directory(
+        'static/.well-known',
+        'apple-developer-merchantid-domain-association'
+    )
+
 @app.route("/")
 def index():
     return redirect(url_for("recharge.enter_number_get"))
-
-
 
 if __name__ == "__main__":
     app.run(

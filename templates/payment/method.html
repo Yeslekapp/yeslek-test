@@ -5,54 +5,120 @@
 {% block title %}{{ t("payment.method.title") }}{% endblock %}
 
 {% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
 <script defer src="{{ url_for('static', filename='js/tz_toast.js') }}"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
-const form = document.getElementById("paymentMethodForm");
+  const form = document.getElementById("paymentMethodForm");
+  if (!form) return;
 
-const amount = parseFloat(form.dataset.amount || "0");
+  const amount = parseFloat(form.dataset.amount || "0");
 
-const saveCardToggle = document.getElementById("saveCardToggle");
-const saveCardInput = document.getElementById("saveCardInput");
+  const saveCardToggle = document.getElementById("saveCardToggle");
+  const saveCardInput = document.getElementById("saveCardInput");
+  const finalAmountText = document.getElementById("finalAmountText");
+  const payBtn = document.getElementById("payBtn");
 
-const finalAmountText = document.getElementById("finalAmountText");
-const payBtn = document.getElementById("payBtn");
+  function format(v){
+    return (Math.round(v * 100)/100).toFixed(2);
+  }
 
-function format(v){
-return (Math.round(v * 100)/100).toFixed(2);
-}
+  function compute(){
+    let finalAmount = amount;
 
-function compute(){
+    if(finalAmountText){
+      finalAmountText.textContent = `${format(finalAmount)} €`;
+    }
 
-let finalAmount = amount;
+    if(payBtn){
+      payBtn.textContent = `Payer ${format(finalAmount)} €`;
+    }
+  }
 
-// update UI montant
-if(finalAmountText){
-finalAmountText.textContent =
-`${format(finalAmount)} €`;
-}
+  saveCardToggle?.addEventListener("change", () => {
+    saveCardInput.value = saveCardToggle.checked ? "1" : "0";
+  });
 
-// update bouton
-if(payBtn){
-payBtn.textContent =
-`Payer ${format(finalAmount)} €`;
-}
+  compute();
 
-}
+  // ---------------------------
+  // STRIPE WALLET
+  // ---------------------------
+  try {
 
-// save card toggle
-saveCardToggle?.addEventListener(
-"change",
-()=>{
-saveCardInput.value =
-saveCardToggle.checked ? "1" : "0";
-}
-);
+    const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
 
-// init
-compute();
+    const paymentRequest = stripe.paymentRequest({
+      country: 'FR',
+      currency: 'eur',
+      total: {
+        label: 'Yeslek',
+        amount: Math.round(amount * 100),
+      },
+      requestPayerName: true,
+      requestPayerEmail: true,
+    });
+
+    const result = await paymentRequest.canMakePayment();
+
+    console.log("WALLET CHECK:", result);
+
+    if (result) {
+
+      const elements = stripe.elements();
+
+      const prButton = elements.create('paymentRequestButton', {
+        paymentRequest: paymentRequest,
+        style: {
+          paymentRequestButton: {
+            theme: 'dark',
+            height: '44px',
+          }
+        }
+      });
+
+      const container = document.getElementById('walletContainer');
+
+      if (container) {
+        container.style.display = 'block';
+        prButton.mount('#payment-request-button');
+      }
+
+      paymentRequest.on('paymentmethod', async (ev) => {
+
+        try {
+          const res = await fetch("/payment/card", { method: "POST" });
+          const data = await res.json();
+
+          const confirmResult = await stripe.confirmCardPayment(
+            data.client_secret,
+            { payment_method: ev.paymentMethod.id },
+            { handleActions: false }
+          );
+
+          if (confirmResult.error) {
+            ev.complete('fail');
+          } else {
+            ev.complete('success');
+            window.location.href = "/payment/success";
+          }
+
+        } catch (err) {
+          console.error("Payment error:", err);
+          ev.complete('fail');
+        }
+
+      });
+
+    } else {
+      console.log("❌ Wallet non disponible sur cet appareil");
+    }
+
+  } catch (e) {
+    console.error("Stripe init error:", e);
+  }
 
 });
 </script>
@@ -111,7 +177,9 @@ compute();
     --------------------------- #}
     <section class="tz-card">
       <div class="tz-card__title">{{ t("payment.chooseMethod") }}</div>
-
+     <div id="walletContainer" style="display:none; margin-bottom:12px;">
+      <div id="payment-request-button"></div>
+      </div>
       <div class="tz-stack" style="gap:12px;">
 
         <button type="button"
