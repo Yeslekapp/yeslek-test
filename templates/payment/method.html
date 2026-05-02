@@ -16,15 +16,39 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const amount = parseFloat(form.dataset.amount || "0");
 
-  const payBtn = document.getElementById("payBtn");
+  const saveCardToggle = document.getElementById("saveCardToggle");
   const saveCardInput = document.getElementById("saveCardInput");
+  const finalAmountText = document.getElementById("finalAmountText");
+  const payBtn = document.getElementById("payBtn");
 
-  let walletAvailable = false;
-  let paymentRequestRef = null;
+  function format(v){
+    return (Math.round(v * 100)/100).toFixed(2);
+  }
 
-  const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+  function compute(){
+    let finalAmount = amount;
 
+    if(finalAmountText){
+      finalAmountText.textContent = `${format(finalAmount)} €`;
+    }
+
+    if(payBtn){
+      payBtn.textContent = `Payer ${format(finalAmount)} €`;
+    }
+  }
+
+  saveCardToggle?.addEventListener("change", () => {
+    saveCardInput.value = saveCardToggle.checked ? "1" : "0";
+  });
+
+  compute();
+
+  // ---------------------------
+  // STRIPE WALLET
+  // ---------------------------
   try {
+
+    const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
 
     const paymentRequest = stripe.paymentRequest({
       country: 'FR',
@@ -42,85 +66,91 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("WALLET CHECK:", result);
 
     if (result) {
-      walletAvailable = true;
-      paymentRequestRef = paymentRequest;
 
-      // 🎯 UX PRO : bouton intelligent
-      payBtn.textContent =
-        result.applePay
-          ? "Payer avec Apple Pay"
-          : "Payer avec Google Pay";
+      const elements = stripe.elements();
 
-      payBtn.classList.add("tz-wallet-primary");
-    }
-
-    // ---------------------------
-    // CLICK BUTTON (SMART)
-    // ---------------------------
-    payBtn.addEventListener("click", (e) => {
-
-      if (walletAvailable && paymentRequestRef) {
-        e.preventDefault();
-        paymentRequestRef.show();
-      }
-
-      // sinon → submit normal (fallback auto)
-    });
-
-    // ---------------------------
-    // WALLET FLOW
-    // ---------------------------
-    if (walletAvailable) {
-
-      paymentRequest.on('paymentmethod', async (ev) => {
-
-        try {
-
-          payBtn.disabled = true;
-          payBtn.textContent = "Paiement...";
-
-          const res = await fetch("/payment/card", {
-            method: "POST"
-          });
-
-          const data = await res.json();
-
-          const confirmResult = await stripe.confirmCardPayment(
-            data.client_secret,
-            { payment_method: ev.paymentMethod.id }
-          );
-
-          if (confirmResult.error) {
-            ev.complete('fail');
-
-            payBtn.disabled = false;
-            payBtn.textContent = "Réessayer";
-            return;
+      const prButton = elements.create('paymentRequestButton', {
+        paymentRequest: paymentRequest,
+        style: {
+          paymentRequestButton: {
+            theme: 'dark',
+            height: '44px',
           }
-
-          ev.complete('success');
-
-          window.location.href =
-            "/payment/success?pi=" + confirmResult.paymentIntent.id;
-
-        } catch (e) {
-          console.error(e);
-          ev.complete('fail');
-
-          payBtn.disabled = false;
-          payBtn.textContent = "Erreur - Réessayer";
         }
-
       });
 
+      const container = document.getElementById('walletContainer');
+
+      if (container) {
+        container.style.display = 'block';
+        prButton.mount('#payment-request-button');
+      }
+
+paymentRequest.on('paymentmethod', async (ev) => {
+
+  try {
+
+    // 🔒 LOCK UI
+    payBtn.disabled = true;
+    payBtn.classList.add("tz-wallet-loading");
+    payBtn.textContent = "Paiement...";
+
+const res = await fetch("/payment/card", {
+     method: "POST"
+   });
+
+    const data = await res.json();
+
+    const confirmResult = await stripe.confirmCardPayment(
+      data.client_secret,
+      {
+        payment_method: ev.paymentMethod.id,
+      }
+    );
+
+    if (confirmResult.error) {
+      console.error(confirmResult.error);
+      ev.complete('fail');
+
+      // 🔁 UNLOCK
+      payBtn.disabled = false;
+      payBtn.textContent = "Réessayer";
+      return;
+    }
+
+    if (confirmResult.paymentIntent.status === "succeeded") {
+      ev.complete('success');
+
+      // 🚀 transition smooth
+      window.location.href = "/payment/success?pi=" + confirmResult.paymentIntent.id;
+    } else {
+      ev.complete('fail');
+
+      payBtn.disabled = false;
+      payBtn.textContent = "Réessayer";
     }
 
   } catch (e) {
-    console.error("Stripe error:", e);
+    console.error(e);
+    ev.complete('fail');
+
+    payBtn.disabled = false;
+    payBtn.textContent = "Erreur - Réessayer";
+  }
+
+});
+
+    } else {
+      console.log("❌ Wallet non disponible sur cet appareil");
+    }
+
+  } catch (e) {
+    console.error("Stripe init error:", e);
   }
 
 });
 </script>
+
 {% endblock %}
 
 {% block content %}
