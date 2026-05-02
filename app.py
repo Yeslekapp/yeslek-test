@@ -32,19 +32,7 @@ from routes.reloadly import reloadly_bp
 # ---------------------------
 from db.database import Base, engine
 Base.metadata.create_all(bind=engine)
-# ---------------------------
-# Auto migrate: add balance column
-# ---------------------------
-from sqlalchemy import text
 
-with engine.connect() as conn:
-    try:
-        conn.execute(text(
-            "ALTER TABLE users ADD COLUMN balance FLOAT DEFAULT 0"
-        ))
-        conn.commit()
-    except Exception:
-        pass
 # ---------------------------
 # Helpers
 # ---------------------------
@@ -77,19 +65,26 @@ def create_app() -> Flask:
     # Proxy
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
-    # ---------------------------
-    # Security Config
-    # ---------------------------
+# ---------------------------
+# Security Config (FINAL PRO)
+# ---------------------------
     app.secret_key = config.SECRET_KEY or os.getenv("FLASK_SECRET_KEY")
 
     if not app.secret_key:
-        raise RuntimeError("SECRET_KEY must be set")
+     raise RuntimeError("SECRET_KEY must be set")
 
     app.config["SESSION_COOKIE_HTTPONLY"] = True
-    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-    app.config["SESSION_COOKIE_SECURE"] = os.getenv("ENV") == "production"
-    app.config["PREFERRED_URL_SCHEME"] = os.getenv("PREFERRED_URL_SCHEME", "https")
-    app.config["MAX_CONTENT_LENGTH"] = config.MAX_CONTENT_LENGTH
+
+# 🔥 Gestion OAuth + cookies (Google compatible)
+    if os.getenv("ENV") == "production":
+      app.config["SESSION_COOKIE_SAMESITE"] = "None"   # obligatoire pour Google OAuth
+      app.config["SESSION_COOKIE_SECURE"] = True       # HTTPS only
+    else:
+       app.config["SESSION_COOKIE_SAMESITE"] = "Lax"    # OK en local
+       app.config["SESSION_COOKIE_SECURE"] = False      # HTTP local
+
+       app.config["PREFERRED_URL_SCHEME"] = os.getenv("PREFERRED_URL_SCHEME", "https")
+       app.config["MAX_CONTENT_LENGTH"] = config.MAX_CONTENT_LENGTH
 
     # ---------------------------
     # Inject current time
@@ -188,27 +183,7 @@ def create_app() -> Flask:
         user_email = (session.get("user_email") or "").strip().lower()
         session["is_admin"] = user_email in config.ADMIN_EMAILS
 
-    # ---------------------------
-    # Inject user balance
-    # ---------------------------
-    @app.before_request
-    def inject_user_balance():
 
-        user_id = session.get("user_id")
-
-        if not user_id:
-            session["user_balance"] = 0.0
-            return
-
-        if "user_balance" in session:
-            return
-
-        try:
-            from services.user.user_service import UserService
-            balance = UserService.get_balance(user_id)
-            session["user_balance"] = float(balance or 0.0)
-        except Exception:
-            session["user_balance"] = 0.0
 
     # ---------------------------
     # Translation helper

@@ -75,11 +75,16 @@ def google_login():
 
     flow.redirect_uri = GOOGLE_REDIRECT_URI
 
-    auth_url, _ = flow.authorization_url(
-    prompt="select_account"
-)
+    # ✅ IMPORTANT: récupérer state
+    auth_url, state = flow.authorization_url(
+        prompt="select_account"
+    )
+
+    # ✅ stocker state en session
+    session["google_oauth_state"] = state
 
     return redirect(auth_url)
+
 
 # ============================================================
 # GOOGLE CALLBACK
@@ -101,22 +106,24 @@ def google_callback():
                 "https://www.googleapis.com/auth/userinfo.email",
                 "https://www.googleapis.com/auth/userinfo.profile",
                 "openid"
-            ]
+            ],
+            # ✅ CRITIQUE: restaurer state
+            state=session.get("google_oauth_state")
         )
 
         flow.redirect_uri = GOOGLE_REDIRECT_URI
 
-        # 🔥 sécurité : utilisateur annule / erreur Google
+        # sécurité erreur Google
         if "error" in request.args:
             print("GOOGLE ERROR:", request.args)
             return redirect(url_for("auth.login"))
 
-        # 🔥 échange token
+        # échange token
         flow.fetch_token(authorization_response=request.url)
 
         credentials = flow.credentials
 
-        # 🔥 appel userinfo sécurisé
+        # appel userinfo
         res = requests.get(
             "https://www.googleapis.com/oauth2/v2/userinfo",
             headers={"Authorization": f"Bearer {credentials.token}"},
@@ -132,18 +139,21 @@ def google_callback():
         email = userinfo.get("email")
         name = userinfo.get("name")
 
-        # 🔥 sécurité email obligatoire
         if not email:
             return redirect(url_for("auth.login"))
 
-        # ✅ USER DB
+        # USER DB
         user = get_or_create_user(email=email, name=name)
 
-        # ✅ SESSION
+        # SESSION LOGIN
         session["user_id"] = user.id
         session["user_email"] = email
         session["user_name"] = name
         session.permanent = True
+
+        # cleanup state
+        session.pop("google_oauth_state", None)
+
         print("SESSION AFTER GOOGLE LOGIN:", dict(session))
 
         return redirect("/")
