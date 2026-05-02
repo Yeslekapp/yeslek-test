@@ -66,30 +66,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("WALLET CHECK:", result);
 
     if (result) {
-      // ---------------------------
-// CUSTOM WALLET BUTTON LINK
-// ---------------------------
-
-const walletCustomContainer = document.getElementById("walletCustomContainer");
-const walletBtn = document.getElementById("walletCustomBtn");
-const walletLogo = document.getElementById("walletLogo");
-
-// afficher ton bouton
-if (walletCustomContainer) {
-  walletCustomContainer.style.display = "block";
-}
-
-// logo dynamique (Apple / Google)
-if (result.applePay) {
-  walletLogo.src = "/static/img/applepay.png";
-} else if (result.googlePay) {
-  walletLogo.src = "/static/img/gpay.png";
-}
-
-// CLICK → ouvre wallet Stripe
-walletBtn?.addEventListener("click", () => {
-  paymentRequest.show();
-});
 
       const elements = stripe.elements();
 
@@ -223,23 +199,6 @@ const res = await fetch("/payment/card", {
     </label>
   </div>
 </section>
-
-<div id="walletCustomContainer" style="display:none; margin-bottom:12px;">
-
-  <button type="button" class="tz-wallet-tile" id="walletCustomBtn">
-
-    <img id="walletLogo" src="/static/img/gpay.png" class="tz-wallet-logo">
-
-    <div class="tz-wallet-divider"></div>
-
-    <div class="tz-wallet-card">
-      <div class="tz-wallet-card-mock"></div>
-      <div class="tz-wallet-digits">••••</div>
-    </div>
-
-  </button>
-
-</div>
 
     {# ---------------------------
        Methods
