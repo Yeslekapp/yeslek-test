@@ -31,7 +31,10 @@ OTP_RESEND_COOLDOWN = 30
 from config import (
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
-    GOOGLE_REDIRECT_URI
+    GOOGLE_REDIRECT_URI,
+    FACEBOOK_APP_ID,
+    FACEBOOK_APP_SECRET,
+    FACEBOOK_REDIRECT_URI
 )
 
 # ---------------------------
@@ -80,19 +83,18 @@ def google_login():
 
     flow.redirect_uri = GOOGLE_REDIRECT_URI
 
-    # 🔥 IMPORTANT: récupérer state + PKCE
     auth_url, state = flow.authorization_url(
-        prompt="select_account"
+        prompt="select_account",
+        access_type="offline",
+        code_challenge=None 
     )
 
     session["google_oauth_state"] = state
-    session["code_verifier"] = flow.code_verifier   # ✅ FIX CRITIQUE
 
     return redirect(auth_url)
 
-
 # ============================================================
-# GOOGLE CALLBACK
+# GOOGLE callback
 # ============================================================
 @auth_bp.route("/google/callback")
 def google_callback():
@@ -117,20 +119,22 @@ def google_callback():
 
         flow.redirect_uri = GOOGLE_REDIRECT_URI
 
-        # 🔥 RESTORE PKCE
-        flow.code_verifier = session.get("code_verifier")
-
-        # sécurité erreur Google
+        # ---------------------------
+        # Sécurité erreur Google
+        # ---------------------------
         if "error" in request.args:
-            print("GOOGLE ERROR:", request.args)
             return redirect(url_for("auth.login"))
 
-        # échange token
+        # ---------------------------
+        # Exchange token
+        # ---------------------------
         flow.fetch_token(authorization_response=request.url)
 
         credentials = flow.credentials
 
-        # appel userinfo
+        # ---------------------------
+        # Get user info
+        # ---------------------------
         res = requests.get(
             "https://www.googleapis.com/oauth2/v2/userinfo",
             headers={"Authorization": f"Bearer {credentials.token}"},
@@ -138,7 +142,6 @@ def google_callback():
         )
 
         if res.status_code != 200:
-            print("USERINFO ERROR:", res.text)
             return redirect(url_for("auth.login"))
 
         userinfo = res.json()
@@ -149,10 +152,14 @@ def google_callback():
         if not email:
             return redirect(url_for("auth.login"))
 
+        # ---------------------------
         # USER DB
+        # ---------------------------
         user = get_or_create_user(email=email, name=name)
 
+        # ---------------------------
         # SESSION LOGIN
+        # ---------------------------
         session["user_id"] = user.id
         session["user_email"] = email
         session["user_name"] = name
@@ -160,16 +167,90 @@ def google_callback():
 
         # cleanup
         session.pop("google_oauth_state", None)
-        session.pop("code_verifier", None)
 
         print("SESSION AFTER GOOGLE LOGIN:", dict(session))
 
-        return redirect("/")
+        # ---------------------------
+        # REDIRECT FINAL
+        # ---------------------------
+        return redirect(url_for("recharge.enter_number_get"))
 
     except Exception as e:
         print("GOOGLE CALLBACK ERROR:", str(e))
         return redirect(url_for("auth.login"))
+# ============================================================
+# LOGIN facebook
+# ============================================================
+@auth_bp.route("/facebook/login")
+def facebook_login():
 
+    fb_auth_url = (
+        "https://www.facebook.com/v18.0/dialog/oauth"
+        f"?client_id={FACEBOOK_APP_ID}"
+        f"&redirect_uri={FACEBOOK_REDIRECT_URI}"
+        "&scope=email,public_profile"
+    )
+
+    return redirect(fb_auth_url)
+
+# ============================================================
+#   callbackfacebook
+# ============================================================
+@auth_bp.route("/facebook/callback")
+def facebook_callback():
+
+    code = request.args.get("code")
+
+    if not code:
+        return redirect(url_for("auth.login"))
+
+    try:
+        # 🔁 échange token
+        token_url = (
+            "https://graph.facebook.com/v18.0/oauth/access_token"
+            f"?client_id={FACEBOOK_APP_ID}"
+            f"&redirect_uri={FACEBOOK_REDIRECT_URI}"
+            f"&client_secret={FACEBOOK_APP_SECRET}"
+            f"&code={code}"
+        )
+
+        token_res = requests.get(token_url).json()
+        access_token = token_res.get("access_token")
+
+        if not access_token:
+            return redirect(url_for("auth.login"))
+
+        # 👤 user info
+        user_res = requests.get(
+            "https://graph.facebook.com/me",
+            params={
+                "fields": "id,name,email,picture",
+                "access_token": access_token
+            }
+        ).json()
+
+        email = user_res.get("email")
+        name = user_res.get("name")
+        avatar = user_res.get("picture", {}).get("data", {}).get("url")
+
+        if not email:
+            return redirect(url_for("auth.login"))
+
+        # DB
+        user = get_or_create_user(email=email, name=name)
+
+        # SESSION
+        session["user_id"] = user.id
+        session["user_email"] = email
+        session["user_name"] = name
+        session["user_avatar"] = avatar
+        session.permanent = True
+
+        return redirect(url_for("recharge.enter_number_get"))
+
+    except Exception as e:
+        print("FACEBOOK ERROR:", e)
+        return redirect(url_for("auth.login"))
 
 # ============================================================
 # LOGIN EMAIL

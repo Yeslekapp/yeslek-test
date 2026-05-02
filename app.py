@@ -75,12 +75,16 @@ def create_app() -> Flask:
 
     app.config["SESSION_COOKIE_HTTPONLY"] = True
 
-# 🔥 TOUJOURS compatible OAuth
-    app.config["SESSION_COOKIE_SAMESITE"] = "None"
-    app.config["SESSION_COOKIE_SECURE"] = True
+# ✅ FIX CRITIQUE (LOCAL vs PROD)
+    if os.getenv("ENV") == "production":
+     app.config["SESSION_COOKIE_SAMESITE"] = "None"
+     app.config["SESSION_COOKIE_SECURE"] = True
+    else:
+      app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+      app.config["SESSION_COOKIE_SECURE"] = False
 
-    app.config["PREFERRED_URL_SCHEME"] = "https"
-    app.config["MAX_CONTENT_LENGTH"] = config.MAX_CONTENT_LENGTH
+      app.config["PREFERRED_URL_SCHEME"] = "https"
+      app.config["MAX_CONTENT_LENGTH"] = config.MAX_CONTENT_LENGTH
 
     # ---------------------------
     # Inject current time

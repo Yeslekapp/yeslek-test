@@ -103,7 +103,7 @@ ADMIN_EMAILS_ENV = {
 ADMIN_EMAILS_STATIC = {
     "admin@yeslek.com",
     "safarigulahmad616@gmail.com",
-    "admin3@email.com"
+    "admin@email.com"
 }
 
 ADMIN_EMAILS = ADMIN_EMAILS_ENV.union(ADMIN_EMAILS_STATIC)
@@ -129,8 +129,7 @@ MAX_CONTENT_LENGTH = 2 * 1024 * 1024
 if not IS_PROD:
     print("[RELOADLY]", RELOADLY_BASE_URL)
     print("[STRIPE MODE]", STRIPE_MODE)
-
-    # ---------------------------
+# ---------------------------
 # Google OAuth
 # ---------------------------
 
@@ -140,3 +139,10 @@ GOOGLE_REDIRECT_URI = os.getenv(
     "GOOGLE_REDIRECT_URI",
     "https://yeslek.com/auth/google/callback"
 )
+
+# ---------------------------
+# FACEBOOK
+# ---------------------------
+FACEBOOK_APP_ID = os.getenv("FACEBOOK_APP_ID")
+FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET")
+FACEBOOK_REDIRECT_URI = os.getenv("FACEBOOK_REDIRECT_URI")

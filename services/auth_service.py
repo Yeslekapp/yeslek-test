@@ -9,7 +9,7 @@ from db.models.user import User
 # ---------------------------
 # Get or Create User
 # ---------------------------
-def get_or_create_user(email=None, phone=None):
+def get_or_create_user(email=None, phone=None, name=None):
 
     db = SessionLocal()
 
@@ -25,16 +25,27 @@ def get_or_create_user(email=None, phone=None):
             return None
 
         # ---------------------------
-        # Create user if not exists
+        # Create user
         # ---------------------------
         if not user:
             user = User(
                 email=email,
-                phone=phone
+                phone=phone,
+                name=name
             )
             db.add(user)
             db.commit()
             db.refresh(user)
+
+        else:
+            # 🔥 update name propre
+            if name and not user.name:
+                user.name = name
+                db.commit()
+                db.refresh(user)  # ✅ IMPORTANT
+
+        # 🔥 détacher proprement APRÈS tout
+        db.expunge(user)
 
         return user
 
