@@ -1,7 +1,7 @@
 {
   "common": {
     "continue": "Devam et",
-    "remove": "Kaldır",
+    "remove": "Sil",
     "hello": "Merhaba",
     "user": "Uluslararası mobil yükleme",
     "goodMorning": "Günaydın",
@@ -15,7 +15,7 @@
     "copy": "Kopyala",
     "copied": "Kopyalandı",
     "copyFailed": "Kopyalama başarısız",
-    "removed": "Kaldırıldı",
+    "removed": "Silindi",
     "close": "Kapat"
   },
 
@@ -27,22 +27,12 @@
     "about": "Hakkında"
   },
 
-  "wallet": {
-    "creditEarned": "{amount} € kredi kazandınız",
-    "creditAvailable": "Mevcut kredi",
-    "addCredit": "Kredi ekle",
-    "copyLink": "Referans bağlantısını kopyala",
-    "shareAfterPayment": "Kredi almak için bağlantıyı paylaş",
-    "continue": "Devam et",
-    "balance": "Mevcut bakiye"
-  },
-
   "auth": {
-    "name": "İsim",
+    "name": "Ad",
     "name_placeholder": "Adınız veya isminiz",
-    "login": "Giriş yap",
-    "logout": "Çıkış yap",
-    "choose": "Bir yöntem seç",
+    "login": "Giriş",
+    "logout": "Çıkış",
+    "choose": "Bir yöntem seçin",
     "choose_hint": "Hesabınıza saniyeler içinde erişin",
     "email": "E-posta",
     "phone": "Telefon",
@@ -50,27 +40,31 @@
     "email_invalid": "Geçersiz e-posta",
     "phone_required": "Numara gerekli",
     "security_hint": "Tek kullanımlık kod. Bilgilerinizi asla paylaşmayız.",
-    "email_hint": "Size bir doğrulama kodu göndereceğiz",
+    "email_hint": "Size doğrulama kodu göndereceğiz",
     "email_label": "E-posta adresi",
     "email_placeholder": "name@gmail.com",
-    "email_help": "Yazımı kontrol edin. Kod hızlı gelir.",
-    "phone_hint": "Size SMS ile bir kod göndereceğiz",
+    "email_help": "Yazımı kontrol edin. Kod hızlıca gelir.",
+    "phone_hint": "Size SMS ile kod göndereceğiz",
     "phone_label": "Telefon numarası",
     "phone_placeholder": "Telefon numarası",
-    "phone_help": "Uluslararası format kullanın (örn. +33...).",
+    "phone_help": "Uluslararası format kullanın (örn: +33...).",
     "invalid_phone": "Geçersiz numara",
     "otp_title": "Doğrulama",
     "otp_sent_to": "Kod gönderildi",
     "otp_label": "Kod",
     "otp_placeholder": "Kodu girin",
-    "otp_help": "Kodu yapıştırabilirsiniz. Tek kullanımlık.",
+    "otp_help": "Kodu yapıştırabilirsiniz. Tek kullanımlıktır.",
     "otp_invalid": "Geçersiz veya süresi dolmuş kod",
+    "continue_google": "Google ile devam et",
+    "continue_facebook": "Facebook ile devam et",
+    "continue_phone": "Telefon ile",
+    "continue_email": "E-posta",
     "resend": "Tekrar gönder",
     "change_email": "E-postayı değiştir",
     "change_phone": "Numarayı değiştir",
     "logout_confirm": "Çıkış yapmak istiyor musunuz?",
-    "or_continue": "Veya devam et",
-    "legal_notice": "Devam ederek Kullanım Şartları ve Gizlilik Politikasını kabul edersiniz."
+    "or_continue": "Veya şununla devam et",
+    "legal_notice": "Devam ederek Kullanım Koşullarımızı ve Gizlilik Politikamızı kabul edersiniz."
   },
 
   "lang": {
@@ -80,7 +74,7 @@
 
   "recharge": {
     "enterNumber": {
-      "title": "Numara gir",
+      "title": "Numara girin",
       "beneficiaryNumber": "Alıcı numarası",
       "phoneExample": "+33…",
       "enterNumber": "Bir numara girin",
@@ -93,30 +87,31 @@
     },
 
     "selectOperator": {
-      "title": "Operatör seç",
+      "title": "Operatör seçin",
       "emptyTitle": "Operatör bulunamadı",
       "emptyMessage": "Bu numara için operatör bulunamadı."
     },
 
     "selectForfait": {
-      "title": "Paket seç",
+      "title": "Paket seçin",
       "internet": "İnternet",
       "days": "{days} gün"
     },
 
     "selectAmount": {
-      "title": "Tutar seç",
+      "title": "Tutar seçin",
       "operatorNotDetected": "Operatör algılanamadı",
       "editOperator": "Operatörü değiştir",
       "amountLabel": "Tutar",
-      "chooseInternetPlan": "İnternet paketi seç",
-      "creditAndTotal": "Kredi & toplam",
+      "chooseInternetPlan": "İnternet paketi seçin",
       "amountRow": "Tutar",
       "taxesRow": "Vergiler",
       "receivedAmountTitle": "Alıcıya ulaşan",
       "goToPay": "Öde",
       "operatorPickerSoon": "Operatör seçimi yakında",
-      "choose": "Seç"
+      "choose": "Seç",
+      "instant": "Anında yükleme",
+      "secure": "Güvenli ödeme"
     }
   },
 
@@ -125,8 +120,8 @@
       "title": "Ödeme yöntemi",
       "points": "Puanlar",
       "saveCard": "Kartı kaydet",
-      "chooseMethod": "Bir yöntem seç",
-      "cardPayment": "Kredi kartı",
+      "chooseMethod": "Bir yöntem seçin",
+      "cardPayment": "Kart ile ödeme",
       "cardPaymentDesc": "Güvenli ödeme",
       "applePay": "Apple Pay",
       "applePayDesc": "Yakında",
@@ -136,26 +131,25 @@
       "paypalDesc": "Yakında",
       "wallet": "Cüzdan",
       "walletDesc": "Yakında",
-      "methodSelected": "Yöntem seçildi",
+      "methodSelected": "Seçilen yöntem",
       "methodUnavailable": "Yöntem kullanılamıyor",
       "paypalComingSoon": "Yakında",
       "pay": "{amount} öde",
       "pointsAvailable": "Mevcut puanlar: {points}",
-      "setDefault": "Varsayılan ödeme yöntemi yap",
-
+      "setDefault": "Varsayılan ödeme yöntemi olarak ayarla",
       "payment.method.title": "Ödeme yöntemi",
       "payment.points.title": "Puanlar",
       "payment.points.available": "Mevcut puanlar: {points}",
       "payment.saveCard": "Kartı kaydet",
-      "payment.chooseMethod": "Ödeme yöntemi seç",
-      "payment.methods.card.title": "Kredi kartı",
-      "payment.methods.card.desc": "Visa veya Mastercard ile öde",
-      "payment.methodSelected": "Yöntem seçildi",
+      "payment.chooseMethod": "Bir ödeme yöntemi seçin",
+      "payment.methods.card.title": "Kart ile ödeme",
+      "payment.methods.card.desc": "Visa veya Mastercard ile ödeyin",
+      "payment.methodSelected": "Seçilen yöntem",
       "payment.pay": "{amount} € öde",
       "currency.eur": "€",
 
       "legacy_errors": {
-        "emptyName": "Lütfen kart sahibinin adını girin",
+        "emptyName": "Lütfen kart üzerindeki ismi girin",
         "invalidName": "Geçersiz isim",
         "invalidCardNumber": "Geçersiz kart numarası",
         "incompleteCardNumber": "Eksik kart numarası",
@@ -163,7 +157,9 @@
         "invalidCvc": "Geçersiz güvenlik kodu",
         "paymentFailed": "Ödeme başarısız",
         "paymentNotCompleted": "Ödeme tamamlanmadı",
-        "serverError": "Sunucu hatası, lütfen tekrar deneyin"
+        "serverError": "Sunucu hatası, lütfen tekrar deneyin",
+        "expiry": "Son kullanma",
+        "default": "Varsayılan"
       }
     },
 
@@ -174,14 +170,14 @@
 
     "methods": {
       "card": {
-        "title": "Kredi kartı",
-        "desc": "Visa veya Mastercard ile öde"
+        "title": "Kart ile ödeme",
+        "desc": "Visa veya Mastercard ile ödeyin"
       }
     },
 
     "saveCard": "Kartı kaydet",
-    "chooseMethod": "Ödeme yöntemi seç",
-    "methodSelected": "Yöntem seçildi",
+    "chooseMethod": "Bir ödeme yöntemi seçin",
+    "methodSelected": "Seçilen yöntem",
     "pay": "{amount} € öde",
 
     "card": {
@@ -199,9 +195,10 @@
       "invalidCardNumber": "Geçersiz kart numarası",
       "invalidExpiry": "Geçersiz tarih",
       "invalidCvv": "Geçersiz CVV",
-      "formError": "Hataları düzeltin",
+      "formError": "Lütfen hataları düzeltin",
+
       "errors": {
-        "emptyName": "Lütfen kart sahibinin adını girin",
+        "emptyName": "Lütfen kart üzerindeki ismi girin",
         "invalidName": "Geçersiz isim",
         "invalidCardNumber": "Geçersiz kart numarası",
         "incompleteCardNumber": "Eksik kart numarası",
@@ -215,7 +212,7 @@
 
     "success": {
       "title": "Ödeme başarılı",
-      "message": "Ödemeniz doğrulandı.",
+      "message": "Ödemeniz onaylandı.",
       "amount": "Tutar",
       "date": "Tarih",
       "order": "Sipariş",
@@ -225,7 +222,7 @@
       "dateLabel": "Tarih",
       "orderLabel": "Sipariş",
       "referenceLabel": "Referans",
-      "processing": "Yükleme devam ediyor... lütfen bekleyin ⏳",
+      "processing": "Yükleme yapılıyor... lütfen bekleyin ⏳",
       "done": "Yükleme başarıyla gönderildi ✅"
     },
 
@@ -246,7 +243,22 @@
   },
 
   "history": {
-    "empty": "Geçmiş yok"
+    "title": "Geçmiş",
+    "empty": "Henüz işlem yok",
+
+    "status": {
+      "success": "Başarılı",
+      "pending": "Beklemede",
+      "failed": "Başarısız",
+      "all": "Tümü"
+    },
+
+    "labels": {
+      "amount": "Tutar",
+      "date": "Tarih",
+      "country": "Ülke",
+      "phone": "Numara"
+    }
   },
 
   "menu": {
@@ -256,14 +268,23 @@
   "about": {
     "description": "Basit ve hızlı mobil yükleme uygulaması.",
     "privacy": "Gizlilik politikası",
-    "terms": "Kullanım şartları"
+    "terms": "Kullanım koşulları"
+  },
+
+  "time": {
+    "day": "gün",
+    "days": "gün",
+    "week": "hafta",
+    "weeks": "hafta",
+    "month": "ay",
+    "months": "ay"
   },
 
   "profile": {
-    "name": "İsim",
+    "name": "Ad",
     "email": "E-posta",
     "phone": "Telefon",
     "birthdate": "Doğum tarihi",
-    "not_defined": "Tanımlı değil"
+    "not_defined": "Tanımlanmadı"
   }
 }

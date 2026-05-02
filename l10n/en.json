@@ -27,61 +27,43 @@
     "about": "About"
   },
 
-  "wallet": {
-    "creditEarned": "You earn {amount} € credit",
-    "creditAvailable": "Available credit",
-    "addCredit": "Add credit",
-    "copyLink": "Copy referral link",
-    "shareAfterPayment": "Share the link to receive credit",
-    "continue": "Continue",
-    "balance": "Available balance"
-  },
-
   "auth": {
     "name": "Name",
     "name_placeholder": "Your name or first name",
-
     "login": "Login",
     "logout": "Logout",
     "choose": "Choose a method",
     "choose_hint": "Access your account in seconds",
-
     "email": "Email",
     "phone": "Phone",
-
     "email_required": "Email required",
     "email_invalid": "Invalid email",
     "phone_required": "Number required",
-
     "security_hint": "One-time code. We never share your information.",
-
     "email_hint": "We will send you a verification code",
     "email_label": "Email address",
     "email_placeholder": "name@gmail.com",
     "email_help": "Check spelling. The code arrives quickly.",
-
     "phone_hint": "We will send you a code by SMS",
     "phone_label": "Phone number",
     "phone_placeholder": "Phone number",
     "phone_help": "Use international format (e.g. +33...).",
-
     "invalid_phone": "Invalid number",
-
     "otp_title": "Verification",
     "otp_sent_to": "Code sent to",
     "otp_label": "Code",
     "otp_placeholder": "Enter the code",
-    "otp_help": "You can paste the code. One-time use.",
+    "otp_help": "You can paste the code. It is single-use.",
     "otp_invalid": "Invalid or expired code",
-
+    "continue_google": "Continue with Google",
+    "continue_facebook": "Continue with Facebook",
+    "continue_phone": "With phone",
+    "continue_email": "Email",
     "resend": "Resend",
     "change_email": "Change email",
     "change_phone": "Change number",
-
     "logout_confirm": "Do you want to log out?",
-
     "or_continue": "Or continue with",
-
     "legal_notice": "By continuing, you accept our Terms of Use and Privacy Policy."
   },
 
@@ -95,11 +77,9 @@
       "title": "Enter number",
       "beneficiaryNumber": "Recipient number",
       "phoneExample": "+33…",
-
       "enterNumber": "Enter a number",
       "validNumber": "Valid number",
       "invalidNumber": "Invalid number",
-
       "enterValidNumber": "Enter a valid number",
       "searchCountry": "Search…",
       "contacts": "Contacts",
@@ -109,7 +89,7 @@
     "selectOperator": {
       "title": "Choose operator",
       "emptyTitle": "No operator found",
-      "emptyMessage": "We couldn't find any operator for this number."
+      "emptyMessage": "We could not find any operator for this number."
     },
 
     "selectForfait": {
@@ -121,16 +101,17 @@
     "selectAmount": {
       "title": "Choose amount",
       "operatorNotDetected": "Operator not detected",
-      "editOperator": "Change operator",
+      "editOperator": "Edit operator",
       "amountLabel": "Amount",
-      "chooseInternetPlan": "Choose internet plan",
-      "creditAndTotal": "Credit & total",
+      "chooseInternetPlan": "Choose an internet plan",
       "amountRow": "Amount",
       "taxesRow": "Taxes",
       "receivedAmountTitle": "They receive",
       "goToPay": "Pay",
       "operatorPickerSoon": "Operator selection coming soon",
-      "choose": "Choose"
+      "choose": "Choose",
+      "instant": "Instant top-up",
+      "secure": "Secure payment"
     }
   },
 
@@ -140,7 +121,7 @@
       "points": "Points",
       "saveCard": "Save card",
       "chooseMethod": "Choose a method",
-      "cardPayment": "Credit card",
+      "cardPayment": "Card payment",
       "cardPaymentDesc": "Secure payment",
       "applePay": "Apple Pay",
       "applePayDesc": "Coming soon",
@@ -150,34 +131,35 @@
       "paypalDesc": "Coming soon",
       "wallet": "Wallet",
       "walletDesc": "Coming soon",
-      "methodSelected": "Method selected",
+      "methodSelected": "Selected method",
       "methodUnavailable": "Method unavailable",
       "paypalComingSoon": "Coming soon",
       "pay": "Pay {amount}",
       "pointsAvailable": "Available points: {points}",
       "setDefault": "Set as payment method",
-
       "payment.method.title": "Payment method",
       "payment.points.title": "Points",
       "payment.points.available": "Available points: {points}",
       "payment.saveCard": "Save card",
-      "payment.chooseMethod": "Choose payment method",
-      "payment.methods.card.title": "Credit card",
-      "payment.methods.card.desc": "Pay with Visa or Mastercard",
-      "payment.methodSelected": "Method selected",
+      "payment.chooseMethod": "Choose a payment method",
+      "payment.methods.card.title": "Card payment",
+      "payment.methods.card.desc": "Pay with your Visa or Mastercard",
+      "payment.methodSelected": "Selected method",
       "payment.pay": "Pay {amount} €",
       "currency.eur": "€",
 
       "legacy_errors": {
-        "emptyName": "Please enter cardholder name",
+        "emptyName": "Please enter the name on the card",
         "invalidName": "Invalid name",
         "invalidCardNumber": "Invalid card number",
         "incompleteCardNumber": "Incomplete card number",
-        "invalidExpiry": "Invalid expiration date",
+        "invalidExpiry": "Invalid expiry date",
         "invalidCvc": "Invalid security code",
         "paymentFailed": "Payment failed",
         "paymentNotCompleted": "Payment not completed",
-        "serverError": "Server error, please try again"
+        "serverError": "Server error, please try again",
+        "expiry": "Expires on",
+        "default": "Default"
       }
     },
 
@@ -188,14 +170,14 @@
 
     "methods": {
       "card": {
-        "title": "Credit card",
-        "desc": "Pay with Visa or Mastercard"
+        "title": "Card payment",
+        "desc": "Pay with your Visa or Mastercard"
       }
     },
 
     "saveCard": "Save card",
-    "chooseMethod": "Choose payment method",
-    "methodSelected": "Method selected",
+    "chooseMethod": "Choose a payment method",
+    "methodSelected": "Selected method",
     "pay": "Pay {amount} €",
 
     "card": {
@@ -203,26 +185,24 @@
       "securityNotice": "Your payment information is protected.",
       "invalidForm": "Invalid form.",
       "genericError": "An error occurred.",
-
       "holderName": "Cardholder name",
       "number": "Card number",
       "expiry": "MM/YY",
       "cvv": "CVV",
       "payAmount": "Pay {amount} €",
       "scanTooltip": "Scan card",
-
       "invalidCardHolderName": "Invalid name",
       "invalidCardNumber": "Invalid card number",
       "invalidExpiry": "Invalid date",
       "invalidCvv": "Invalid CVV",
-      "formError": "Please fix errors",
+      "formError": "Please fix the errors",
 
       "errors": {
-        "emptyName": "Please enter cardholder name",
+        "emptyName": "Please enter the name on the card",
         "invalidName": "Invalid name",
         "invalidCardNumber": "Invalid card number",
         "incompleteCardNumber": "Incomplete card number",
-        "invalidExpiry": "Invalid expiration date",
+        "invalidExpiry": "Invalid expiry date",
         "invalidCvc": "Invalid security code",
         "paymentFailed": "Payment failed",
         "paymentNotCompleted": "Payment not completed",
@@ -238,12 +218,10 @@
       "order": "Order",
       "reference": "Reference",
       "finish": "Finish",
-
       "amountLabel": "Amount",
       "dateLabel": "Date",
       "orderLabel": "Order",
       "referenceLabel": "Reference",
-
       "processing": "Top-up in progress... please wait ⏳",
       "done": "Top-up sent successfully ✅"
     },
@@ -265,7 +243,22 @@
   },
 
   "history": {
-    "empty": "No history"
+    "title": "History",
+    "empty": "No transactions yet",
+
+    "status": {
+      "success": "Success",
+      "pending": "Pending",
+      "failed": "Failed",
+      "all": "All"
+    },
+
+    "labels": {
+      "amount": "Amount",
+      "date": "Date",
+      "country": "Country",
+      "phone": "Number"
+    }
   },
 
   "menu": {
@@ -276,6 +269,15 @@
     "description": "Simple and fast mobile top-up app.",
     "privacy": "Privacy policy",
     "terms": "Terms of use"
+  },
+
+  "time": {
+    "day": "day",
+    "days": "days",
+    "week": "week",
+    "weeks": "weeks",
+    "month": "month",
+    "months": "months"
   },
 
   "profile": {

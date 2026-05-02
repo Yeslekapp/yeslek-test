@@ -181,14 +181,21 @@ def google_callback():
 # ============================================================
 # LOGIN facebook
 # ============================================================
+import secrets
+
 @auth_bp.route("/facebook/login")
 def facebook_login():
+
+    state = secrets.token_urlsafe(16)
+
+    session["fb_oauth_state"] = state
 
     fb_auth_url = (
         "https://www.facebook.com/v18.0/dialog/oauth"
         f"?client_id={FACEBOOK_APP_ID}"
         f"&redirect_uri={FACEBOOK_REDIRECT_URI}"
         "&scope=email,public_profile"
+        f"&state={state}"
     )
 
     return redirect(fb_auth_url)

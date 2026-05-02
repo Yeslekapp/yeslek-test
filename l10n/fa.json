@@ -3,7 +3,7 @@
     "continue": "ادامه",
     "remove": "حذف",
     "hello": "سلام",
-    "user": "شارژ بین‌المللی موبایل",
+    "user": "شارژ موبایل بین‌المللی",
     "goodMorning": "صبح بخیر",
     "goodEvening": "عصر بخیر",
     "goodAfternoon": "بعدازظهر بخیر",
@@ -27,25 +27,15 @@
     "about": "درباره"
   },
 
-  "wallet": {
-    "creditEarned": "شما {amount} € اعتبار دریافت می‌کنید",
-    "creditAvailable": "اعتبار موجود",
-    "addCredit": "افزودن اعتبار",
-    "copyLink": "کپی لینک دعوت",
-    "shareAfterPayment": "برای دریافت اعتبار لینک را به اشتراک بگذارید",
-    "continue": "ادامه",
-    "balance": "موجودی در دسترس"
-  },
-
   "auth": {
     "name": "نام",
-    "name_placeholder": "نام یا اسم شما",
+    "name_placeholder": "نام یا نام کوچک شما",
     "login": "ورود",
     "logout": "خروج",
     "choose": "یک روش انتخاب کنید",
     "choose_hint": "در چند ثانیه به حساب خود دسترسی پیدا کنید",
     "email": "ایمیل",
-    "phone": "شماره تلفن",
+    "phone": "تلفن",
     "email_required": "ایمیل الزامی است",
     "email_invalid": "ایمیل نامعتبر است",
     "phone_required": "شماره الزامی است",
@@ -57,20 +47,24 @@
     "phone_hint": "یک کد از طریق پیامک ارسال می‌کنیم",
     "phone_label": "شماره تلفن",
     "phone_placeholder": "شماره تلفن",
-    "phone_help": "از فرمت بین‌المللی استفاده کنید (مثلاً +33...).",
-    "invalid_phone": "شماره نامعتبر",
+    "phone_help": "از فرمت بین‌المللی استفاده کنید (مثال: +33...).",
+    "invalid_phone": "شماره نامعتبر است",
     "otp_title": "تأیید",
     "otp_sent_to": "کد ارسال شد به",
     "otp_label": "کد",
     "otp_placeholder": "کد را وارد کنید",
-    "otp_help": "می‌توانید کد را پیست کنید. یک‌بار مصرف است.",
+    "otp_help": "می‌توانید کد را جای‌گذاری کنید. یک‌بار مصرف است.",
     "otp_invalid": "کد نامعتبر یا منقضی شده",
+    "continue_google": "ادامه با Google",
+    "continue_facebook": "ادامه با Facebook",
+    "continue_phone": "با تلفن",
+    "continue_email": "ایمیل",
     "resend": "ارسال مجدد",
     "change_email": "تغییر ایمیل",
     "change_phone": "تغییر شماره",
     "logout_confirm": "آیا می‌خواهید خارج شوید؟",
     "or_continue": "یا ادامه با",
-    "legal_notice": "با ادامه، شرایط استفاده و سیاست حفظ حریم خصوصی را می‌پذیرید."
+    "legal_notice": "با ادامه، شما شرایط استفاده و سیاست حفظ حریم خصوصی ما را می‌پذیرید."
   },
 
   "lang": {
@@ -81,7 +75,7 @@
   "recharge": {
     "enterNumber": {
       "title": "وارد کردن شماره",
-      "beneficiaryNumber": "شماره گیرنده",
+      "beneficiaryNumber": "شماره دریافت‌کننده",
       "phoneExample": "+33…",
       "enterNumber": "یک شماره وارد کنید",
       "validNumber": "شماره معتبر",
@@ -89,13 +83,13 @@
       "enterValidNumber": "یک شماره معتبر وارد کنید",
       "searchCountry": "جستجو…",
       "contacts": "مخاطبین",
-      "noInternetPlans": "برای این اپراتور بسته اینترنتی موجود نیست"
+      "noInternetPlans": "هیچ بسته اینترنتی برای این اپراتور موجود نیست"
     },
 
     "selectOperator": {
       "title": "انتخاب اپراتور",
-      "emptyTitle": "اپراتوری یافت نشد",
-      "emptyMessage": "برای این شماره اپراتوری پیدا نکردیم."
+      "emptyTitle": "اپراتوری پیدا نشد",
+      "emptyMessage": "هیچ اپراتوری برای این شماره پیدا نشد."
     },
 
     "selectForfait": {
@@ -109,14 +103,15 @@
       "operatorNotDetected": "اپراتور شناسایی نشد",
       "editOperator": "تغییر اپراتور",
       "amountLabel": "مبلغ",
-      "chooseInternetPlan": "انتخاب بسته اینترنت",
-      "creditAndTotal": "اعتبار و مجموع",
+      "chooseInternetPlan": "انتخاب بسته اینترنتی",
       "amountRow": "مبلغ",
       "taxesRow": "مالیات",
-      "receivedAmountTitle": "دریافتی",
+      "receivedAmountTitle": "دریافت می‌کنند",
       "goToPay": "پرداخت",
-      "operatorPickerSoon": "انتخاب اپراتور به زودی",
-      "choose": "انتخاب"
+      "operatorPickerSoon": "انتخاب اپراتور به‌زودی",
+      "choose": "انتخاب",
+      "instant": "شارژ فوری",
+      "secure": "پرداخت امن"
     }
   },
 
@@ -125,45 +120,46 @@
       "title": "روش پرداخت",
       "points": "امتیازها",
       "saveCard": "ذخیره کارت",
-      "chooseMethod": "یک روش انتخاب کنید",
-      "cardPayment": "کارت بانکی",
+      "chooseMethod": "انتخاب روش",
+      "cardPayment": "پرداخت با کارت",
       "cardPaymentDesc": "پرداخت امن",
       "applePay": "Apple Pay",
-      "applePayDesc": "به زودی",
+      "applePayDesc": "به‌زودی",
       "googlePay": "Google Pay",
-      "googlePayDesc": "به زودی",
+      "googlePayDesc": "به‌زودی",
       "paypal": "PayPal",
-      "paypalDesc": "به زودی",
+      "paypalDesc": "به‌زودی",
       "wallet": "کیف پول",
-      "walletDesc": "به زودی",
-      "methodSelected": "روش انتخاب شد",
+      "walletDesc": "به‌زودی",
+      "methodSelected": "روش انتخاب‌شده",
       "methodUnavailable": "روش در دسترس نیست",
-      "paypalComingSoon": "به زودی",
+      "paypalComingSoon": "به‌زودی",
       "pay": "پرداخت {amount}",
       "pointsAvailable": "امتیازهای موجود: {points}",
-      "setDefault": "تنظیم به عنوان روش پرداخت",
-
+      "setDefault": "تنظیم به‌عنوان روش پیش‌فرض",
       "payment.method.title": "روش پرداخت",
       "payment.points.title": "امتیازها",
       "payment.points.available": "امتیازهای موجود: {points}",
       "payment.saveCard": "ذخیره کارت",
       "payment.chooseMethod": "انتخاب روش پرداخت",
-      "payment.methods.card.title": "کارت بانکی",
-      "payment.methods.card.desc": "پرداخت با ویزا یا مسترکارت",
-      "payment.methodSelected": "روش انتخاب شد",
+      "payment.methods.card.title": "پرداخت با کارت",
+      "payment.methods.card.desc": "پرداخت با Visa یا Mastercard",
+      "payment.methodSelected": "روش انتخاب‌شده",
       "payment.pay": "پرداخت {amount} €",
       "currency.eur": "€",
 
       "legacy_errors": {
-        "emptyName": "لطفاً نام دارنده کارت را وارد کنید",
+        "emptyName": "لطفاً نام روی کارت را وارد کنید",
         "invalidName": "نام نامعتبر",
         "invalidCardNumber": "شماره کارت نامعتبر",
-        "incompleteCardNumber": "شماره کارت ناقص",
+        "incompleteCardNumber": "شماره کارت ناقص است",
         "invalidExpiry": "تاریخ انقضا نامعتبر",
         "invalidCvc": "کد امنیتی نامعتبر",
         "paymentFailed": "پرداخت ناموفق",
         "paymentNotCompleted": "پرداخت تکمیل نشد",
-        "serverError": "خطای سرور، لطفاً دوباره تلاش کنید"
+        "serverError": "خطای سرور، لطفاً دوباره تلاش کنید",
+        "expiry": "تاریخ انقضا",
+        "default": "پیش‌فرض"
       }
     },
 
@@ -174,21 +170,21 @@
 
     "methods": {
       "card": {
-        "title": "کارت بانکی",
-        "desc": "پرداخت با ویزا یا مسترکارت"
+        "title": "پرداخت با کارت",
+        "desc": "پرداخت با Visa یا Mastercard"
       }
     },
 
     "saveCard": "ذخیره کارت",
     "chooseMethod": "انتخاب روش پرداخت",
-    "methodSelected": "روش انتخاب شد",
+    "methodSelected": "روش انتخاب‌شده",
     "pay": "پرداخت {amount} €",
 
     "card": {
       "title": "پرداخت با کارت",
       "securityNotice": "اطلاعات پرداخت شما محافظت می‌شود.",
       "invalidForm": "فرم نامعتبر است.",
-      "genericError": "خطایی رخ داد.",
+      "genericError": "خطایی رخ داده است.",
       "holderName": "نام دارنده کارت",
       "number": "شماره کارت",
       "expiry": "MM/YY",
@@ -200,11 +196,12 @@
       "invalidExpiry": "تاریخ نامعتبر",
       "invalidCvv": "CVV نامعتبر",
       "formError": "لطفاً خطاها را اصلاح کنید",
+
       "errors": {
-        "emptyName": "لطفاً نام دارنده کارت را وارد کنید",
+        "emptyName": "لطفاً نام روی کارت را وارد کنید",
         "invalidName": "نام نامعتبر",
         "invalidCardNumber": "شماره کارت نامعتبر",
-        "incompleteCardNumber": "شماره کارت ناقص",
+        "incompleteCardNumber": "شماره کارت ناقص است",
         "invalidExpiry": "تاریخ انقضا نامعتبر",
         "invalidCvc": "کد امنیتی نامعتبر",
         "paymentFailed": "پرداخت ناموفق",
@@ -225,7 +222,7 @@
       "dateLabel": "تاریخ",
       "orderLabel": "سفارش",
       "referenceLabel": "مرجع",
-      "processing": "شارژ در حال انجام است... لطفاً صبر کنید ⏳",
+      "processing": "در حال انجام شارژ... لطفاً صبر کنید ⏳",
       "done": "شارژ با موفقیت ارسال شد ✅"
     },
 
@@ -246,7 +243,22 @@
   },
 
   "history": {
-    "empty": "تاریخی وجود ندارد"
+    "title": "تاریخچه",
+    "empty": "هنوز تراکنشی وجود ندارد",
+
+    "status": {
+      "success": "موفق",
+      "pending": "در انتظار",
+      "failed": "ناموفق",
+      "all": "همه"
+    },
+
+    "labels": {
+      "amount": "مبلغ",
+      "date": "تاریخ",
+      "country": "کشور",
+      "phone": "شماره"
+    }
   },
 
   "menu": {
@@ -254,15 +266,24 @@
   },
 
   "about": {
-    "description": "اپلیکیشن ساده و سریع برای شارژ موبایل.",
+    "description": "اپلیکیشن ساده و سریع شارژ موبایل.",
     "privacy": "سیاست حفظ حریم خصوصی",
     "terms": "شرایط استفاده"
+  },
+
+  "time": {
+    "day": "روز",
+    "days": "روز",
+    "week": "هفته",
+    "weeks": "هفته",
+    "month": "ماه",
+    "months": "ماه"
   },
 
   "profile": {
     "name": "نام",
     "email": "ایمیل",
-    "phone": "شماره تلفن",
+    "phone": "تلفن",
     "birthdate": "تاریخ تولد",
     "not_defined": "تعریف نشده"
   }

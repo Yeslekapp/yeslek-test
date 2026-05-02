@@ -65,26 +65,29 @@ def create_app() -> Flask:
     # Proxy
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
+
 # ---------------------------
-# Security Config (FINAL FIX GOOGLE)
+# Security Config (FINAL SESSION FIX)
 # ---------------------------
     app.secret_key = config.SECRET_KEY or os.getenv("FLASK_SECRET_KEY")
 
     if not app.secret_key:
      raise RuntimeError("SECRET_KEY must be set")
 
-    app.config["SESSION_COOKIE_HTTPONLY"] = True
+     app.config["SESSION_COOKIE_NAME"] = "yeslek_session"
+     app.config["SESSION_COOKIE_HTTPONLY"] = True
+     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=365 * 5)
 
-# ✅ FIX CRITIQUE (LOCAL vs PROD)
+# ✅ Cookies session: local vs production
     if os.getenv("ENV") == "production":
      app.config["SESSION_COOKIE_SAMESITE"] = "None"
      app.config["SESSION_COOKIE_SECURE"] = True
     else:
-      app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-      app.config["SESSION_COOKIE_SECURE"] = False
+     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+     app.config["SESSION_COOKIE_SECURE"] = False
 
-      app.config["PREFERRED_URL_SCHEME"] = "https"
-      app.config["MAX_CONTENT_LENGTH"] = config.MAX_CONTENT_LENGTH
+     app.config["PREFERRED_URL_SCHEME"] = "https"
+     app.config["MAX_CONTENT_LENGTH"] = config.MAX_CONTENT_LENGTH
 
     # ---------------------------
     # Inject current time

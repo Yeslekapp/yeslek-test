@@ -31,48 +31,40 @@
   "auth": {
     "name": "Nom",
     "name_placeholder": "Votre nom ou prénom",
-
     "login": "Connexion",
     "logout": "Déconnexion",
     "choose": "Choisir une méthode",
     "choose_hint": "Accédez à votre compte en quelques secondes",
-
     "email": "Email",
     "phone": "Téléphone",
-
     "email_required": "Email requis",
     "email_invalid": "Email invalide",
     "phone_required": "Numéro requis",
-
     "security_hint": "Code à usage unique. Nous ne partageons jamais vos informations.",
-
     "email_hint": "Nous vous enverrons un code de vérification",
     "email_label": "Adresse email",
     "email_placeholder": "nom@gmail.com",
     "email_help": "Vérifiez l’orthographe. Le code arrive rapidement.",
-
     "phone_hint": "Nous vous enverrons un code par SMS",
     "phone_label": "Numéro de téléphone",
     "phone_placeholder": "Numéro de téléphone",
     "phone_help": "Utilisez le format international (ex: +33...).",
-
     "invalid_phone": "Numéro invalide",
-
     "otp_title": "Vérification",
     "otp_sent_to": "Code envoyé à",
     "otp_label": "Code",
     "otp_placeholder": "Saisissez le code",
     "otp_help": "Vous pouvez coller le code. Il est à usage unique.",
     "otp_invalid": "Code invalide ou expiré",
-
+    "continue_google": "Continuer avec Google",
+    "continue_facebook": "Continuer avec Facebook",
+    "continue_phone": "Avec téléphone",
+    "continue_email": "Email",
     "resend": "Renvoyer",
     "change_email": "Modifier l’email",
     "change_phone": "Modifier le numéro",
-
     "logout_confirm": "Voulez-vous vous déconnecter ?",
-
     "or_continue": "Ou continuer avec",
-
     "legal_notice": "En poursuivant, vous acceptez nos Conditions d’utilisation et notre Politique de confidentialité."
   },
 
@@ -86,11 +78,9 @@
       "title": "Entrer le numéro",
       "beneficiaryNumber": "Numéro du bénéficiaire",
       "phoneExample": "+33…",
-
       "enterNumber": "Entrez un numéro",
       "validNumber": "Numéro valide",
       "invalidNumber": "Numéro invalide",
-
       "enterValidNumber": "Entrez un numéro valide",
       "searchCountry": "Rechercher…",
       "contacts": "Contacts",
@@ -148,7 +138,6 @@
     "pay": "Payer {amount}",
     "pointsAvailable": "Points disponibles : {points}",
     "setDefault": "Définir comme moyen de paiement",
-
     "payment.method.title": "Méthode de paiement",
     "payment.points.title": "Points",
     "payment.points.available": "Points disponibles : {points}",
@@ -197,14 +186,12 @@
     "securityNotice": "Vos informations de paiement sont protégées.",
     "invalidForm": "Formulaire invalide.",
     "genericError": "Une erreur est survenue.",
-
     "holderName": "Nom du titulaire",
     "number": "Numéro de carte",
     "expiry": "MM/AA",
     "cvv": "CVV",
     "payAmount": "Payer {amount} €",
     "scanTooltip": "Scanner la carte",
-
     "invalidCardHolderName": "Nom invalide",
     "invalidCardNumber": "Numéro de carte invalide",
     "invalidExpiry": "Date invalide",
@@ -233,12 +220,10 @@
       "order": "Commande",
       "reference": "Référence",
       "finish": "Terminer",
-
       "amountLabel": "Montant",
       "dateLabel": "Date",
       "orderLabel": "Commande",
       "referenceLabel": "Référence",
-
       "processing": "Recharge en cours... veuillez patienter ⏳",
       "done": "Recharge envoyée avec succès ✅"
     },

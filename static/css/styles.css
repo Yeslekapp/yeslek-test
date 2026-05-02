@@ -2386,3 +2386,26 @@ LOGOUT FIX (isolé propre)
 .tz-icon-btn.danger{
   color:#d32f2f;
 }
+/* ---------------------------
+   Social item
+--------------------------- */
+.tz-auth-social-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* label */
+.tz-auth-social-label {
+  font-size: 11px;
+  color: #666;
+  text-align: center;
+  transition: 0.2s ease;
+}
+
+/* hover micro animation */
+.tz-auth-social-item:hover .tz-auth-social-label {
+  color: #000;
+  transform: translateY(-2px);
+}

@@ -3,74 +3,68 @@
     "continue": "ادامه ورکړئ",
     "remove": "لرې کړئ",
     "hello": "سلام",
-    "user": "نړیوال د موبایل ریچارج",
+    "user": "نړیوال ګرځنده ریچارج",
     "goodMorning": "سهار مو پخیر",
     "goodEvening": "ماښام مو پخیر",
-    "goodAfternoon": "غرمه مو پخیر",
+    "goodAfternoon": "ورځ مو پخیر",
     "language": "ژبه",
     "save": "خوندي کړئ",
-    "back": "بیرته",
+    "back": "شاته",
     "yes": "هو",
     "no": "نه",
-    "copy": "کاپي",
+    "copy": "کاپي کړئ",
     "copied": "کاپي شو",
     "copyFailed": "کاپي ناکامه شوه",
     "removed": "لرې شو",
-    "close": "بند"
+    "close": "بند کړئ"
   },
 
   "account": {
     "profile": "زما معلومات",
     "settings": "د حساب تنظیمات",
     "balance": "yeslek بیلانس",
-    "payment_methods": "د پیسو ورکولو طریقې",
+    "payment_methods": "د تادیې طریقې",
     "about": "په اړه"
-  },
-
-  "wallet": {
-    "creditEarned": "تاسو {amount} € کریډیټ ترلاسه کوئ",
-    "creditAvailable": "موجود کریډیټ",
-    "addCredit": "کریډیټ اضافه کړئ",
-    "copyLink": "د راجع لینک کاپي کړئ",
-    "shareAfterPayment": "د کریډیټ ترلاسه کولو لپاره لینک شریک کړئ",
-    "continue": "ادامه ورکړئ",
-    "balance": "موجود بیلانس"
   },
 
   "auth": {
     "name": "نوم",
-    "name_placeholder": "ستاسو نوم یا مخکینی نوم",
+    "name_placeholder": "ستاسو نوم یا لومړی نوم",
     "login": "ننوتل",
     "logout": "وتل",
     "choose": "یوه طریقه وټاکئ",
-    "choose_hint": "په څو ثانیو کې خپل حساب ته لاسرسی ومومئ",
-    "email": "بریښنالیک",
-    "phone": "ټیلیفون",
-    "email_required": "بریښنالیک اړین دی",
-    "email_invalid": "ناسم بریښنالیک",
+    "choose_hint": "خپل حساب ته په څو ثانیو کې لاسرسی ومومئ",
+    "email": "برېښنالیک",
+    "phone": "تلیفون",
+    "email_required": "برېښنالیک اړین دی",
+    "email_invalid": "ناسم برېښنالیک",
     "phone_required": "شمېره اړینه ده",
     "security_hint": "یو ځل کارېدونکی کوډ. موږ ستاسو معلومات نه شریکوو.",
     "email_hint": "موږ به تاسو ته د تایید کوډ واستوو",
-    "email_label": "بریښنالیک پته",
+    "email_label": "د برېښنالیک پته",
     "email_placeholder": "name@gmail.com",
     "email_help": "املا وګورئ. کوډ ژر راځي.",
     "phone_hint": "موږ به تاسو ته د SMS له لارې کوډ واستوو",
-    "phone_label": "د ټیلیفون شمېره",
-    "phone_placeholder": "د ټیلیفون شمېره",
-    "phone_help": "نړیوال فارمټ وکاروئ (لکه +33...).",
+    "phone_label": "د تلیفون شمېره",
+    "phone_placeholder": "د تلیفون شمېره",
+    "phone_help": "نړیوال فورمټ وکاروئ (لکه +33...).",
     "invalid_phone": "ناسمه شمېره",
     "otp_title": "تایید",
     "otp_sent_to": "کوډ واستول شو",
     "otp_label": "کوډ",
     "otp_placeholder": "کوډ دننه کړئ",
-    "otp_help": "تاسو کولی شئ کوډ پیسټ کړئ. یو ځل کارېدونکی دی.",
+    "otp_help": "تاسو کولی شئ کوډ پیسټ کړئ. دا یو ځل کارېدونکی دی.",
     "otp_invalid": "ناسم یا ختم شوی کوډ",
+    "continue_google": "د Google سره دوام ورکړئ",
+    "continue_facebook": "د Facebook سره دوام ورکړئ",
+    "continue_phone": "د تلیفون له لارې",
+    "continue_email": "برېښنالیک",
     "resend": "بیا واستوئ",
-    "change_email": "بریښنالیک بدل کړئ",
-    "change_phone": "شمېره بدل کړئ",
+    "change_email": "برېښنالیک بدل کړئ",
+    "change_phone": "شمېره بدله کړئ",
     "logout_confirm": "ایا غواړئ ووځئ؟",
-    "or_continue": "یا دوام ورکړئ له لارې",
-    "legal_notice": "په دوام ورکولو سره، تاسو زموږ د کارونې شرایط او د محرمیت تګلاره منئ."
+    "or_continue": "یا له دې سره دوام ورکړئ",
+    "legal_notice": "په دوام سره، تاسو زموږ د کارولو شرایط او د محرمیت پالیسي منئ."
   },
 
   "lang": {
@@ -80,53 +74,54 @@
 
   "recharge": {
     "enterNumber": {
-      "title": "شمېره داخل کړئ",
+      "title": "شمېره دننه کړئ",
       "beneficiaryNumber": "د ترلاسه کوونکي شمېره",
       "phoneExample": "+33…",
-      "enterNumber": "یوه شمېره داخل کړئ",
+      "enterNumber": "یوه شمېره دننه کړئ",
       "validNumber": "سمه شمېره",
       "invalidNumber": "ناسمه شمېره",
-      "enterValidNumber": "یوه سمه شمېره داخل کړئ",
-      "searchCountry": "پلټنه…",
+      "enterValidNumber": "سمه شمېره دننه کړئ",
+      "searchCountry": "ولټوئ…",
       "contacts": "اړیکې",
-      "noInternetPlans": "د دې اپریټر لپاره انټرنیټ بسته نشته"
+      "noInternetPlans": "د دې اپراتور لپاره د انټرنېټ بسته نشته"
     },
 
     "selectOperator": {
-      "title": "اپریټر وټاکئ",
-      "emptyTitle": "اپریټر ونه موندل شو",
-      "emptyMessage": "موږ د دې شمېرې لپاره اپریټر ونه موند."
+      "title": "اپراتور وټاکئ",
+      "emptyTitle": "هیڅ اپراتور ونه موندل شو",
+      "emptyMessage": "د دې شمېرې لپاره اپراتور ونه موندل شو."
     },
 
     "selectForfait": {
       "title": "بسته وټاکئ",
-      "internet": "انټرنیټ",
+      "internet": "انټرنېټ",
       "days": "{days} ورځې"
     },
 
     "selectAmount": {
-      "title": "مقدار وټاکئ",
-      "operatorNotDetected": "اپریټر ونه پېژندل شو",
-      "editOperator": "اپریټر بدل کړئ",
-      "amountLabel": "مقدار",
-      "chooseInternetPlan": "انټرنیټ بسته وټاکئ",
-      "creditAndTotal": "کریډیټ او ټول",
-      "amountRow": "مقدار",
+      "title": "اندازه وټاکئ",
+      "operatorNotDetected": "اپراتور ونه پېژندل شو",
+      "editOperator": "اپراتور بدل کړئ",
+      "amountLabel": "اندازه",
+      "chooseInternetPlan": "د انټرنېټ بسته وټاکئ",
+      "amountRow": "اندازه",
       "taxesRow": "مالیات",
-      "receivedAmountTitle": "دوی ترلاسه کوي",
-      "goToPay": "تادیه",
-      "operatorPickerSoon": "د اپریټر ټاکنه ژر راځي",
-      "choose": "وټاکئ"
+      "receivedAmountTitle": "ترلاسه کوي",
+      "goToPay": "تادیه وکړئ",
+      "operatorPickerSoon": "د اپراتور انتخاب ژر راځي",
+      "choose": "وټاکئ",
+      "instant": "سمدستي ریچارج",
+      "secure": "خوندي تادیه"
     }
   },
 
   "payment": {
     "method": {
       "title": "د تادیې طریقه",
-      "points": "نمرې",
+      "points": "پواینټونه",
       "saveCard": "کارت خوندي کړئ",
       "chooseMethod": "یوه طریقه وټاکئ",
-      "cardPayment": "بانکي کارت",
+      "cardPayment": "د کارت تادیه",
       "cardPaymentDesc": "خوندي تادیه",
       "applePay": "Apple Pay",
       "applePayDesc": "ژر راځي",
@@ -134,97 +129,99 @@
       "googlePayDesc": "ژر راځي",
       "paypal": "PayPal",
       "paypalDesc": "ژر راځي",
-      "wallet": "والېټ",
+      "wallet": "والټ",
       "walletDesc": "ژر راځي",
-      "methodSelected": "طریقه وټاکل شوه",
-      "methodUnavailable": "طریقه شتون نلري",
+      "methodSelected": "ټاکل شوې طریقه",
+      "methodUnavailable": "طریقه شتون نه لري",
       "paypalComingSoon": "ژر راځي",
       "pay": "{amount} تادیه کړئ",
-      "pointsAvailable": "موجود نمرې: {points}",
-      "setDefault": "د تادیې اصلي طریقه وټاکئ",
-
+      "pointsAvailable": "شتون لرونکي پواینټونه: {points}",
+      "setDefault": "د ډیفالټ تادیې په توګه وټاکئ",
       "payment.method.title": "د تادیې طریقه",
-      "payment.points.title": "نمرې",
-      "payment.points.available": "موجود نمرې: {points}",
+      "payment.points.title": "پواینټونه",
+      "payment.points.available": "شتون لرونکي پواینټونه: {points}",
       "payment.saveCard": "کارت خوندي کړئ",
       "payment.chooseMethod": "د تادیې طریقه وټاکئ",
-      "payment.methods.card.title": "بانکي کارت",
-      "payment.methods.card.desc": "د Visa یا Mastercard له لارې تادیه",
-      "payment.methodSelected": "طریقه وټاکل شوه",
+      "payment.methods.card.title": "د کارت تادیه",
+      "payment.methods.card.desc": "د Visa یا Mastercard سره تادیه وکړئ",
+      "payment.methodSelected": "ټاکل شوې طریقه",
       "payment.pay": "{amount} € تادیه کړئ",
       "currency.eur": "€",
 
       "legacy_errors": {
-        "emptyName": "مهرباني وکړئ د کارت مالک نوم داخل کړئ",
+        "emptyName": "مهرباني وکړئ د کارت نوم دننه کړئ",
         "invalidName": "ناسم نوم",
-        "invalidCardNumber": "ناسم کارت شمېره",
-        "incompleteCardNumber": "نیمګړې کارت شمېره",
+        "invalidCardNumber": "ناسم کارت نمبر",
+        "incompleteCardNumber": "کارت نمبر نیمګړی دی",
         "invalidExpiry": "ناسمه نېټه",
         "invalidCvc": "ناسم امنیتي کوډ",
         "paymentFailed": "تادیه ناکامه شوه",
         "paymentNotCompleted": "تادیه بشپړه نه شوه",
-        "serverError": "د سرور تېروتنه، مهرباني وکړئ بیا هڅه وکړئ"
+        "serverError": "د سرور تېروتنه، بیا هڅه وکړئ",
+        "expiry": "پای ته رسېږي",
+        "default": "ډیفالټ"
       }
     },
 
     "points": {
-      "title": "نمرې",
-      "available": "موجود نمرې: {points}"
+      "title": "پواینټونه",
+      "available": "شتون لرونکي پواینټونه: {points}"
     },
 
     "methods": {
       "card": {
-        "title": "بانکي کارت",
-        "desc": "د Visa یا Mastercard له لارې تادیه"
+        "title": "د کارت تادیه",
+        "desc": "د Visa یا Mastercard سره تادیه وکړئ"
       }
     },
 
     "saveCard": "کارت خوندي کړئ",
     "chooseMethod": "د تادیې طریقه وټاکئ",
-    "methodSelected": "طریقه وټاکل شوه",
+    "methodSelected": "ټاکل شوې طریقه",
     "pay": "{amount} € تادیه کړئ",
 
     "card": {
       "title": "د کارت تادیه",
       "securityNotice": "ستاسو د تادیې معلومات خوندي دي.",
       "invalidForm": "ناسم فورم.",
-      "genericError": "یوه تېروتنه رامنځته شوه.",
-      "holderName": "د کارت مالک نوم",
-      "number": "د کارت شمېره",
+      "genericError": "یوه تېروتنه وشوه.",
+      "holderName": "د کارت د مالک نوم",
+      "number": "کارت نمبر",
       "expiry": "MM/YY",
       "cvv": "CVV",
       "payAmount": "{amount} € تادیه کړئ",
       "scanTooltip": "کارت سکین کړئ",
       "invalidCardHolderName": "ناسم نوم",
-      "invalidCardNumber": "ناسم کارت شمېره",
+      "invalidCardNumber": "ناسم کارت نمبر",
       "invalidExpiry": "ناسمه نېټه",
       "invalidCvv": "ناسم CVV",
-      "formError": "مهرباني وکړئ تېروتنې اصلاح کړئ",
+      "formError": "مهرباني وکړئ تېروتنې سمې کړئ",
+
       "errors": {
-        "emptyName": "مهرباني وکړئ د کارت مالک نوم داخل کړئ",
+        "emptyName": "مهرباني وکړئ د کارت نوم دننه کړئ",
         "invalidName": "ناسم نوم",
-        "invalidCardNumber": "ناسم کارت شمېره",
-        "incompleteCardNumber": "نیمګړې کارت شمېره",
+        "invalidCardNumber": "ناسم کارت نمبر",
+        "incompleteCardNumber": "کارت نمبر نیمګړی دی",
         "invalidExpiry": "ناسمه نېټه",
         "invalidCvc": "ناسم امنیتي کوډ",
         "paymentFailed": "تادیه ناکامه شوه",
         "paymentNotCompleted": "تادیه بشپړه نه شوه",
-        "serverError": "د سرور تېروتنه، مهرباني وکړئ بیا هڅه وکړئ"
+        "serverError": "د سرور تېروتنه، بیا هڅه وکړئ"
       }
     },
 
     "success": {
       "title": "تادیه بریالۍ شوه",
       "message": "ستاسو تادیه تایید شوه.",
-      "amount": "مقدار",
+      "amount": "اندازه",
       "date": "نېټه",
       "order": "امر",
-      "reference": "ریفرنس",
+      "reference": "حواله",
       "finish": "پای",
-      "amountLabel": "مقدار",
+      "amountLabel": "اندازه",
       "dateLabel": "نېټه",
       "orderLabel": "امر",
-      "referenceLabel": "ریفرنس",
+      "referenceLabel": "حواله",
       "processing": "ریچارج روان دی... مهرباني وکړئ انتظار وکړئ ⏳",
       "done": "ریچارج په بریالیتوب سره واستول شو ✅"
     },
@@ -240,30 +237,54 @@
     "af": "افغانستان",
     "fr": "فرانسه",
     "us": "متحده ایالات",
-    "de": "المان",
+    "de": "جرمني",
     "it": "ایټالیا",
     "es": "هسپانیا"
   },
 
   "history": {
-    "empty": "هیڅ تاریخ نشته"
+    "title": "تاریخچه",
+    "empty": "تر اوسه هیڅ معامله نشته",
+
+    "status": {
+      "success": "بریالی",
+      "pending": "په انتظار کې",
+      "failed": "ناکام",
+      "all": "ټول"
+    },
+
+    "labels": {
+      "amount": "اندازه",
+      "date": "نېټه",
+      "country": "هیواد",
+      "phone": "شمېره"
+    }
   },
 
   "menu": {
-    "history": "تاریخ"
+    "history": "تاریخچه"
   },
 
   "about": {
-    "description": "ساده او چټک د موبایل ریچارج اپلیکیشن.",
+    "description": "ساده او چټک ګرځنده ریچارج اپلیکیشن.",
     "privacy": "د محرمیت تګلاره",
-    "terms": "د کارونې شرایط"
+    "terms": "د کارولو شرایط"
+  },
+
+  "time": {
+    "day": "ورځ",
+    "days": "ورځې",
+    "week": "اونۍ",
+    "weeks": "اونۍ",
+    "month": "میاشت",
+    "months": "میاشتې"
   },
 
   "profile": {
     "name": "نوم",
-    "email": "بریښنالیک",
-    "phone": "ټیلیفون",
-    "birthdate": "د زیږېدو نېټه",
-    "not_defined": "تعریف شوی نه دی"
+    "email": "برېښنالیک",
+    "phone": "تلیفون",
+    "birthdate": "د زېږېدو نېټه",
+    "not_defined": "نه دی ټاکل شوی"
   }
 }
