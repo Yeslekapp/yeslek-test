@@ -2386,3 +2386,10 @@ LOGOUT FIX (isolé propre)
 .tz-icon-btn.danger{
   color:#d32f2f;
 }
+
+.tz-wallet-primary {
+  background: black;
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
