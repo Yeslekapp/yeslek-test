@@ -28,16 +28,6 @@
    
   },
 
-"wallet": {
-  "creditEarned": "Vous gagnez {amount} € de crédit",
-  "creditAvailable": "Crédit disponible",
-  "addCredit": "Ajouter crédit",
-  "copyLink": "Copier lien ami",
-  "shareAfterPayment": "Partager le lien pour recevoir du crédit",
-  "continue": "Continuer",
-  "balance": "Solde disponible"
-},
-
   "auth": {
     "name": "Nom",
     "name_placeholder": "Votre nom ou prénom",
@@ -125,14 +115,14 @@
       "editOperator": "Modifier l’opérateur",
       "amountLabel": "Montant",
       "chooseInternetPlan": "Choisir un forfait internet",
-      "creditAndTotal": "Crédit & total",
       "amountRow": "Montant",
       "taxesRow": "Taxes",
       "receivedAmountTitle": "Ils/Elles reçoivent",
       "goToPay": "Payer",
       "operatorPickerSoon": "Sélection opérateur bientôt disponible",
       "choose": "Choisir",
-      "creditUsed": "Crédit utilisé"
+      "instant": "Recharge instantanée",
+      "secure": "Paiement sécurisé"
     }
   },
 

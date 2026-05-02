@@ -9,7 +9,6 @@ import uuid
 import logging
 from typing import Any, Dict, Optional
 
-from services.wallet.credit_service import CreditService
 from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
 from services.account.card_service import CardService
 from services.communication.email_service import EmailService
@@ -59,25 +58,11 @@ def _get_payment_context() -> Dict[str, Any]:
     base_amount = _safe_float(session.get("recharge_amount"), 0.0)
     recharge_total_amount = _safe_float(session.get("recharge_total_amount"), 0.0)
 
-    # ---------------------------
-    # Wallet credit
-    # ---------------------------
-    user_id = session.get("user_id")
-
     credit_available = 0.0
-    if user_id:
-        credit_available = _safe_float(
-            CreditService.get_balance(user_id), 0.0
-        )
+    use_credit = False
+    credit_used = 0.0
 
-    use_credit = bool(session.get("payment_use_credit", False))
-
-    credit_used = min(credit_available, recharge_total_amount) if use_credit else 0.0
-
-    final_amount = max(
-        0.0,
-        recharge_total_amount - credit_used
-    )
+    final_amount = recharge_total_amount
 
     return {
         "phone": phone,
@@ -85,7 +70,6 @@ def _get_payment_context() -> Dict[str, Any]:
         "recharge_amount": recharge_total_amount,
         "credit_available": credit_available,
         "use_credit": use_credit,
-        "credit_used": credit_used,
         "final_amount": final_amount,
     }
 
@@ -146,7 +130,6 @@ def _build_checkout_metadata(idem_key: str) -> Dict[str, str]:
         "base_amount": f"{ctx['base_amount']:.2f}",
         "recharge_amount": f"{ctx['recharge_amount']:.2f}",
         "charged_amount": f"{ctx['final_amount']:.2f}",
-        "credit_used": f"{ctx['credit_used']:.2f}",
         "country_iso": _safe_str(session.get("country_iso")).upper(),
         "user_id": _safe_str(session.get("user_id")),
         "user_email": _safe_str(
@@ -425,7 +408,6 @@ def card_get():
         amount=amount,
         forfait_display=_get_forfait_display(),
         final_amount=ctx["final_amount"],
-        credit_used=ctx.get("credit_used", 0),
         save_card=session.get("payment_save_card", True),
         cards=OrderService.get_saved_cards(session.get("user_id")),
         received_display=received_display
@@ -494,9 +476,6 @@ def method_get():
         phone=ctx["phone"],
         amount=amount,
         forfait_display=_get_forfait_display(),
-        credit_available=ctx["credit_available"],
-        use_credit=ctx["use_credit"],
-        credit_used=ctx["credit_used"],
         final_amount=ctx["final_amount"],
         selected_method=session.get("payment_selected_method", "card"),
         save_card=session.get("payment_save_card", True),
@@ -509,11 +488,9 @@ def method_get():
 def method_post():
     selected_method = request.form.get("selected_method", "card")
     save_card = request.form.get("save_card") == "1"
-    use_credit = request.form.get("use_credit") == "1"
 
     session["payment_selected_method"] = selected_method
     session["payment_save_card"] = save_card
-    session["payment_use_credit"] = use_credit
 
     if selected_method != "card":
         session["payment_toast"] = "payment.methodUnavailable"
@@ -737,16 +714,7 @@ def stripe_webhook_post():
             payload_obj["status"] = "FAILED"
             payload_obj["reason"] = "recharge_failed"
 
-        # ---------------------------
-        # Cashback wallet
-        # ---------------------------
-        if user_id and result.status == "SUCCESS":
-            try:
-                cashback = round(charged_amount * 0.025, 2)
-                if cashback > 0:
-                    CreditService.add_credit(user_id=user_id, amount=cashback)
-            except Exception:
-                logger.exception("Wallet cashback error")
+
 
         # ---------------------------
         # Save result
@@ -777,15 +745,6 @@ def stripe_webhook_post():
 
         except Exception as e:
             logger.exception("CARD SAVE ERROR: %s", e)
-
-        # ---------------------------
-        # Refresh balance
-        # ---------------------------
-        try:
-            if user_id:
-                session["user_balance"] = CreditService.get_balance(user_id)
-        except Exception:
-            pass
 
         # ---------------------------
         # Email
@@ -974,7 +933,6 @@ def success_finish_post():
     session.pop("payment_toast", None)
     session.pop("payment_selected_method", None)
     session.pop("payment_save_card", None)
-    session.pop("payment_use_credit", None)
     session.pop("last_payment_intent_id", None)
 
     session.pop("recharge_phone", None)

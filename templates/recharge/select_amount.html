@@ -61,7 +61,6 @@
  id="amountCard"
  data-tax-rate="{{ tax_rate }}"
  data-operator-id="{{ operator.id or operator.operator_id or '' }}"
- data-points-rate="0.025"
  data-currency="{{ operator.currency_code or 'EUR' }}"
  data-rate="{{ currency_rate or 1 }}">
 
@@ -96,21 +95,22 @@
 
       <input type="hidden" name="amount" id="amountInput" value="{{ amount }}">
 
-{# ---------------------------
-   Wallet credit earned
---------------------------- #}
-<div class="tz-row" style="margin-top:10px;">
+<div class="tz-row tz-features" style="margin-top:10px; gap:16px;">
+  
   <div class="tz-check">
-    <span aria-hidden="true">💰</span>
-    <span
-      id="creditEarnedText"
-      data-template="{{ t('wallet.creditEarned', {'amount':'{amount}'}) }}"
-    >
-      {{ t("wallet.creditEarned", {
-        "amount": ("%.2f"|format(amount * 0.025))
-      }) }}
+    <span aria-hidden="true">⚡</span>
+    <span class="tz-muted">
+      {{ t("recharge.selectAmount.instant") }}
     </span>
   </div>
+
+  <div class="tz-check">
+    <span aria-hidden="true">🔒</span>
+    <span class="tz-muted">
+      {{ t("recharge.selectAmount.secure") }}
+    </span>
+  </div>
+
 </div>
     </section>
 
@@ -158,7 +158,7 @@
     <div class="tz-check">
       <span aria-hidden="true">💳</span>
       <div class="tz-strong">
-        {{ t("recharge.selectAmount.creditAndTotal") }}
+        {{ t("recharge.selectAmount.totalSummary") }}
       </div>
     </div>
 

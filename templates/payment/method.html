@@ -13,19 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
 const form = document.getElementById("paymentMethodForm");
 
 const amount = parseFloat(form.dataset.amount || "0");
-const credit = parseFloat(form.dataset.credit || "0");
-
-const useCreditToggle = document.getElementById("useCreditToggle");
-const useCreditInput = document.getElementById("useCreditInput");
 
 const saveCardToggle = document.getElementById("saveCardToggle");
 const saveCardInput = document.getElementById("saveCardInput");
 
 const finalAmountText = document.getElementById("finalAmountText");
-const walletBalance = document.getElementById("walletBalance");
 const payBtn = document.getElementById("payBtn");
-const creditUsedRow = document.getElementById("creditUsedRow");
-const creditUsedText = document.getElementById("creditUsedText");
 
 function format(v){
 return (Math.round(v * 100)/100).toFixed(2);
@@ -33,65 +26,21 @@ return (Math.round(v * 100)/100).toFixed(2);
 
 function compute(){
 
-const useCredit = useCreditToggle?.checked || false;
-
-let creditUsed = 0;
 let finalAmount = amount;
-let remaining = credit;
 
-if(useCredit){
-
-creditUsed = Math.min(credit, amount);
-
-finalAmount = amount - creditUsed;
-
-remaining = credit - creditUsed;
-
-}
-// ---------------------------
-// Credit used UI (NEW)
-// ---------------------------
-if (creditUsedRow && creditUsedText) {
-
-  if (useCredit && creditUsed > 0) {
-    creditUsedRow.style.display = "flex";
-    creditUsedText.textContent = `- ${format(creditUsed)} €`;
-  } else {
-    creditUsedRow.style.display = "none";
-  }
-
-}
-
-// wallet UI
-if(walletBalance){
-walletBalance.textContent =
-`${format(remaining)} €`;
-}
-
-// amount UI
+// update UI montant
 if(finalAmountText){
 finalAmountText.textContent =
 `${format(finalAmount)} €`;
 }
 
-// button UI
+// update bouton
 if(payBtn){
 payBtn.textContent =
 `Payer ${format(finalAmount)} €`;
 }
 
-// hidden input
-if(useCreditInput){
-useCreditInput.value = useCredit ? "1" : "0";
 }
-
-}
-
-// toggle credit
-useCreditToggle?.addEventListener(
-"change",
-compute
-);
 
 // save card toggle
 saveCardToggle?.addEventListener(
@@ -119,37 +68,9 @@ compute();
         class="tz-stack"
         id="paymentMethodForm"
         data-amount="{{ "%.2f"|format(amount) }}"
-        data-credit="{{ "%.2f"|format(credit_available) }}"
         data-toast-key="{{ session.get('payment_toast','') }}">
 
-{# ---------------------------
-   Wallet Credit
---------------------------- #}
-<section class="tz-card tz-card--green">
-  <div class="tz-row">
 
-    <div class="tz-check">
-      <span aria-hidden="true">💰</span>
-      <div>
-        <div class="tz-small tz-muted">
-          {{ t("wallet.creditAvailable") }}
-        </div>
-        <div class="tz-strong" id="walletBalance">
-          {{ "%.2f"|format(session.get("user_balance",0)) }} €
-        </div>
-      </div>
-    </div>
-
-    {% if not is_forfait_minutes %}
-<label class="tz-check">
-  <input type="checkbox"
-         id="useCreditToggle"
-         {% if from_wallet %}disabled{% endif %}>
-</label>
-    {% endif %}
-
-  </div>
-</section>
 
 <section class="tz-card tz-card--soft">
 
@@ -170,15 +91,7 @@ compute();
 </div>
   </div>
 
-  {# 🔥 AJOUT ICI (INSIDE CARD) #}
-  <div class="tz-row"
-       id="creditUsedRow"
-       style="margin-top:8px; display:none;">
-    <div class="tz-muted">
-      {{ t("wallet.creditUsed") }}
-    </div>
-    <div class="tz-strong" id="creditUsedText">—</div>
-  </div>
+
 
 </section>
 {# ---------------------------
@@ -231,7 +144,6 @@ compute();
 
 <input type="hidden" name="selected_method" id="selectedMethodInput" value="{{ selected_method }}">
 <input type="hidden" name="save_card" id="saveCardInput" value="{% if save_card %}1{% else %}0{% endif %}">
-<input type="hidden" name="use_credit" id="useCreditInput" value="0">
     {# ---------------------------
        Pay Button
     --------------------------- #}
