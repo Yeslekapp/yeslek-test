@@ -26,7 +26,6 @@ from routes.i18n import bp as i18n_bp
 from routes.account import account_bp
 from routes.history import history_bp
 from routes.admin import admin_bp
-from routes.wallet import wallet_bp
 # ---------------------------
 # Create tables (TEMP)
 # ---------------------------
@@ -225,7 +224,6 @@ def create_app() -> Flask:
     app.register_blueprint(account_bp)
     app.register_blueprint(history_bp)
     app.register_blueprint(admin_bp)
-    app.register_blueprint(wallet_bp)
 
     return app
 

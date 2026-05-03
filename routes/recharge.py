@@ -361,12 +361,18 @@ def enter_number_get():
     city = get_city_for_country(country_iso)
 
     return render_template(
-        "recharge/enter_number.html",
-        initial_phone=initial_phone,
-        country_iso=country_iso,
-        city=city,
-        canonical_url="https://yeslek.com/recharge/enter-number"
-    )
+    "recharge/enter_number.html",
+    initial_phone=initial_phone,
+    country_iso=country_iso,
+    city=city,
+    canonical_url="https://yeslek.com/recharge/enter-number",
+
+    # ---------------------------
+    # SEO
+    # ---------------------------
+    seo_title="Recharge mobile internationale | Yeslek",
+    seo_description="Envoyez du crédit mobile instantanément dans plus de 150 pays avec Yeslek. Recharge rapide et sécurisée."
+)
 
 
 # ---------------------------

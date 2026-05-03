@@ -362,7 +362,7 @@ def phone():
 
             SMSService.send_sms(
                 phone_number,
-                f"Your Tikzok verification code is {code}"
+                f"Your yeslek verification code is {code}"
             )
 
         except Exception as e:
