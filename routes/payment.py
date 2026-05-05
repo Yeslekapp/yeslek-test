@@ -334,8 +334,8 @@ def _resolve_payment_status() -> Dict[str, Any]:
                 )
 
                 payload["transaction_id"] = tx_result.transaction_id
-                payload["reference"] = tx_result.custom_identifier
-                payload["transaction_reference"] = tx_result.custom_identifier
+                payload["reference"] = tx_result.custom_identifier or payload.get("reference")
+                payload["transaction_reference"] = tx_result.custom_identifier or payload.get("transaction_reference")
                 session["payment_success_payload"] = payload
                 session["last_transaction_id"] = tx_result.transaction_id
                 session["last_transaction_reference"] = tx_result.custom_identifier
@@ -389,7 +389,7 @@ def _resolve_payment_status() -> Dict[str, Any]:
                 )
 
                 existing["transaction_id"] = tx_result.transaction_id
-                existing["reference"] = tx_result.transaction_id
+                existing["reference"] = tx_result.custom_identifier or existing.get("reference")
                 existing["transaction_reference"] = tx_result.custom_identifier
                 session["payment_success_payload"] = existing
                 session["last_transaction_id"] = tx_result.transaction_id
@@ -961,7 +961,7 @@ def payment_success():
             )
 
             payload["transaction_id"] = tx.transaction_id
-            payload["transaction_reference"] = tx.custom_identifier  # 🔥 FIX IMPORTANT
+            payload["transaction_reference"] = tx.custom_identifier or payload.get("transaction_reference") # 🔥 FIX IMPORTANT
 
             session["payment_success_payload"] = payload
 
