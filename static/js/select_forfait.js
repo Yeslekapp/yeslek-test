@@ -34,11 +34,12 @@
   const userCurrency = "€";
 
   let selectedButton = null;
+  let hasUserSelected = false;
   let isSubmitting = false;
   let scrollTimeout = null;
   let isAutoSelecting = false;
   let forfaitsLoaded = false;
-
+  let forfaitsReady = false;
   // ---------------------------
   // Helpers
   // ---------------------------
@@ -163,7 +164,7 @@
   function applySelection(btn, options = {}) {
 
     if (!btn || isSubmitting) return;
-
+    hasUserSelected = true;
     const planId = btn.dataset.id || "";
     const gb = btn.dataset.gb || "";
     const price = Number(btn.dataset.price || 0);
@@ -200,45 +201,67 @@
     }
   }
 
-  // ---------------------------
-  // Submit
-  // ---------------------------
+// ---------------------------
+// Submit
+// ---------------------------
 
-  async function submitSelection() {
+async function submitSelection() {
 
-    if (isSubmitting || !selectedButton) return;
+  // 🔒 attendre que les forfaits soient prêts
+  if (!forfaitsReady) {
+    if (typeof tzToast === "function") {
+      tzToast("Chargement...");
+    }
+    return;
+  }
 
-    const planId = selectedPlanId.value;
-    const gb = selectedPlanGb.value;
-    const price = Number(selectedPlanPrice.value);
+  // 🔒 sécurité UX
+  if (isSubmitting) return;
 
-    if (!planId || price <= 0) return;
+  // 🔥 UX: message si rien sélectionné
+  if (!selectedButton) {
+    if (typeof tzToast === "function") {
+      tzToast("Sélectionnez un forfait");
+    }
+    return;
+  }
 
-    setLoading(true);
+  const planId = selectedPlanId.value;
+  const price = Number(selectedPlanPrice.value);
 
-    try {
+  if (!planId || price <= 0) return;
 
-      const res = await fetch("/recharge/select-forfait", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: planId, gb, price })
-      });
+  setLoading(true);
 
-      const data = await res.json();
+  try {
 
-      if (!data.ok) throw new Error("forfait_save_error");
+    const res = await fetch("/recharge/select-forfait", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: planId })
+    });
 
+    const data = await res.json();
+
+    if (!data.ok) throw new Error("forfait_save_error");
+
+    // 🔥 UX: mini feedback avant redirect
+    continueBtn.textContent = "✔";
+    continueBtn.style.opacity = "0.8";
+
+    setTimeout(() => {
       window.location.href = "/payment/method";
+    }, 120);
 
-    } catch (e) {
-      console.error(e);
-      setLoading(false);
+  } catch (e) {
+    console.error(e);
+    setLoading(false);
 
-      if (typeof tzToast === "function") {
-        tzToast("Erreur, réessayez");
-      }
+    if (typeof tzToast === "function") {
+      tzToast("Erreur, réessayez");
     }
   }
+}
 
   // ---------------------------
   // Events
@@ -275,7 +298,7 @@
         }
       });
 
-      if (closest && selectedButton && closest !== selectedButton) {
+      if (closest && hasUserSelected && closest !== selectedButton) {
         isAutoSelecting = true;
 
         applySelection(closest, {
@@ -317,6 +340,7 @@ async function loadForfaits() {
     const data = await res.json();
 
     if (!data.plans || !data.plans.length) return;
+    forfaitsReady = true;
 
     // 👉 sync silencieux (prod clean)
     console.log("forfaits synced");
@@ -332,20 +356,12 @@ async function loadForfaits() {
 
 setMoneyOpen(true);
 setContinueState(false, 0);
+selectedButton = null;
 
 // 👉 RESET UI (important)
 if (rowAmount) rowAmount.textContent = "—";
 if (rowTax) rowTax.textContent = "—";
 if (rowReceived) rowReceived.textContent = "—";
-
-// 👉 utiliser HTML existant (instant UX)
-const first = optionsWrap.querySelector(".tz-forfait-option");
-
-if (first) {
-  applySelection(first, {
-    skipDetailsScroll: true
-  });
-}
 
 // 👉 API en background (sans casser UI)
 loadForfaits();

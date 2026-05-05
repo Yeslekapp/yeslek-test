@@ -87,6 +87,8 @@ def _get_payment_context() -> Dict[str, Any]:
     # FINAL
     # ---------------------------
     final_amount = round(total, 2)
+    if base_amount <= 0:
+     raise Exception("Invalid amount (0)")
 
     # 🔥 sync session (important)
     session["recharge_total_amount"] = final_amount
@@ -455,6 +457,8 @@ def card_get():
 
     ctx = _get_payment_context()
     amount = ctx.get("recharge_amount")
+    if not session.get("recharge_forfait") and not session.get("recharge_amount"):
+     return redirect(url_for("recharge.select_amount_get"))
 
     if amount is None:
         return redirect(url_for("recharge.select_amount_get"))
@@ -599,6 +603,9 @@ def card_post():
         return redirect(url_for("payment.method_get"))
 
     ctx = _get_payment_context()
+    if ctx["final_amount"] <= 0:
+     return jsonify({"error": "invalid_amount"}), 400
+     
 
     if not ctx["recharge_amount"]:
         return redirect(url_for("recharge.select_amount_get"))

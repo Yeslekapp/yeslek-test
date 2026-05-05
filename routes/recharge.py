@@ -105,6 +105,8 @@ def clear_forfait():
     # ---------------------------
 @recharge_bp.get("/select-forfait")
 def select_forfait_get():
+        # 🔥 RESET obligatoire
+    session.pop("recharge_forfait", None)
 
     phone = session.get("recharge_phone")
 
@@ -191,38 +193,53 @@ def select_forfait_get():
         no_plans=False
     )
 
+
 # ---------------------------
 # Select Forfait (POST)
 # ---------------------------
-
 @recharge_bp.post("/select-forfait")
 def select_forfait_post():
-    session.pop("received_display", None)
-    data = request.get_json(silent=True) or {}
 
-    gb = data.get("gb")
-    price = data.get("price")
+    session.pop("received_display", None)
+
+    data = request.get_json(silent=True) or {}
     plan_id = data.get("id")
 
-    if not gb or not price or not plan_id:
+    if not plan_id:
         return jsonify({"ok": False}), 400
 
-    # ---------------------------
-    # Save forfait
-    # ---------------------------
-    session["recharge_forfait"] = {
-        "id": int(plan_id),
-        "gb": gb,
-        "price": price,
-    }
+    plans = session.get("recharge_data_plans") or []
 
     # ---------------------------
-    # 🔒 LOCK operator (IMPORTANT)
+    # 🔥 FIX CRASH (operator manquant)
     # ---------------------------
     operator = session.get("recharge_operator")
 
-    if operator:
-        session["recharge_operator"] = operator
+    # ---------------------------
+    # Fallback anti-404
+    # ---------------------------
+    if not plans and operator:
+        try:
+            plans = get_reloadly_plans(operator)
+            session["recharge_data_plans"] = plans
+        except Exception:
+            plans = []
+
+    selected = next(
+        (p for p in plans if str(p.get("id")) == str(plan_id)),
+        None
+    )
+
+    if not selected:
+        return jsonify({"ok": False, "error": "plan_not_found"}), 404
+
+    session["recharge_forfait"] = {
+        "id": selected.get("id"),
+        "gb": selected.get("gb"),
+        "price": selected.get("amount"),
+        "name": selected.get("name"),
+        "validity": selected.get("validity"),
+    }
 
     return jsonify({"ok": True})
 
@@ -239,15 +256,14 @@ def api_forfaits():
         return jsonify({"error": "no_operator"}), 400
 
     # ---------------------------
-    # 🔒 CACHE (ULTRA IMPORTANT)
+    # CACHE (performance)
     # ---------------------------
     cached_plans = session.get("recharge_data_plans")
-
     if cached_plans:
         return jsonify({"plans": cached_plans})
 
     # ---------------------------
-    # 🔥 FIX CRITIQUE : FORCER OPERATOR DATA
+    # 🔥 FORCE DATA OPERATOR
     # ---------------------------
     if not operator.get("supports_data"):
 
@@ -267,13 +283,23 @@ def api_forfaits():
 
         if data_operator:
             operator = data_operator
-            session["recharge_operator"] = operator  # 🔒 IMPORTANT
+            session["recharge_operator"] = operator
 
     # ---------------------------
-    # Get plans (LIVE - 1 seule fois)
+    # FETCH PLANS
     # ---------------------------
-    plans = get_reloadly_plans(operator)
+    try:
+        plans = get_reloadly_plans(operator)
+    except Exception as e:
+        print("❌ Reloadly plans error:", e)
+        return jsonify({"error": "plans_fetch_failed"}), 500
 
+    if not plans:
+        return jsonify({"error": "no_plans_found"}), 404
+
+    # ---------------------------
+    # STORE SESSION (IMPORTANT)
+    # ---------------------------
     session["recharge_data_plans"] = plans
 
     return jsonify({"plans": plans})
@@ -355,7 +381,11 @@ def enter_number_get():
     session.pop("recharge_operator", None)
     session.pop("recharge_amount", None)
     session.pop("recharge_total_amount", None)
-
+    session.pop("payment_success_payload", None)
+    session.pop("recharge_data_plans", None)
+    session.pop("received_display", None)
+    session.pop("payment_idempotency_key", None)
+    session.pop("last_payment_amount", None)
     initial_phone = session.get("recharge_phone", "+93")
     country_iso = detect_country_iso_from_phone(initial_phone) or "AF"
     city = get_city_for_country(country_iso)
