@@ -61,9 +61,6 @@ def _get_payment_context() -> Dict[str, Any]:
     phone = session.get("recharge_phone", "")
     forfait = session.get("recharge_forfait") or {}
 
-    credit_available = 0.0
-    use_credit = False
-    credit_used = 0.0
 
     # ---------------------------
     # BASE AMOUNT
@@ -103,9 +100,6 @@ def _get_payment_context() -> Dict[str, Any]:
 
         "tax": round(tax, 2),
 
-        "credit_available": credit_available,
-        "use_credit": use_credit,
-        "credit_used": credit_used,
     }
 
 
@@ -191,49 +185,110 @@ def _store_payment_success_payload(payload: Dict[str, Any]) -> None:
 
 
 # ---------------------------
-# Feature: Success Payload FIX FINAL
+# Feature: Success Payload (PRO VERSION)
 # ---------------------------
 
 from datetime import datetime
+from typing import Optional, Dict, Any
 
 def _build_success_payload(
     *,
     base_amount: float,
     charged_amount: float,
-    credit_used: float,
     transaction_id: Optional[int],
     transaction_reference: str,
 ) -> Dict[str, Any]:
 
+    # ---------------------------
+    # Base payload (core)
+    # ---------------------------
     payload_obj = OrderService.build_success_payload(amount=base_amount)
 
+    # ---------------------------
+    # Safe session data
+    # ---------------------------
+    forfait = session.get("recharge_forfait") or {}
+    operator = session.get("recharge_operator") or {}
+
+    # ---------------------------
+    # Reference format (SAFE)
+    # ---------------------------
     ref = f"{transaction_id:012d}" if transaction_id else "000000000000"
 
     # ---------------------------
-    # Taxes = total - montant
+    # Taxes
     # ---------------------------
     tax = round(charged_amount - base_amount, 2)
 
+    # ---------------------------
+    # Forfait display (UX)
+    # ---------------------------
+    forfait_display = None
+
+    if isinstance(forfait, dict):
+        gb = forfait.get("gb")
+        validity = forfait.get("validity")
+        name = forfait.get("name")
+
+        if gb and validity:
+            forfait_display = f"{gb} • {validity}"
+        elif gb:
+            forfait_display = gb
+        elif name:
+            forfait_display = name
+
+    # fallback airtime
+    if not forfait_display:
+        forfait_display = "Recharge mobile"
+
+    # ---------------------------
+    # Payload final
+    # ---------------------------
     payload_obj.update({
+
+        # ---------------------------
+        # Status
+        # ---------------------------
         "status": "SUCCESS",
 
+        # ---------------------------
         # UI values
-        "amount": base_amount,
+        # ---------------------------
+        "amount": round(base_amount, 2),
         "tax": tax,
-        "total": charged_amount,
+        "total": round(charged_amount, 2),
 
-        # data
-        "charged_amount": charged_amount,
-        "credit_used": credit_used,
+        # ---------------------------
+        # Product (🔥 FIX IMPORTANT)
+        # ---------------------------
+        "forfait": forfait_display,
+
+        # ---------------------------
+        # Operator (future UI/email)
+        # ---------------------------
+        "operator_name": operator.get("name"),
+        "operator_logo": operator.get("logo_url"),
+
+        # ---------------------------
+        # Data
+        # ---------------------------
+        "charged_amount": round(charged_amount, 2),
         "transaction_id": transaction_id,
 
-        # reference
+        # ---------------------------
+        # Reference
+        # ---------------------------
         "transaction_reference": ref,
         "reference": ref,
-
-        # UI
-        "date": datetime.utcnow().strftime("%d/%m/%Y %H:%M"),
         "order_number": ref,
+
+        # ---------------------------
+        # Meta
+        # ---------------------------
+        "date": datetime.utcnow().strftime("%d/%m/%Y %H:%M"),
+        "phone": session.get("recharge_phone"),
+        "country_iso": session.get("country_iso"),
+
     })
 
     return payload_obj
@@ -645,7 +700,6 @@ def stripe_webhook_post():
 
     base_amount = _safe_float(metadata.get("base_amount"), 0.0)
     charged_amount = _safe_float(metadata.get("charged_amount"), 0.0)
-    credit_used = _safe_float(metadata.get("credit_used"), 0.0)
 
     # ---------------------------
     # 🔥 DEBUG IMPORTANT
@@ -737,7 +791,6 @@ def stripe_webhook_post():
         payload_obj = _build_success_payload(
             base_amount=base_amount,
             charged_amount=charged_amount,
-            credit_used=credit_used,
             transaction_id=result.transaction_id,
             transaction_reference=result.custom_identifier,
         )
