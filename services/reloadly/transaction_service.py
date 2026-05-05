@@ -430,7 +430,7 @@ def process_recharge(
                     plan_id=int(plan_id),
                     country_iso=country_iso,
                     operator_id=int(operator_id),
-                    amount=amount,  
+                    amount=None,  # 🔥 CRITICAL FIX  
                     custom_identifier=reference,
                 )
                 print("🔥 RELOADLY DATA RESULT:", raw_result)

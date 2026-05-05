@@ -52,25 +52,60 @@ def _get_forfait_display():
         return str(forfait.get("gb"))
     return None
 
-def _get_payment_context() -> Dict[str, Any]:
-    phone = session.get("recharge_phone", "")
 
-    base_amount = _safe_float(session.get("recharge_amount"), 0.0)
-    recharge_total_amount = _safe_float(session.get("recharge_total_amount"), 0.0)
+# ---------------------------
+# Payment context (FINAL FIX FORFAIT + TAX)
+# ---------------------------
+def _get_payment_context() -> Dict[str, Any]:
+
+    phone = session.get("recharge_phone", "")
+    forfait = session.get("recharge_forfait") or {}
 
     credit_available = 0.0
     use_credit = False
     credit_used = 0.0
 
-    final_amount = recharge_total_amount
+    # ---------------------------
+    # BASE AMOUNT
+    # ---------------------------
+    if isinstance(forfait, dict) and forfait.get("price"):
+
+        try:
+            base_amount = _safe_float(forfait.get("price"), 0.0)
+        except Exception:
+            base_amount = 0.0
+
+    else:
+        base_amount = _safe_float(session.get("recharge_amount"), 0.0)
+
+    # ---------------------------
+    # TAX (SYNC FRONT / BACK)
+    # ---------------------------
+    tax_rate = _safe_float(session.get("tax_rate"), 0.33)  # fallback
+
+    tax = base_amount * tax_rate
+    total = base_amount + tax
+
+    # ---------------------------
+    # FINAL
+    # ---------------------------
+    final_amount = round(total, 2)
+
+    # 🔥 sync session (important)
+    session["recharge_total_amount"] = final_amount
 
     return {
         "phone": phone,
+
         "base_amount": base_amount,
-        "recharge_amount": recharge_total_amount,
+        "recharge_amount": final_amount,
+        "final_amount": final_amount,
+
+        "tax": round(tax, 2),
+
         "credit_available": credit_available,
         "use_credit": use_credit,
-        "final_amount": final_amount,
+        "credit_used": credit_used,
     }
 
 
@@ -244,7 +279,7 @@ def _resolve_payment_status() -> Dict[str, Any]:
                 )
 
                 payload["transaction_id"] = tx_result.transaction_id
-                payload["reference"] = tx_result.transaction_id
+                payload["reference"] = tx_result.custom_identifier
                 payload["transaction_reference"] = tx_result.custom_identifier
                 session["payment_success_payload"] = payload
                 session["last_transaction_id"] = tx_result.transaction_id
@@ -688,7 +723,7 @@ def stripe_webhook_post():
             payment_reference=payment_reference,
             phone=phone,
             country_iso=country_iso,
-            amount=amount_value,
+            amount=None if plan_id else amount_value,
             plan_id=plan_id,
             operator_id=operator_id,
             user_id=user_id or session.get("user_id"),
@@ -793,7 +828,7 @@ def payment_status():
     return jsonify(status)
 
 # ---------------------------
-# Payment success page (FINAL PRODUCTION STABLE)
+# Payment success page (FINAL CLEAN)
 # ---------------------------
 @payment_bp.get("/success")
 def payment_success():
@@ -810,7 +845,7 @@ def payment_success():
     forfait_display = _get_forfait_display()
 
     # ---------------------------
-    # 🔒 PROTECTION
+    # 🔒 NO PAYMENT
     # ---------------------------
     if not payment_intent_id:
         ctx = _get_payment_context()
@@ -826,28 +861,22 @@ def payment_success():
         )
 
     # ---------------------------
-    # 🔥 AFFICHAGE IMMÉDIAT (UNIQUE PAR PAYMENT)
+    # 🔥 FIRST LOAD (NO PAYLOAD)
     # ---------------------------
     if not payload:
-
         import hashlib
 
-        # 👉 ref basée sur Stripe (stable + unique)
         raw = payment_intent_id.encode()
         hash_val = int(hashlib.sha256(raw).hexdigest(), 16)
-
         formatted_ref = str(hash_val % 10**12).zfill(12)
 
         payload = {
             "status": "PROCESSING",
             "amount": _safe_float(session.get("recharge_amount")),
             "date": datetime.utcnow().strftime("%d/%m/%Y %H:%M"),
-
-            # même valeur partout
             "order_number": formatted_ref,
             "reference": formatted_ref,
             "transaction_reference": formatted_ref,
-
             "transaction_id": None,
         }
 
@@ -865,7 +894,7 @@ def payment_success():
         )
 
     # ---------------------------
-    # 🔄 SYNC STATUS
+    # 🔄 SYNC STATUS (Reloadly)
     # ---------------------------
     try:
         transaction_id = payload.get("transaction_id")
@@ -879,42 +908,30 @@ def payment_success():
             )
 
             payload["transaction_id"] = tx.transaction_id
+            payload["transaction_reference"] = tx.custom_identifier  # 🔥 FIX IMPORTANT
 
             session["payment_success_payload"] = payload
 
             if tx.status == "PROCESSING":
-                return render_template(
-                    "payment/success.html",
-                    status="processing",
-                    amount=payload["amount"],
-                    date=payload["date"],
-                    order_number=payload["order_number"],
-                    reference=payload["reference"],
-                    forfait_display=forfait_display,
-                    received_display=received_display,
-                )
+                status = "processing"
+            elif tx.status in {"FAILED", "REFUNDED"}:
+                status = "failed"
+            else:
+                status = "success"
 
-            if tx.status in {"FAILED", "REFUNDED"}:
-                return render_template(
-                    "payment/success.html",
-                    status="failed",
-                    amount=payload["amount"],
-                    date=payload["date"],
-                    order_number=payload["order_number"],
-                    reference=payload["reference"],
-                    forfait_display=forfait_display,
-                    received_display=received_display,
-                )
+        else:
+            status = "success"
 
     except Exception as e:
         print("⚠️ STATUS REFRESH ERROR:", e)
+        status = "processing"
 
     # ---------------------------
-    # ✅ SUCCESS FINAL
+    # ✅ FINAL RENDER
     # ---------------------------
     return render_template(
         "payment/success.html",
-        status="success",
+        status=status,
         amount=payload["amount"],
         date=payload["date"],
         order_number=payload["order_number"],

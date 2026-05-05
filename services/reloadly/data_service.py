@@ -480,7 +480,7 @@ def send_data_topup(
     payload = {
         "operatorId": normalized_operator_id,  # ✅ FIX PRINCIPAL
         "productId": normalized_plan_id,
-        "amount": float(amount),
+        
         "senderCurrencyCode": "EUR",
         "recipientPhone": {
             "countryCode": normalized_country,

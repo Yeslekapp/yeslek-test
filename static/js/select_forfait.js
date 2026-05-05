@@ -218,7 +218,6 @@
 
     try {
 
-      // Save forfait
       const res = await fetch("/recharge/select-forfait", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -227,28 +226,7 @@
 
       const data = await res.json();
 
-      if (!data.ok) throw new Error();
-
-      // Inject amount
-      const amountRes = await fetch("/recharge/select-amount", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-Requested-With": "XMLHttpRequest"
-        },
-        body: new URLSearchParams({
-          amount: price.toString()
-        })
-      });
-
-      const amountData = await amountRes.json();
-
-      if (amountRes.status === 401 && amountData?.redirect) {
-        window.location.href = amountData.redirect;
-        return;
-      }
-
-      if (!amountData?.ok) throw new Error();
+      if (!data.ok) throw new Error("forfait_save_error");
 
       window.location.href = "/payment/method";
 
