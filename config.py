@@ -55,7 +55,7 @@ RELOADLY_CLIENT_ID = os.getenv("RELOADLY_CLIENT_ID", "")
 RELOADLY_CLIENT_SECRET = os.getenv("RELOADLY_CLIENT_SECRET", "")
 
 # ⚡ dynamique (safe)
-RELOADLY_ENV = "LIVE" if IS_PROD else "SANDBOX"
+RELOADLY_ENV = "LIVE"
 RELOADLY_BASE_URL = "https://topups.reloadly.com"
 RELOADLY_AUTH_URL = "https://auth.reloadly.com/oauth/token"
 
@@ -83,7 +83,7 @@ STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 
 # ⚡ dynamique (safe)
-STRIPE_MODE = "live" if IS_PROD else "test"
+STRIPE_MODE = "live"
 
 # ---------------------------
 # Payment settings
