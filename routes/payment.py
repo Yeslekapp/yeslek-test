@@ -64,10 +64,18 @@ def _get_payment_context() -> Dict[str, Any]:
     # ---------------------------
     # BASE AMOUNT
     # ---------------------------
-    if isinstance(forfait, dict) and forfait.get("price"):
+    if isinstance(forfait, dict):
+
+        raw_amount = (
+            forfait.get("price")
+            or forfait.get("amount")
+        )
 
         try:
-            base_amount = _safe_float(forfait.get("price"), 0.0)
+            base_amount = _safe_float(
+                raw_amount,
+                0.0
+            )
         except Exception:
             base_amount = 0.0
 
@@ -123,12 +131,11 @@ def _get_payment_context() -> Dict[str, Any]:
         "phone": phone,
 
         "base_amount": round(base_amount, 2),
-        "recharge_amount": final_amount,
-        "final_amount": final_amount,
+        "recharge_amount": round(final_amount, 2),
+        "final_amount": round(final_amount, 2),
 
         "tax": round(tax, 2),
     }
-
 
 def _get_or_create_payment_idempotency_key() -> str:
     idem_key = _safe_str(session.get("payment_idempotency_key"))
