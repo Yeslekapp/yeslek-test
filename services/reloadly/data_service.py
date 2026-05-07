@@ -310,7 +310,8 @@ def get_reloadly_plans(operator: Dict[str, Any] | None) -> List[Dict[str, Any]]:
                 display_name = description
 
             plans.append({
-                "id": int(amount * 1000),
+                "id": None,
+                "operator_id": int(operator_id),
                 "name": description,
                 "amount": round(amount, 2),
                 "currency": details.get("destinationCurrencyCode") or "EUR",
@@ -450,13 +451,17 @@ def send_data_topup(
     if not normalized_country:
         raise RuntimeError("Reloadly country ISO missing")
 
-    try:
-        normalized_plan_id = int(plan_id)
-    except Exception as exc:
-        raise RuntimeError("Invalid plan id") from exc
+    normalized_plan_id = None
 
-    if normalized_plan_id <= 0:
-        raise RuntimeError("Invalid plan id")
+    if plan_id is not None:
+     try:
+        normalized_plan_id = int(plan_id)
+
+        if normalized_plan_id <= 0:
+            normalized_plan_id = None
+
+     except Exception:
+        normalized_plan_id = None
 
     try:
         normalized_operator_id = int(operator_id)
@@ -478,9 +483,8 @@ def send_data_topup(
     # 🔥 FIX PAYLOAD (NO LOOKUP)
     # ---------------------------
     payload = {
-        "operatorId": normalized_operator_id,  # ✅ FIX PRINCIPAL
-        "productId": normalized_plan_id,
-        "amount": float(amount),
+        "operatorId": normalized_operator_id,
+        "amount": round(float(amount), 2),
         
         "senderCurrencyCode": "EUR",
         "recipientPhone": {
@@ -488,7 +492,8 @@ def send_data_topup(
             "number": _extract_local_number(normalized_phone),
         },
     }
-
+    if normalized_plan_id:
+     payload["productId"] = normalized_plan_id
     # optional custom id
     custom_id = str(custom_identifier or "").strip()
     if custom_id:

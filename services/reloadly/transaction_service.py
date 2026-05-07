@@ -426,13 +426,13 @@ def process_recharge(
                     raise TransactionServiceError("operator_id requis pour DATA")
 
                 raw_result = send_data_topup(
-                    phone=phone,
-                    plan_id=int(plan_id),
-                    amount=float(amount),
-                    country_iso=country_iso,
-                    operator_id=int(operator_id),
-                    custom_identifier=reference,
-                )
+                 phone=phone,
+                 plan_id=int(plan_id),
+                 amount=round(float(amount), 2),  # montant Reloadly SANS taxe
+                 country_iso=country_iso,
+                 operator_id=int(operator_id),
+                 custom_identifier=reference,
+                 )
                 print("🔥 RELOADLY DATA RESULT:", raw_result)
 
             else:
