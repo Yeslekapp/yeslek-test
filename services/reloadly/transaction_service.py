@@ -428,6 +428,7 @@ def process_recharge(
                 raw_result = send_data_topup(
                     phone=phone,
                     plan_id=int(plan_id),
+                    amount=float(amount),
                     country_iso=country_iso,
                     operator_id=int(operator_id),
                     custom_identifier=reference,

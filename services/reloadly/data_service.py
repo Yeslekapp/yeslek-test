@@ -432,6 +432,7 @@ def get_reloadly_quote(
 def send_data_topup(
     phone: str,
     plan_id: int,
+    amount: float,
     country_iso: str,
     operator_id: int, 
     custom_identifier: str | None = None,
@@ -479,6 +480,7 @@ def send_data_topup(
     payload = {
         "operatorId": normalized_operator_id,  # ✅ FIX PRINCIPAL
         "productId": normalized_plan_id,
+        "amount": float(amount),
         
         "senderCurrencyCode": "EUR",
         "recipientPhone": {
