@@ -61,7 +61,6 @@ def _get_payment_context() -> Dict[str, Any]:
     phone = session.get("recharge_phone", "")
     forfait = session.get("recharge_forfait") or {}
 
-
     # ---------------------------
     # BASE AMOUNT
     # ---------------------------
@@ -73,12 +72,18 @@ def _get_payment_context() -> Dict[str, Any]:
             base_amount = 0.0
 
     else:
-        base_amount = _safe_float(session.get("recharge_amount"), 0.0)
+        base_amount = _safe_float(
+            session.get("recharge_amount"),
+            0.0
+        )
 
     # ---------------------------
     # TAX (SYNC FRONT / BACK)
     # ---------------------------
-    tax_rate = _safe_float(session.get("tax_rate"), 0.33)  # fallback
+    tax_rate = _safe_float(
+        session.get("tax_rate"),
+        0.33
+    )
 
     tax = base_amount * tax_rate
     total = base_amount + tax
@@ -87,28 +92,41 @@ def _get_payment_context() -> Dict[str, Any]:
     # FINAL
     # ---------------------------
     final_amount = round(total, 2)
-    if base_amount <= 0:
-      logger.warning("Invalid payment amount: session=%s", dict(session))
-    return {
-        "phone": phone,
-        "base_amount": 0.0,
-        "recharge_amount": 0.0,
-        "final_amount": 0.0,
-        "tax": 0.0,
-    }
 
-    # 🔥 sync session (important)
+    # ---------------------------
+    # Protection invalid amount
+    # ---------------------------
+    if base_amount <= 0:
+
+        logger.warning(
+            "Invalid payment amount: session=%s",
+            dict(session)
+        )
+
+        return {
+            "phone": phone,
+            "base_amount": 0.0,
+            "recharge_amount": 0.0,
+            "final_amount": 0.0,
+            "tax": 0.0,
+        }
+
+    # ---------------------------
+    # Sync session
+    # ---------------------------
     session["recharge_total_amount"] = final_amount
 
+    # ---------------------------
+    # Final payload
+    # ---------------------------
     return {
         "phone": phone,
 
-        "base_amount": base_amount,
+        "base_amount": round(base_amount, 2),
         "recharge_amount": final_amount,
         "final_amount": final_amount,
 
         "tax": round(tax, 2),
-
     }
 
 
@@ -1045,8 +1063,8 @@ def payment_success():
         status="success",
         amount=payload.get("amount", 0),
         date_iso=payload.get("date_iso"),
-        order_number=payload["order_number"],
-        reference=payload["reference"],
+        order_number=payload.get("order_number", "..."),
+        reference=payload.get("reference", "..."),
         forfait_display=forfait_display,
         received_display=received_display,
     )
