@@ -10,12 +10,13 @@ try:
 except Exception:
     pass
 
+
 # ---------------------------
-# Environment
+# FORCE LIVE
 # ---------------------------
 
-ENV = os.getenv("ENV", "production")
-IS_PROD = ENV == "production"
+ENV = "production"
+IS_PROD = True
 
 # ---------------------------
 # Flask (FINAL PRODUCTION SAFE)
