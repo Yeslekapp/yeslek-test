@@ -490,7 +490,6 @@ def process_recharge(
                 "status": "FAILED",
                 "error": str(exc),
             })
-
             raise TransactionServiceError(str(exc)) from exc
 
 

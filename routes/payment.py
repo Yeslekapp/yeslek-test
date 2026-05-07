@@ -940,7 +940,7 @@ def payment_status():
 # ---------------------------
 @payment_bp.get("/success")
 def payment_success():
-    
+
     payment_intent_id = _get_payment_intent_id()
 
     if payment_intent_id:
@@ -956,11 +956,13 @@ def payment_success():
     # 🔒 PROTECTION
     # ---------------------------
     if not payment_intent_id:
+
         ctx = _get_payment_context()
+
         return render_template(
             "payment/success.html",
             status="processing",
-            amount=ctx["recharge_amount"],
+            amount=ctx.get("recharge_amount", 0),
             date_iso=datetime.now(timezone.utc).isoformat(),
             order_number="...",
             reference="...",
@@ -969,7 +971,7 @@ def payment_success():
         )
 
     # ---------------------------
-    # 🔥 AFFICHAGE IMMÉDIAT (UNIQUE PAR PAYMENT)
+    # 🔥 AFFICHAGE IMMÉDIAT
     # ---------------------------
     if not payload:
 
@@ -993,7 +995,6 @@ def payment_success():
                 session.get("recharge_amount")
             ),
 
-            # ✅ UTC ISO
             "date_iso": datetime.now(
                 timezone.utc
             ).isoformat(),
@@ -1012,8 +1013,8 @@ def payment_success():
             status="processing",
             amount=payload.get("amount", 0),
             date_iso=payload.get("date_iso"),
-            order_number=payload["order_number"],
-            reference=payload["reference"],
+            order_number=payload.get("order_number", "..."),
+            reference=payload.get("reference", "..."),
             forfait_display=forfait_display,
             received_display=received_display,
         )
@@ -1022,6 +1023,7 @@ def payment_success():
     # 🔄 SYNC STATUS (Reloadly)
     # ---------------------------
     try:
+
         transaction_id = payload.get("transaction_id")
         reference = payload.get("transaction_reference")
 
@@ -1036,30 +1038,33 @@ def payment_success():
             session["payment_success_payload"] = payload
 
             if tx.status == "PROCESSING":
+
                 return render_template(
                     "payment/success.html",
                     status="processing",
                     amount=payload.get("amount", 0),
                     date_iso=payload.get("date_iso"),
-                    order_number=payload["order_number"],
-                    reference=payload["reference"],
+                    order_number=payload.get("order_number", "..."),
+                    reference=payload.get("reference", "..."),
                     forfait_display=forfait_display,
                     received_display=received_display,
                 )
 
             if tx.status in {"FAILED", "REFUNDED"}:
+
                 return render_template(
                     "payment/success.html",
                     status="failed",
                     amount=payload.get("amount", 0),
                     date_iso=payload.get("date_iso"),
-                    order_number=payload["order_number"],
-                    reference=payload["reference"],
+                    order_number=payload.get("order_number", "..."),
+                    reference=payload.get("reference", "..."),
                     forfait_display=forfait_display,
                     received_display=received_display,
                 )
 
     except Exception as e:
+
         print("⚠️ STATUS REFRESH ERROR:", e)
 
     # ---------------------------
