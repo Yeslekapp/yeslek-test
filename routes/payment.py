@@ -4,7 +4,7 @@
 
 from __future__ import annotations  # ✅ TOUJOURS EN PREMIER
 
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import logging
 from typing import Any, Dict, Optional
@@ -190,9 +190,6 @@ def _store_payment_success_payload(payload: Dict[str, Any]) -> None:
 # Feature: Success Payload (PRO VERSION)
 # ---------------------------
 
-from datetime import datetime
-from typing import Optional, Dict, Any
-
 def _build_success_payload(
     *,
     base_amount: float,
@@ -287,7 +284,7 @@ def _build_success_payload(
         # ---------------------------
         # Meta
         # ---------------------------
-        "date": datetime.utcnow().strftime("%d/%m/%Y %H:%M"),
+         "date_iso": datetime.now(timezone.utc).isoformat(),
         "phone": session.get("recharge_phone"),
         "country_iso": session.get("country_iso"),
 
@@ -410,7 +407,22 @@ def _resolve_payment_status() -> Dict[str, Any]:
         return {"status": "success"}
 
     if stripe_status == "succeeded":
-      return {"status": "success"}
+
+     existing = IdempotencyService.get_result(idem_key)
+
+    if existing:
+
+        tx_status = _safe_str(
+            existing.get("status")
+        ).upper()
+
+        if tx_status == "SUCCESS":
+            return {"status": "success"}
+
+        if tx_status in {"FAILED", "REFUNDED"}:
+            return {"status": "failed"}
+
+    return {"status": "success"}
         
 
     if stripe_status in {"canceled", "requires_payment_method"}:
@@ -639,7 +651,6 @@ def card_post():
         print("Stripe payment intent error:", exc)
         return jsonify({"error": "payment_error"}), 400
 
-
 # ---------------------------
 # Stripe webhook (FINAL PRODUCTION ULTRA SAFE)
 # ---------------------------
@@ -784,7 +795,7 @@ def stripe_webhook_post():
             payment_reference=payment_reference,
             phone=phone,
             country_iso=country_iso,
-            amount=None if plan_id else amount_value,
+            amount=amount_value,
             plan_id=plan_id,
             operator_id=operator_id,
             user_id=user_id or session.get("user_id"),
@@ -806,8 +817,13 @@ def stripe_webhook_post():
         # Gestion erreurs recharge
         # ---------------------------
         if result.status in {"FAILED", "REFUNDED"}:
-            payload_obj["status"] = "FAILED"
-            payload_obj["reason"] = "recharge_failed"
+
+         payload_obj["status"] = "FAILED"
+         payload_obj["reason"] = "recharge_failed"
+
+        else:
+
+         payload_obj["status"] = "SUCCESS"
 
 
 
@@ -892,7 +908,7 @@ def payment_status():
 # ---------------------------
 @payment_bp.get("/success")
 def payment_success():
-
+    
     payment_intent_id = _get_payment_intent_id()
 
     if payment_intent_id:
@@ -913,7 +929,7 @@ def payment_success():
             "payment/success.html",
             status="processing",
             amount=ctx["recharge_amount"],
-            date=None,
+            date_iso=datetime.now(timezone.utc).isoformat(),
             order_number="...",
             reference="...",
             forfait_display=forfait_display,
@@ -928,13 +944,27 @@ def payment_success():
         import hashlib
 
         raw = payment_intent_id.encode()
-        hash_val = int(hashlib.sha256(raw).hexdigest(), 16)
-        formatted_ref = str(hash_val % 10**12).zfill(12)
+
+        hash_val = int(
+            hashlib.sha256(raw).hexdigest(),
+            16
+        )
+
+        formatted_ref = str(
+            hash_val % 10**12
+        ).zfill(12)
 
         payload = {
             "status": "PROCESSING",
-            "amount": _safe_float(session.get("recharge_amount")),
-            "date": datetime.utcnow().strftime("%d/%m/%Y %H:%M"),
+
+            "amount": _safe_float(
+                session.get("recharge_amount")
+            ),
+
+            # ✅ UTC ISO
+            "date_iso": datetime.now(
+                timezone.utc
+            ).isoformat(),
 
             "order_number": formatted_ref,
             "reference": formatted_ref,
@@ -949,7 +979,7 @@ def payment_success():
             "payment/success.html",
             status="processing",
             amount=payload["amount"],
-            date=payload["date"],
+            date_iso=payload.get("date_iso"),
             order_number=payload["order_number"],
             reference=payload["reference"],
             forfait_display=forfait_display,
@@ -978,7 +1008,7 @@ def payment_success():
                     "payment/success.html",
                     status="processing",
                     amount=payload["amount"],
-                    date=payload["date"],
+                    date_iso=payload.get("date_iso"),
                     order_number=payload["order_number"],
                     reference=payload["reference"],
                     forfait_display=forfait_display,
@@ -990,7 +1020,7 @@ def payment_success():
                     "payment/success.html",
                     status="failed",
                     amount=payload["amount"],
-                    date=payload["date"],
+                    date_iso=payload.get("date_iso"),
                     order_number=payload["order_number"],
                     reference=payload["reference"],
                     forfait_display=forfait_display,
@@ -1007,7 +1037,7 @@ def payment_success():
         "payment/success.html",
         status="success",
         amount=payload["amount"],
-        date=payload["date"],
+        date_iso=payload.get("date_iso"),
         order_number=payload["order_number"],
         reference=payload["reference"],
         forfait_display=forfait_display,

@@ -94,7 +94,39 @@ if (successContent) {
   successContent.style.display = "block";
 }
 
+
+
+  // ---------------------------
+  // Local timezone display
+  // ---------------------------
+
+  const dateEl = document.getElementById("localPaymentDate");
+
+  if (dateEl) {
+
+    const utc = dateEl.dataset.utc;
+
+    if (utc) {
+
+      const d = new Date(utc);
+
+      dateEl.textContent = d.toLocaleString(
+        navigator.language || "fr-FR",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }
+      );
+
+    }
+
+  }
+
 });
+
 </script>
 {% endblock %}
 
@@ -161,20 +193,37 @@ if (successContent) {
         <div class="tz-divider"></div>
 
         <div class="tz-row">
-          <div class="tz-muted">{{ t("payment.success.dateLabel") }}</div>
-          <div class="tz-strong">{{ date or "..." }}</div>
+          <div class="tz-muted">
+            {{ t("payment.success.dateLabel") }}
+          </div>
+
+          <div class="tz-strong">
+            <span id="localPaymentDate"
+                  data-utc="{{ date_iso or '' }}">
+              ...
+            </span>
+          </div>
         </div>
 
         <div class="tz-divider"></div>
 
         <div class="tz-row">
-          <div class="tz-muted">{{ t("payment.success.orderLabel") }}</div>
+          <div class="tz-muted">
+            {{ t("payment.success.orderLabel") }}
+          </div>
 
-          <div class="tz-row tz-row--gap" style="justify-content:flex-end;">
+          <div class="tz-row tz-row--gap"
+               style="justify-content:flex-end;">
+
             <div class="tz-strong"
                  id="orderNumberText"
-                 style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                 style="max-width:220px;
+                        overflow:hidden;
+                        text-overflow:ellipsis;
+                        white-space:nowrap;">
+
               {{ order_number or "..." }}
+
             </div>
 
             <button type="button"
@@ -183,19 +232,29 @@ if (successContent) {
                     aria-label="{{ t('common.copy') }}">
               📋
             </button>
+
           </div>
         </div>
 
         <div class="tz-divider"></div>
 
         <div class="tz-row">
-          <div class="tz-muted">{{ t("payment.success.referenceLabel") }}</div>
+          <div class="tz-muted">
+            {{ t("payment.success.referenceLabel") }}
+          </div>
 
-          <div class="tz-row tz-row--gap" style="justify-content:flex-end;">
+          <div class="tz-row tz-row--gap"
+               style="justify-content:flex-end;">
+
             <div class="tz-strong"
                  id="referenceText"
-                 style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                 style="max-width:220px;
+                        overflow:hidden;
+                        text-overflow:ellipsis;
+                        white-space:nowrap;">
+
               {{ reference or "..." }}
+
             </div>
 
             <button type="button"
@@ -204,6 +263,7 @@ if (successContent) {
                     aria-label="{{ t('common.copy') }}">
               📋
             </button>
+
           </div>
         </div>
 
@@ -217,7 +277,9 @@ if (successContent) {
         <button type="submit"
                 class="tz-primary-btn"
                 style="transition: transform .15s ease;">
+
           {{ t("payment.success.finish") }}
+
         </button>
 
       </form>

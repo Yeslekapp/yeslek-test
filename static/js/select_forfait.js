@@ -236,10 +236,16 @@ async function submitSelection() {
   try {
 
     const res = await fetch("/recharge/select-forfait", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: planId })
-    });
+    method: "POST",
+    headers: {
+    "Content-Type": "application/json"
+   },
+   body: JSON.stringify({
+    id: planId,
+    gb: selectedPlanGb.value,
+    price: selectedPlanPrice.value
+  })
+});
 
     const data = await res.json();
 

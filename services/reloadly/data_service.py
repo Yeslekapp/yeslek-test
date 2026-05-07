@@ -434,7 +434,6 @@ def send_data_topup(
     plan_id: int,
     country_iso: str,
     operator_id: int, 
-    amount: float, # 🔥 FIX CRITIQUE
     custom_identifier: str | None = None,
 ) -> Dict[str, Any]:
 
