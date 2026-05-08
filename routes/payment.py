@@ -5,7 +5,6 @@
 from __future__ import annotations  # ✅ TOUJOURS EN PREMIER
 
 from datetime import datetime, timezone
-from threading import Thread
 import uuid
 import logging
 from typing import Any, Dict, Optional
@@ -18,6 +17,7 @@ from services.order.order_service import OrderService
 from services.stripe.stripe_service import StripeService
 from services.reloadly.transaction_service import (
     TransactionServiceError,
+    InvalidTransactionInputError,
     build_transaction_reference,
     get_existing_transaction,
     process_recharge,
@@ -59,32 +59,54 @@ def _get_forfait_display():
 # ---------------------------
 def _get_payment_context() -> Dict[str, Any]:
 
-    phone = session.get("recharge_phone", "")
-    forfait = session.get("recharge_forfait") or {}
+    phone = session.get(
+        "recharge_phone",
+        ""
+    )
+
+    forfait = session.get(
+        "recharge_forfait"
+    ) or {}
 
     # ---------------------------
     # BASE AMOUNT
     # ---------------------------
-    if isinstance(forfait, dict):
+    base_amount = 0.0
+
+    # ---------------------------
+    # DATA / FORFAIT
+    # ---------------------------
+    if (
+        isinstance(forfait, dict)
+        and forfait
+    ):
 
         raw_amount = (
             forfait.get("price")
             or forfait.get("amount")
+            or forfait.get("value")
         )
 
-        try:
-            base_amount = _safe_float(
-                raw_amount,
-                0.0
-            )
-        except Exception:
-            base_amount = 0.0
+        base_amount = _safe_float(
+            raw_amount,
+            0.0
+        )
 
-    else:
+    # ---------------------------
+    # AIRTIME FALLBACK
+    # ---------------------------
+    if base_amount <= 0:
+
         base_amount = _safe_float(
             session.get("recharge_amount"),
             0.0
         )
+
+    # ---------------------------
+    # EXTRA SAFETY
+    # ---------------------------
+    if base_amount < 0:
+        base_amount = 0.0
 
     # ---------------------------
     # TAX (SYNC FRONT / BACK)
@@ -94,36 +116,48 @@ def _get_payment_context() -> Dict[str, Any]:
         0.33
     )
 
-    tax = base_amount * tax_rate
-    total = base_amount + tax
+    if tax_rate < 0:
+        tax_rate = 0.0
+
+    tax = round(
+        base_amount * tax_rate,
+        2
+    )
 
     # ---------------------------
-    # FINAL
+    # FINAL TOTAL
     # ---------------------------
-    final_amount = round(total, 2)
+    final_amount = round(
+        base_amount + tax,
+        2
+    )
 
     # ---------------------------
     # Protection invalid amount
     # ---------------------------
-    if base_amount <= 0:
+    if final_amount <= 0:
 
         logger.warning(
-            "Invalid payment amount: session=%s",
+            "Invalid payment amount | session=%s",
             dict(session)
         )
 
         return {
             "phone": phone,
+
             "base_amount": 0.0,
             "recharge_amount": 0.0,
             "final_amount": 0.0,
+
             "tax": 0.0,
         }
 
     # ---------------------------
     # Sync session
     # ---------------------------
-    session["recharge_total_amount"] = final_amount
+    session["recharge_total_amount"] = (
+        final_amount
+    )
 
     # ---------------------------
     # Final payload
@@ -131,12 +165,27 @@ def _get_payment_context() -> Dict[str, Any]:
     return {
         "phone": phone,
 
-        "base_amount": round(base_amount, 2),
-        "recharge_amount": round(final_amount, 2),
-        "final_amount": round(final_amount, 2),
+        "base_amount": round(
+            base_amount,
+            2
+        ),
 
-        "tax": round(tax, 2),
+        "recharge_amount": round(
+            final_amount,
+            2
+        ),
+
+        "final_amount": round(
+            final_amount,
+            2
+        ),
+
+        "tax": round(
+            tax,
+            2
+        ),
     }
+
 
 def _get_or_create_payment_idempotency_key() -> str:
     idem_key = _safe_str(session.get("payment_idempotency_key"))
@@ -203,11 +252,6 @@ def _build_checkout_metadata(idem_key: str) -> Dict[str, str]:
          forfait.get("id")
                or forfait.get("name")
              ),
-             "forfait_display": _safe_str(
-              forfait.get("display_name")
-              or forfait.get("gb")
-              or forfait.get("name")
-             ),
         "operator_id": _safe_str(operator.get("id")),
         "operator_name": _safe_str(operator.get("name")),
         "operator_logo": _safe_str(operator.get("logo_url")),
@@ -237,11 +281,6 @@ def _build_success_payload(
     charged_amount: float,
     transaction_id: Optional[int],
     transaction_reference: str,
-    forfait_display: str,
-    operator_name: str,
-    operator_logo: str,
-    phone: str,
-    country_iso: str,
 ) -> Dict[str, Any]:
 
     # ---------------------------
@@ -250,23 +289,41 @@ def _build_success_payload(
     payload_obj = OrderService.build_success_payload(amount=base_amount)
 
     # ---------------------------
+    # Safe session data
+    # ---------------------------
+    forfait = session.get("recharge_forfait") or {}
+    operator = session.get("recharge_operator") or {}
+
+    # ---------------------------
     # Reference format (SAFE)
     # ---------------------------
-    ref = (
-    transaction_reference
-    or (
-        f"{transaction_id:012d}"
-        if transaction_id
-        else "000000000000"
-    )
-)
+    ref = f"{transaction_id:012d}" if transaction_id else "000000000000"
 
     # ---------------------------
     # Taxes
     # ---------------------------
     tax = round(charged_amount - base_amount, 2)
 
+    # ---------------------------
+    # Forfait display (UX)
+    # ---------------------------
+    forfait_display = None
 
+    if isinstance(forfait, dict):
+        gb = forfait.get("gb")
+        validity = forfait.get("validity")
+        name = forfait.get("name")
+
+        if gb and validity:
+            forfait_display = f"{gb} • {validity}"
+        elif gb:
+            forfait_display = gb
+        elif name:
+            forfait_display = name
+
+    # fallback airtime
+    if not forfait_display:
+        forfait_display = "Recharge mobile"
 
     # ---------------------------
     # Payload final
@@ -293,8 +350,8 @@ def _build_success_payload(
         # ---------------------------
         # Operator (future UI/email)
         # ---------------------------
-        "operator_name": operator_name,
-        "operator_logo": operator_logo,
+        "operator_name": operator.get("name"),
+        "operator_logo": operator.get("logo_url"),
 
         # ---------------------------
         # Data
@@ -313,8 +370,8 @@ def _build_success_payload(
         # Meta
         # ---------------------------
          "date_iso": datetime.now(timezone.utc).isoformat(),
-        "phone": phone,
-        "country_iso": country_iso,
+        "phone": session.get("recharge_phone"),
+        "country_iso": session.get("country_iso"),
 
     })
 
@@ -340,124 +397,291 @@ def _load_payload_from_payment_intent(payment_intent_id: str) -> Optional[Dict[s
     return payload
 
 
+# ---------------------------
+# Resolve payment status
+# ---------------------------
 def _resolve_payment_status() -> Dict[str, Any]:
-    payload = session.get("payment_success_payload")
-    if isinstance(payload, dict) and payload:
-        transaction_id = payload.get("transaction_id")
-        reference = payload.get("transaction_reference")
 
+    payload = session.get(
+        "payment_success_payload"
+    )
+
+    # ---------------------------
+    # Existing session payload
+    # ---------------------------
+    if isinstance(payload, dict) and payload:
+
+        transaction_id = payload.get(
+            "transaction_id"
+        )
+
+        reference = payload.get(
+            "transaction_reference"
+        )
+
+        # ---------------------------
+        # Sync Reloadly status
+        # ---------------------------
         if transaction_id or reference:
+
             try:
+
                 tx_result = refresh_transaction_status(
                     reference=reference or build_transaction_reference(
-                        payment_reference=_safe_str(session.get("last_payment_intent_id")),
-                        phone=_safe_str(session.get("recharge_phone")),
-                        amount=_safe_float(session.get("recharge_amount"), None),
-                        plan_id=(session.get("recharge_forfait") or {}).get("id"),
-                        operator_id=(session.get("recharge_operator") or {}).get("id"),
-                        country_iso=_safe_str(session.get("country_iso")),
+                        payment_reference=_safe_str(
+                            session.get(
+                                "last_payment_intent_id"
+                            )
+                        ),
+                        phone=_safe_str(
+                            session.get(
+                                "recharge_phone"
+                            )
+                        ),
+                        amount=_safe_float(
+                            session.get(
+                                "recharge_amount"
+                            ),
+                            None,
+                        ),
+                        plan_id=(
+                            session.get(
+                                "recharge_forfait"
+                            ) or {}
+                        ).get("id"),
+                        operator_id=(
+                            session.get(
+                                "recharge_operator"
+                            ) or {}
+                        ).get("id"),
+                        country_iso=_safe_str(
+                            session.get(
+                                "country_iso"
+                            )
+                        ),
                     ),
                     transaction_id=transaction_id,
                 )
 
-                payload["transaction_id"] = tx_result.transaction_id
-                payload["reference"] = tx_result.custom_identifier or payload.get("reference")
-                payload["transaction_reference"] = tx_result.custom_identifier or payload.get("transaction_reference")
-                session["payment_success_payload"] = payload
-                session["last_transaction_id"] = tx_result.transaction_id
-                session["last_transaction_reference"] = tx_result.custom_identifier
-
-                if tx_result.status == "SUCCESS":
-                    return {"status": "success"}
-                if tx_result.status in {"FAILED", "REFUNDED"}:
-                    return {"status": "failed"}
-
-                return {"status": "processing"}
-
-            except Exception:
-                return {"status": "processing"}
-
-        return {"status": "success"}
-
-    payment_intent_id = _get_payment_intent_id()
-    if not payment_intent_id:
-        return {"status": "pending"}
-
-    session["last_payment_intent_id"] = payment_intent_id
-
-    try:
-        intent = StripeService.retrieve_payment(payment_intent_id)
-    except Exception:
-        return {"status": "pending"}
-
-    metadata = dict(getattr(intent, "metadata", {}) or {})
-    stripe_status = _safe_str(getattr(intent, "status", ""))
-
-    idem_key = _safe_str(metadata.get("payment_idempotency_key"))
-    if not idem_key:
-        return {"status": "pending"}
-
-    existing = IdempotencyService.get_result(idem_key)
-    if existing:
-        _store_payment_success_payload(existing)
-
-        tx_status = _safe_str(existing.get("status")).upper()
-        if tx_status in {"FAILED", "REFUNDED"}:
-            return {"status": "failed"}
-
-        transaction_id = existing.get("transaction_id")
-        reference = existing.get("transaction_reference")
-
-        if transaction_id or reference:
-            try:
-                tx_result = refresh_transaction_status(
-                    reference=reference,
-                    transaction_id=transaction_id,
+                payload["transaction_id"] = (
+                    tx_result.transaction_id
                 )
 
-                existing["transaction_id"] = tx_result.transaction_id
-                existing["reference"] = tx_result.custom_identifier or existing.get("reference")
-                existing["transaction_reference"] = tx_result.custom_identifier
-                session["payment_success_payload"] = existing
-                session["last_transaction_id"] = tx_result.transaction_id
-                session["last_transaction_reference"] = tx_result.custom_identifier
+                payload["reference"] = (
+                    tx_result.custom_identifier
+                    or payload.get("reference")
+                )
 
+                payload["transaction_reference"] = (
+                    tx_result.custom_identifier
+                    or payload.get(
+                        "transaction_reference"
+                    )
+                )
+
+                session[
+                    "payment_success_payload"
+                ] = payload
+
+                session[
+                    "last_transaction_id"
+                ] = tx_result.transaction_id
+
+                session[
+                    "last_transaction_reference"
+                ] = tx_result.custom_identifier
+
+                # ---------------------------
+                # SUCCESS
+                # ---------------------------
                 if tx_result.status == "SUCCESS":
-                    return {"status": "success"}
-                if tx_result.status in {"FAILED", "REFUNDED"}:
-                    return {"status": "failed"}
 
-                return {"status": "processing"}
+                    return {
+                        "status": "success"
+                    }
 
+                # ---------------------------
+                # FAILED
+                # ---------------------------
+                if tx_result.status in {
+                    "FAILED",
+                    "REFUNDED",
+                }:
+
+                    return {
+                        "status": "failed"
+                    }
+
+                # ---------------------------
+                # PROCESSING
+                # ---------------------------
+                return {
+                    "status": "processing"
+                }
+
+            # ---------------------------
+            # Reloadly transaction
+            # not created yet
+            # ---------------------------
+            except InvalidTransactionInputError:
+
+                logger.warning(
+                    "Reloadly transaction not found yet"
+                )
+
+                return {
+                    "status": "processing"
+                }
+
+            # ---------------------------
+            # Unexpected error
+            # ---------------------------
             except Exception:
-                return {"status": "processing"}
 
-        return {"status": "success"}
+                logger.exception(
+                    "Payment status refresh error"
+                )
 
-    if stripe_status == "succeeded":
+                return {
+                    "status": "processing"
+                }
 
-        existing = IdempotencyService.get_result(
+        # ---------------------------
+        # Existing payload fallback
+        # ---------------------------
+        return {
+            "status": "success"
+        }
+
+    # ---------------------------
+    # Stripe payment intent
+    # ---------------------------
+    payment_intent_id = _get_payment_intent_id()
+
+    if not payment_intent_id:
+
+        return {
+            "status": "pending"
+        }
+
+    session[
+        "last_payment_intent_id"
+    ] = payment_intent_id
+
+    # ---------------------------
+    # Retrieve Stripe intent
+    # ---------------------------
+    try:
+
+        intent = StripeService.retrieve_payment(
+            payment_intent_id
+        )
+
+    except Exception:
+
+        logger.exception(
+            "Stripe retrieve payment error"
+        )
+
+        return {
+            "status": "pending"
+        }
+
+    metadata = dict(
+        getattr(intent, "metadata", {}) or {}
+    )
+
+    stripe_status = _safe_str(
+        getattr(intent, "status", "")
+    ).lower()
+
+    idem_key = _safe_str(
+        metadata.get(
+            "payment_idempotency_key"
+        )
+    )
+
+    if not idem_key:
+
+        return {
+            "status": "pending"
+        }
+
+    # ---------------------------
+    # Existing idempotent result
+    # ---------------------------
+    existing = IdempotencyService.get_result(
         idem_key
     )
 
     if existing:
 
+        _store_payment_success_payload(
+            existing
+        )
+
         tx_status = _safe_str(
             existing.get("status")
         ).upper()
 
+        # ---------------------------
+        # SUCCESS
+        # ---------------------------
         if tx_status == "SUCCESS":
-            return {"status": "success"}
 
+            return {
+                "status": "success"
+            }
+
+        # ---------------------------
+        # FAILED
+        # ---------------------------
         if tx_status in {
             "FAILED",
             "REFUNDED",
         }:
-            return {"status": "failed"}
 
-        return {"status": "processing"}
+            return {
+                "status": "failed"
+            }
 
-    return {"status": "processing"}
+        # ---------------------------
+        # PROCESSING
+        # ---------------------------
+        return {
+            "status": "processing"
+        }
+
+    # ---------------------------
+    # Stripe success fallback
+    # Stripe paid but webhook
+    # still processing
+    # ---------------------------
+    if stripe_status == "succeeded":
+
+        return {
+            "status": "processing"
+        }
+
+    # ---------------------------
+    # Failed Stripe states
+    # ---------------------------
+    if stripe_status in {
+        "canceled",
+        "requires_payment_method",
+        "payment_failed",
+    }:
+
+        return {
+            "status": "failed"
+        }
+
+    # ---------------------------
+    # Default pending
+    # ---------------------------
+    return {
+        "status": "pending"
+    }
 
 
 # ---------------------------
@@ -679,92 +903,9 @@ def card_post():
     except Exception as exc:
         print("Stripe payment intent error:", exc)
         return jsonify({"error": "payment_error"}), 400
+
 # ---------------------------
-# Background recharge task
-# ---------------------------
-
-def _background_process_recharge(
-    *,
-    idem_key: str,
-    payment_reference: str,
-    phone: str,
-    country_iso: str,
-    amount_value: float,
-    plan_id,
-    operator_id,
-    user_id,
-    metadata,
-    base_amount: float,
-    charged_amount: float,
-    user_email: str,
-    operator_name: str,
-    operator_logo: str,
-    forfait_display: str,
-):
-
-    try:
-
-        print("🔥 BACKGROUND RECHARGE START")
-
-        result = process_recharge(
-            payment_reference=payment_reference,
-            phone=phone,
-            country_iso=country_iso,
-            amount=amount_value,
-            plan_id=plan_id,
-            operator_id=operator_id,
-            user_id=user_id,
-            metadata=metadata,
-        )
-
-        payload_obj = _build_success_payload(
-            base_amount=base_amount,
-            charged_amount=charged_amount,
-            transaction_id=result.transaction_id,
-            transaction_reference=result.custom_identifier,
-            forfait_display=forfait_display,
-            operator_name=operator_name,
-            operator_logo=operator_logo,
-            phone=phone,
-            country_iso=country_iso,
-        )
-
-        if result.status in {"FAILED", "REFUNDED"}:
-            payload_obj["status"] = "FAILED"
-        else:
-            payload_obj["status"] = "SUCCESS"
-
-        IdempotencyService.store_result(
-            idem_key,
-            payload_obj
-        )
-
-        print("🔥 RELOADLY SUCCESS:", result.status)
-
-        if user_email and result.status == "SUCCESS":
-
-            try:
-
-                EmailService.send_payment_success(
-                    email=user_email,
-                    payload=payload_obj,
-                    phone=phone,
-                    country_name=country_iso,
-                    operator_name=operator_name,
-                    operator_logo=operator_logo,
-                )
-
-            except Exception:
-                logger.exception("Email error")
-
-    except Exception as e:
-
-        logger.exception(
-            "BACKGROUND RECHARGE ERROR: %s",
-            e
-        )
-# ---------------------------
-# Stripe webhook (FINAL PRODUCTION ASYNC)
+# Stripe webhook (FINAL PRODUCTION ULTRA SAFE)
 # ---------------------------
 @payment_bp.post("/webhook")
 def stripe_webhook_post():
@@ -778,7 +919,6 @@ def stripe_webhook_post():
     # Verify Stripe signature
     # ---------------------------
     try:
-
         event = StripeService.construct_webhook_event(
             payload,
             sig_header
@@ -800,7 +940,7 @@ def stripe_webhook_post():
     ).get("object") or {}
 
     # ---------------------------
-    # Only success payments
+    # Only handle success payments
     # ---------------------------
     if event_type != "payment_intent.succeeded":
         return jsonify({"ok": True}), 200
@@ -846,9 +986,10 @@ def stripe_webhook_post():
         event_data.get("id")
     )
 
-    # ---------------------------
-    # Duplicate recharge protection
-    # ---------------------------
+    session["last_payment_intent_id"] = (
+        payment_reference
+    )
+
     if get_existing_transaction(
         payment_reference
     ):
@@ -878,9 +1019,6 @@ def stripe_webhook_post():
     forfait_id_raw = _safe_str(
         metadata.get("forfait_id")
     )
-    forfait_display = _safe_str(
-    metadata.get("forfait_display")
-    ) or "Recharge mobile"
 
     operator_id_raw = _safe_str(
         metadata.get("operator_id")
@@ -913,7 +1051,16 @@ def stripe_webhook_post():
     )
 
     # ---------------------------
-    # Validation
+    # DEBUG IMPORTANT
+    # ---------------------------
+    logger.info(
+        "WEBHOOK DEBUG | operator_id_raw=%s | forfait_id=%s",
+        operator_id_raw,
+        forfait_id_raw,
+    )
+
+    # ---------------------------
+    # Validation sécurité
     # ---------------------------
     if not phone or base_amount <= 0:
 
@@ -965,26 +1112,33 @@ def stripe_webhook_post():
         return jsonify({"ok": True}), 200
 
     # ---------------------------
-    # Plan ID
+    # 🔒 FORFAIT / DATA LOGIC
     # ---------------------------
     plan_id = None
 
     if forfait_id_raw:
 
         try:
-
-            plan_id = int(
-                forfait_id_raw
-            )
+            plan_id = int(forfait_id_raw)
 
         except Exception:
 
-            if "_" in forfait_id_raw:
+            plans = session.get(
+                "recharge_data_plans"
+            ) or []
 
-                try:
-                    plan_id = forfait_id_raw
-                except Exception:
-                    plan_id = None
+            matched_plan = next(
+                (
+                    p for p in plans
+                    if str(
+                        p.get("name")
+                    ) == str(forfait_id_raw)
+                ),
+                None
+            )
+
+            if matched_plan:
+                plan_id = matched_plan.get("id")
 
     amount_value = round(
         base_amount,
@@ -992,25 +1146,21 @@ def stripe_webhook_post():
     )
 
     # ---------------------------
-    # Operator ID
+    # FIX CRITIQUE OPERATOR ID
     # ---------------------------
     try:
-
-        operator_id = int(
-            operator_id_raw
-        )
+        operator_id = int(operator_id_raw)
 
     except Exception:
-
         operator_id = None
 
     # ---------------------------
-    # DATA protection
+    # sécurité DATA
     # ---------------------------
     if forfait_id_raw and not operator_id:
 
         logger.error(
-            "❌ Missing operator_id"
+            "❌ Missing operator_id for DATA recharge"
         )
 
         IdempotencyService.store_result(
@@ -1024,113 +1174,113 @@ def stripe_webhook_post():
         return jsonify({"ok": True}), 200
 
     # ---------------------------
-    # Save card immediately
+    # PROCESS RECHARGE
     # ---------------------------
     try:
 
-        save_card = (
-            metadata.get("save_card") == "true"
-        )
-
-        if save_card and user_id:
-
-            payment_method = event_data.get(
-                "payment_method"
-            )
-
-            if payment_method:
-
-                pm = StripeService.retrieve_payment_method(
-                    payment_method
-                )
-
-                card_data = getattr(
-                    pm,
-                    "card",
-                    None
-                )
-
-                if card_data:
-
-                    OrderService.maybe_store_card_tokenized(
-                        user_id=user_id,
-                        save_card=True,
-                        number=str(card_data.last4),
-                        expiry=f"{card_data.exp_month}/{card_data.exp_year}",
-                    )
-
-    except Exception as e:
-
-        logger.exception(
-            "CARD SAVE ERROR: %s",
-            e
-        )
-
-    # ---------------------------
-    # Immediate processing state
-    # ---------------------------
-    IdempotencyService.store_result(
-        idem_key,
-        {
-            "status": "PROCESSING",
-            "reference": payment_reference,
-        },
-    )
-
-    # ---------------------------
-    # Background recharge
-    # ---------------------------
-    Thread(
-        target=_background_process_recharge,
-        kwargs={
-
-            "idem_key": idem_key,
-
-            "payment_reference": payment_reference,
-            "forfait_display": forfait_display,
-            "phone": phone,
-
-            "country_iso": country_iso,
-
-            "amount_value": amount_value,
-
-            "plan_id": plan_id,
-
-            "operator_id": operator_id,
-
-            "user_id": user_id,
-
-            "metadata": {
+        result = process_recharge(
+            payment_reference=payment_reference,
+            phone=phone,
+            country_iso=country_iso,
+            amount=amount_value,
+            plan_id=plan_id,
+            operator_id=operator_id,
+            user_id=user_id or session.get("user_id"),
+            metadata={
                 "flow": "stripe_webhook",
                 "payment_intent_id": payment_reference,
                 "payment_idempotency_key": idem_key,
             },
+        )
 
-            "base_amount": base_amount,
+        payload_obj = _build_success_payload(
+            base_amount=base_amount,
+            charged_amount=charged_amount,
+            transaction_id=result.transaction_id,
+            transaction_reference=result.custom_identifier,
+        )
 
-            "charged_amount": charged_amount,
+        # ---------------------------
+        # Gestion erreurs recharge
+        # ---------------------------
+        if result.status in {"FAILED", "REFUNDED"}:
 
-            "user_email": user_email,
+         payload_obj["status"] = "FAILED"
+         payload_obj["reason"] = "recharge_failed"
 
-            "operator_name": operator_name,
+        else:
 
-            "operator_logo": operator_logo,
-        },
-        daemon=False,
-    ).start()
+         payload_obj["status"] = "SUCCESS"
 
-    print("🔥 BACKGROUND THREAD STARTED")
 
-    # ---------------------------
-    # IMPORTANT
-    # Return immediately to Stripe
-    # ---------------------------
-    return jsonify(
-        {
-            "ok": True,
-            "processing": True,
-        }
-    ), 200
+
+        # ---------------------------
+        # Save result
+        # ---------------------------
+        IdempotencyService.store_result(idem_key, payload_obj)
+        _store_payment_success_payload(payload_obj)
+
+        # ---------------------------
+        # Save card (Stripe metadata)
+        # ---------------------------
+        try:
+            save_card = metadata.get("save_card") == "true"
+
+            if save_card and user_id:
+                payment_method = event_data.get("payment_method")
+
+                if payment_method:
+                    pm = StripeService.retrieve_payment_method(payment_method)
+                    card_data = getattr(pm, "card", None)
+
+                    if card_data:
+                        OrderService.maybe_store_card_tokenized(
+                            user_id=user_id,
+                            save_card=True,
+                            number=str(card_data.last4),
+                            expiry=f"{card_data.exp_month}/{card_data.exp_year}",
+                        )
+
+        except Exception as e:
+            logger.exception("CARD SAVE ERROR: %s", e)
+
+        # ---------------------------
+        # Email
+        # ---------------------------
+        if user_email and result.status == "SUCCESS":
+            try:
+                EmailService.send_payment_success(
+                    email=user_email,
+                    payload=payload_obj,
+                    phone=phone,
+                    country_name=country_iso,
+                    operator_name=operator_name,
+                    operator_logo=operator_logo,
+                )
+            except Exception:
+                logger.exception("Email error")
+
+    except TransactionServiceError as e:
+        logger.exception("Recharge error: %s", e)
+
+        IdempotencyService.store_result(
+            idem_key,
+            {"status": "FAILED", "reason": "recharge_error"},
+        )
+
+        return jsonify({"ok": True}), 200
+
+    except Exception as e:
+        logger.exception("Webhook unexpected error: %s", e)
+
+        IdempotencyService.store_result(
+            idem_key,
+            {"status": "FAILED", "reason": "unexpected_error"},
+        )
+
+        return jsonify({"ok": True}), 200
+
+    return jsonify({"ok": True}), 200
 
 # ---------------------------
 # Payment status
