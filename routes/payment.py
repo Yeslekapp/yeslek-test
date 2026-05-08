@@ -1390,8 +1390,22 @@ def payment_success():
             )
 
             payload["transaction_id"] = tx.transaction_id
+
+            payload["transaction_reference"] = (
+                tx.custom_identifier
+                or reference
+            )
+
+            payload["reference"] = (
+                tx.custom_identifier
+                or reference
+            )
+
             session["payment_success_payload"] = payload
 
+            # ---------------------------
+            # PROCESSING
+            # ---------------------------
             if tx.status == "PROCESSING":
 
                 return render_template(
@@ -1405,7 +1419,13 @@ def payment_success():
                     received_display=received_display,
                 )
 
-            if tx.status in {"FAILED", "REFUNDED"}:
+            # ---------------------------
+            # FAILED
+            # ---------------------------
+            if tx.status in {
+                "FAILED",
+                "REFUNDED",
+            }:
 
                 return render_template(
                     "payment/success.html",
@@ -1418,9 +1438,43 @@ def payment_success():
                     received_display=received_display,
                 )
 
+    # ---------------------------
+    # Reloadly transaction
+    # not ready yet
+    # ---------------------------
+    except InvalidTransactionInputError:
+
+        return render_template(
+            "payment/success.html",
+            status="processing",
+            amount=payload.get("amount", 0),
+            date_iso=payload.get("date_iso"),
+            order_number=payload.get("order_number", "..."),
+            reference=payload.get("reference", "..."),
+            forfait_display=forfait_display,
+            received_display=received_display,
+        )
+
+    # ---------------------------
+    # Unexpected error
+    # ---------------------------
     except Exception as e:
 
-        print("⚠️ STATUS REFRESH ERROR:", e)
+        logger.exception(
+            "⚠️ STATUS REFRESH ERROR: %s",
+            e
+        )
+
+        return render_template(
+            "payment/success.html",
+            status="processing",
+            amount=payload.get("amount", 0),
+            date_iso=payload.get("date_iso"),
+            order_number=payload.get("order_number", "..."),
+            reference=payload.get("reference", "..."),
+            forfait_display=forfait_display,
+            received_display=received_display,
+        )
 
     # ---------------------------
     # ✅ SUCCESS FINAL
