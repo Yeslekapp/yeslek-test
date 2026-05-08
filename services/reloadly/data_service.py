@@ -194,7 +194,7 @@ def get_reloadly_plans(operator: Dict[str, Any] | None) -> List[Dict[str, Any]]:
                 continue
 
             payload = _safe_json(res)
-
+            print("🔥 DATA PLANS RAW:", payload)
             if isinstance(payload, dict):
                 payload = payload.get("content") or payload.get("data") or []
 
