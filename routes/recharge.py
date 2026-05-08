@@ -203,10 +203,18 @@ def select_forfait_post():
     session.pop("received_display", None)
 
     data = request.get_json(silent=True) or {}
-    plan_id = data.get("id")
 
-    if not plan_id:
-        return jsonify({"ok": False}), 400
+    # ---------------------------
+    # DATA plans Reloadly
+    # utilisent name (id = None)
+    # ---------------------------
+    plan_name = data.get("name")
+
+    if not plan_name:
+        return jsonify({
+            "ok": False,
+            "error": "missing_plan_name"
+        }), 400
 
     plans = session.get("recharge_data_plans") or []
 
@@ -225,14 +233,26 @@ def select_forfait_post():
         except Exception:
             plans = []
 
+    # ---------------------------
+    # Find selected plan by name
+    # ---------------------------
     selected = next(
-        (p for p in plans if str(p.get("id")) == str(plan_id)),
+        (
+            p for p in plans
+            if p.get("name") == plan_name
+        ),
         None
     )
 
     if not selected:
-        return jsonify({"ok": False, "error": "plan_not_found"}), 404
+        return jsonify({
+            "ok": False,
+            "error": "plan_not_found"
+        }), 404
 
+    # ---------------------------
+    # Save selected forfait
+    # ---------------------------
     session["recharge_forfait"] = {
         "id": selected.get("id"),
         "gb": selected.get("gb"),
@@ -241,7 +261,11 @@ def select_forfait_post():
         "validity": selected.get("validity"),
     }
 
-    return jsonify({"ok": True})
+    session.modified = True
+
+    return jsonify({
+        "ok": True
+    })
 
 # ---------------------------
 # API: get forfaits live (OPTIMIZED)

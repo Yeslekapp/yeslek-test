@@ -166,6 +166,7 @@
     if (!btn || isSubmitting) return;
     hasUserSelected = true;
     const planId = btn.dataset.id || "";
+    const planName = btn.dataset.name || "";
     const gb = btn.dataset.gb || "";
     const price = Number(btn.dataset.price || 0);
 
@@ -184,6 +185,7 @@
     }
 
     selectedPlanId.value = planId;
+    selectedPlanId.dataset.name = planName;
     selectedPlanGb.value = gb;
     selectedPlanPrice.value = fmt2(price);
 
@@ -242,6 +244,7 @@ async function submitSelection() {
    },
    body: JSON.stringify({
     id: planId,
+    name: selectedPlanId.dataset.name || "",
     gb: selectedPlanGb.value,
     price: selectedPlanPrice.value
   })

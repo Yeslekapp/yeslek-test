@@ -483,15 +483,17 @@ def send_data_topup(
     # 🔥 FIX PAYLOAD (NO LOOKUP)
     # ---------------------------
     payload = {
-        "operatorId": normalized_operator_id,
-        "amount": round(float(amount), 2),
-        
-        "senderCurrencyCode": "EUR",
-        "recipientPhone": {
-            "countryCode": normalized_country,
-            "number": _extract_local_number(normalized_phone),
-        },
-    }
+    "operatorId": normalized_operator_id,
+
+    # IMPORTANT
+    "amount": round(float(amount), 2),
+    "useLocalAmount": True,
+
+    "recipientPhone": {
+        "countryCode": normalized_country,
+        "number": _extract_local_number(normalized_phone),
+    },
+}
     if normalized_plan_id:
      payload["productId"] = normalized_plan_id
     # optional custom id

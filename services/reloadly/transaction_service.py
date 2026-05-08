@@ -414,30 +414,99 @@ def process_recharge(
             "status": "PENDING",
         })
 
-        repo_mark_processing(reference, {"metadata": metadata or {}})
+        repo_mark_processing(reference, {
+            "metadata": metadata or {}
+        })
 
         try:
 
             # ---------------------------
-            # 🔥 CORE FIX (DATA vs AIRTIME)
+            # DATA TOPUP
             # ---------------------------
+
             if plan_id is not None:
+
                 if not operator_id:
-                    raise TransactionServiceError("operator_id requis pour DATA")
+                    raise TransactionServiceError(
+                        "operator_id requis pour DATA"
+                    )
+
+                from flask import session
+
+                operator = session.get(
+                        "recharge_operator"
+                ) or {}
+
+                reloadly_amount = round(
+                    float(amount),
+                    2,
+                )
+
+                # ---------------------------
+                # EUR -> LOCAL AMOUNT
+                # ---------------------------
+
+                fixed_amounts = (
+                    operator.get("fixed_amounts")
+                    or []
+                )
+
+                local_fixed_amounts = (
+                    operator.get("local_fixed_amounts")
+                    or []
+                )
+
+                final_amount = reloadly_amount
+
+                try:
+
+                    normalized_fixed = [
+                        round(float(x), 2)
+                        for x in fixed_amounts
+                    ]
+
+                    index = normalized_fixed.index(
+                        reloadly_amount
+                    )
+
+                    final_amount = float(
+                        local_fixed_amounts[index]
+                    )
+
+                except Exception:
+                    pass
+
+                print("🔥 DATA AMOUNT:", {
+                    "reloadly_amount": reloadly_amount,
+                    "final_amount": final_amount,
+                    "operator_id": operator_id,
+                    "plan_id": plan_id,
+                })
 
                 raw_result = send_data_topup(
-                 phone=phone,
-                 plan_id=int(plan_id),
-                 amount=round(float(amount), 2),  # montant Reloadly SANS taxe
-                 country_iso=country_iso,
-                 operator_id=int(operator_id),
-                 custom_identifier=reference,
-                 )
-                print("🔥 RELOADLY DATA RESULT:", raw_result)
+                    phone=phone,
+                    plan_id=int(plan_id),
+                    amount=final_amount,
+                    country_iso=country_iso,
+                    operator_id=int(operator_id),
+                    custom_identifier=reference,
+                )
+
+                print(
+                    "🔥 RELOADLY DATA RESULT:",
+                    raw_result,
+                )
+
+            # ---------------------------
+            # AIRTIME TOPUP
+            # ---------------------------
 
             else:
+
                 if amount is None:
-                    raise TransactionServiceError("amount requis pour airtime")
+                    raise TransactionServiceError(
+                        "amount requis pour airtime"
+                    )
 
                 raw_result = send_topup(
                     phone=phone,
@@ -446,8 +515,13 @@ def process_recharge(
                     custom_identifier=reference,
                 )
 
-            reloadly_transaction_id = raw_result.get("transaction_id")
-            status = normalize_reloadly_status(raw_result.get("status"))
+            reloadly_transaction_id = raw_result.get(
+                "transaction_id"
+            )
+
+            status = normalize_reloadly_status(
+                raw_result.get("status")
+            )
 
             if status == "UNKNOWN":
                 status = "PROCESSING"
@@ -466,8 +540,10 @@ def process_recharge(
 
             if status == "SUCCESS":
                 repo_mark_success(reference, payload)
+
             elif status == "PROCESSING":
                 repo_mark_processing(reference, payload)
+
             else:
                 repo_mark_failed(reference, payload)
 
@@ -490,7 +566,10 @@ def process_recharge(
                 "status": "FAILED",
                 "error": str(exc),
             })
-            raise TransactionServiceError(str(exc)) from exc
+
+            raise TransactionServiceError(
+                str(exc)
+            ) from exc
 
 
 # ---------------------------
