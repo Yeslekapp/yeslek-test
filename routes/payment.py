@@ -198,7 +198,10 @@ def _build_checkout_metadata(idem_key: str) -> Dict[str, str]:
         "user_email": _safe_str(
             session.get("user_email") or session.get("pending_email")
         ),
-        "forfait_id": _safe_str(forfait.get("id")),
+        "forfait_id": _safe_str(
+         forfait.get("id")
+               or forfait.get("name")
+             ),
         "operator_id": _safe_str(operator.get("id")),
         "operator_name": _safe_str(operator.get("name")),
         "operator_logo": _safe_str(operator.get("logo_url")),
@@ -688,7 +691,9 @@ def card_post():
 # ---------------------------
 @payment_bp.post("/webhook")
 def stripe_webhook_post():
+
     print("🔥 WEBHOOK CALLED")
+
     payload = request.get_data()
     sig_header = request.headers.get("Stripe-Signature", "")
 
@@ -696,13 +701,25 @@ def stripe_webhook_post():
     # Verify Stripe signature
     # ---------------------------
     try:
-        event = StripeService.construct_webhook_event(payload, sig_header)
+        event = StripeService.construct_webhook_event(
+            payload,
+            sig_header
+        )
+
     except Exception as exc:
-        logger.exception("❌ Stripe signature error: %s", exc)
+
+        logger.exception(
+            "❌ Stripe signature error: %s",
+            exc
+        )
+
         return jsonify({"ok": False}), 400
 
     event_type = event.get("type")
-    event_data = (event.get("data") or {}).get("object") or {}
+
+    event_data = (
+        event.get("data") or {}
+    ).get("object") or {}
 
     # ---------------------------
     # Only handle success payments
@@ -710,112 +727,232 @@ def stripe_webhook_post():
     if event_type != "payment_intent.succeeded":
         return jsonify({"ok": True}), 200
 
-    if _safe_str(event_data.get("status")) != "succeeded":
+    if _safe_str(
+        event_data.get("status")
+    ) != "succeeded":
+
         return jsonify({"ok": True}), 200
 
     metadata = event_data.get("metadata") or {}
-    idem_key = _safe_str(metadata.get("payment_idempotency_key"))
+
+    idem_key = _safe_str(
+        metadata.get("payment_idempotency_key")
+    )
 
     if not idem_key:
-        return jsonify({"ok": False, "error": "missing_idempotency_key"}), 400
+
+        return jsonify(
+            {
+                "ok": False,
+                "error": "missing_idempotency_key",
+            }
+        ), 400
 
     # ---------------------------
     # Idempotency protection
     # ---------------------------
-    existing = IdempotencyService.get_result(idem_key)
+    existing = IdempotencyService.get_result(
+        idem_key
+    )
+
     if existing:
-        return jsonify({"ok": True, "deduplicated": True}), 200
 
-    payment_reference = _safe_str(event_data.get("id"))
-    session["last_payment_intent_id"] = payment_reference
+        return jsonify(
+            {
+                "ok": True,
+                "deduplicated": True,
+            }
+        ), 200
 
-    if get_existing_transaction(payment_reference):
-        logger.warning("⚠️ Duplicate recharge prevented")
-        return jsonify({"ok": True, "deduplicated": True}), 200
+    payment_reference = _safe_str(
+        event_data.get("id")
+    )
+
+    session["last_payment_intent_id"] = (
+        payment_reference
+    )
+
+    if get_existing_transaction(
+        payment_reference
+    ):
+
+        logger.warning(
+            "⚠️ Duplicate recharge prevented"
+        )
+
+        return jsonify(
+            {
+                "ok": True,
+                "deduplicated": True,
+            }
+        ), 200
 
     # ---------------------------
     # Extract metadata
     # ---------------------------
-    phone = _safe_str(metadata.get("recharge_phone"))
-    country_iso = _safe_str(metadata.get("country_iso")).upper()
+    phone = _safe_str(
+        metadata.get("recharge_phone")
+    )
 
-    forfait_id_raw = _safe_str(metadata.get("forfait_id"))
-    operator_id_raw = _safe_str(metadata.get("operator_id"))
+    country_iso = _safe_str(
+        metadata.get("country_iso")
+    ).upper()
 
-    operator_name = _safe_str(metadata.get("operator_name"))
-    operator_logo = _safe_str(metadata.get("operator_logo"))
+    forfait_id_raw = _safe_str(
+        metadata.get("forfait_id")
+    )
 
-    user_email = _safe_str(metadata.get("user_email"))
-    user_id = _safe_str(metadata.get("user_id"))
+    operator_id_raw = _safe_str(
+        metadata.get("operator_id")
+    )
 
-    base_amount = _safe_float(metadata.get("base_amount"), 0.0)
-    charged_amount = _safe_float(metadata.get("charged_amount"), 0.0)
+    operator_name = _safe_str(
+        metadata.get("operator_name")
+    )
+
+    operator_logo = _safe_str(
+        metadata.get("operator_logo")
+    )
+
+    user_email = _safe_str(
+        metadata.get("user_email")
+    )
+
+    user_id = _safe_str(
+        metadata.get("user_id")
+    )
+
+    base_amount = _safe_float(
+        metadata.get("base_amount"),
+        0.0
+    )
+
+    charged_amount = _safe_float(
+        metadata.get("charged_amount"),
+        0.0
+    )
 
     # ---------------------------
-    # 🔥 DEBUG IMPORTANT
+    # DEBUG IMPORTANT
     # ---------------------------
-    logger.info("WEBHOOK DEBUG | operator_id_raw=%s | forfait_id=%s", operator_id_raw, forfait_id_raw)
+    logger.info(
+        "WEBHOOK DEBUG | operator_id_raw=%s | forfait_id=%s",
+        operator_id_raw,
+        forfait_id_raw,
+    )
 
     # ---------------------------
     # Validation sécurité
     # ---------------------------
     if not phone or base_amount <= 0:
+
         IdempotencyService.store_result(
             idem_key,
-            {"status": "FAILED", "reason": "invalid_metadata"},
+            {
+                "status": "FAILED",
+                "reason": "invalid_metadata",
+            },
         )
+
         return jsonify({"ok": True}), 200
 
-    stripe_amount = _safe_float(event_data.get("amount_received"), 0.0) / 100.0
-    stripe_currency = _safe_str(event_data.get("currency")).lower()
+    stripe_amount = (
+        _safe_float(
+            event_data.get("amount_received"),
+            0.0
+        ) / 100.0
+    )
+
+    stripe_currency = _safe_str(
+        event_data.get("currency")
+    ).lower()
 
     if stripe_currency != "eur":
+
         IdempotencyService.store_result(
             idem_key,
-            {"status": "FAILED", "reason": "invalid_currency"},
+            {
+                "status": "FAILED",
+                "reason": "invalid_currency",
+            },
         )
+
         return jsonify({"ok": True}), 200
 
-    if abs(stripe_amount - charged_amount) > 0.01:
+    if abs(
+        stripe_amount - charged_amount
+    ) > 0.01:
+
         IdempotencyService.store_result(
             idem_key,
-            {"status": "FAILED", "reason": "amount_mismatch"},
+            {
+                "status": "FAILED",
+                "reason": "amount_mismatch",
+            },
         )
+
         return jsonify({"ok": True}), 200
 
     # ---------------------------
     # 🔒 FORFAIT / DATA LOGIC
     # ---------------------------
+    plan_id = None
+
     if forfait_id_raw:
+
         try:
             plan_id = int(forfait_id_raw)
-        except Exception:
-            IdempotencyService.store_result(
-                idem_key,
-                {"status": "FAILED", "reason": "invalid_plan_id"},
-            )
-            return jsonify({"ok": True}), 200
 
-        amount_value = round(base_amount, 2)  # DATA aussi: obligatoire pour DB
-    else:
-        plan_id = None
-        amount_value = round(base_amount, 2)  # AIRTIME
+        except Exception:
+
+            plans = session.get(
+                "recharge_data_plans"
+            ) or []
+
+            matched_plan = next(
+                (
+                    p for p in plans
+                    if str(
+                        p.get("name")
+                    ) == str(forfait_id_raw)
+                ),
+                None
+            )
+
+            if matched_plan:
+                plan_id = matched_plan.get("id")
+
+    amount_value = round(
+        base_amount,
+        2
+    )
 
     # ---------------------------
-    # 🔥 FIX CRITIQUE OPERATOR ID
+    # FIX CRITIQUE OPERATOR ID
     # ---------------------------
     try:
         operator_id = int(operator_id_raw)
+
     except Exception:
         operator_id = None
 
+    # ---------------------------
     # sécurité DATA
-    if plan_id and not operator_id:
-        logger.error("❌ Missing operator_id for DATA recharge")
+    # ---------------------------
+    if forfait_id_raw and not operator_id:
+
+        logger.error(
+            "❌ Missing operator_id for DATA recharge"
+        )
+
         IdempotencyService.store_result(
             idem_key,
-            {"status": "FAILED", "reason": "missing_operator_id"},
+            {
+                "status": "FAILED",
+                "reason": "missing_operator_id",
+            },
         )
+
         return jsonify({"ok": True}), 200
 
     # ---------------------------
