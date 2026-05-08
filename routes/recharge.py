@@ -253,6 +253,8 @@ def select_forfait_post():
     # ---------------------------
     # Save selected forfait
     # ---------------------------
+    session["recharge_type"] = "DATA"
+
     session["recharge_forfait"] = {
         "id": selected.get("id"),
         "gb": selected.get("gb"),
@@ -403,6 +405,7 @@ def enter_number_get():
     # ---------------------------
     session.pop("recharge_forfait", None)
     session.pop("recharge_operator", None)
+    session.pop("recharge_type", None)
     session.pop("recharge_amount", None)
     session.pop("recharge_total_amount", None)
     session.pop("payment_success_payload", None)
@@ -761,9 +764,19 @@ def select_amount_post():
     except Exception:
         session["received_display"] = None
 
+
+
     # ---------------------------
     # SESSION
     # ---------------------------
+# ---------------------------
+# AIRTIME / DATA TYPE
+# ---------------------------
+    if session.get("recharge_forfait"):
+     session["recharge_type"] = "DATA"
+    else:
+     session["recharge_type"] = "AIRTIME"
+
     session["recharge_amount"] = float(amount)
     session["recharge_total_amount"] = float(breakdown["total"])
 
