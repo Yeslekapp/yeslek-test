@@ -441,7 +441,7 @@ def process_recharge(
             # ---------------------------
 
             is_data = (
-                operator_id is not None
+              plan_id is not None
             )
 
             if is_data:
