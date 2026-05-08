@@ -371,15 +371,23 @@ def process_recharge(
 
     with lock:
 
-        existing = _db_find_by_reference(reference) or repo_find(reference)
+        existing = (
+            _db_find_by_reference(reference)
+            or repo_find(reference)
+        )
 
         if existing:
-            status = normalize_reloadly_status(existing.get("status"))
+
+            status = normalize_reloadly_status(
+                existing.get("status")
+            )
 
             return TransactionResult(
                 ok=(status == "SUCCESS"),
                 status=status,
-                transaction_id=existing.get("reloadly_transaction_id"),
+                transaction_id=existing.get(
+                    "reloadly_transaction_id"
+                ),
                 custom_identifier=reference,
                 is_duplicate=True,
                 message="Transaction déjà traitée",
@@ -397,12 +405,17 @@ def process_recharge(
         )
 
         if not db_result["created"]:
-            status = normalize_reloadly_status(db_result.get("status"))
+
+            status = normalize_reloadly_status(
+                db_result.get("status")
+            )
 
             return TransactionResult(
                 ok=(status == "SUCCESS"),
                 status=status,
-                transaction_id=db_result.get("reloadly_transaction_id"),
+                transaction_id=db_result.get(
+                    "reloadly_transaction_id"
+                ),
                 custom_identifier=reference,
                 is_duplicate=True,
                 message="Transaction déjà enregistrée",
@@ -414,9 +427,12 @@ def process_recharge(
             "status": "PENDING",
         })
 
-        repo_mark_processing(reference, {
-            "metadata": metadata or {}
-        })
+        repo_mark_processing(
+            reference,
+            {
+                "metadata": metadata or {}
+            }
+        )
 
         try:
 
@@ -424,7 +440,11 @@ def process_recharge(
             # DATA TOPUP
             # ---------------------------
 
-            if plan_id is not None:
+            is_data = (
+                operator_id is not None
+            )
+
+            if is_data:
 
                 if not operator_id:
                     raise TransactionServiceError(
@@ -434,7 +454,7 @@ def process_recharge(
                 from flask import session
 
                 operator = session.get(
-                        "recharge_operator"
+                    "recharge_operator"
                 ) or {}
 
                 reloadly_amount = round(
@@ -485,7 +505,7 @@ def process_recharge(
 
                 raw_result = send_data_topup(
                     phone=phone,
-                    plan_id=int(plan_id),
+                    plan_id=plan_id,
                     amount=final_amount,
                     country_iso=country_iso,
                     operator_id=int(operator_id),
@@ -539,13 +559,25 @@ def process_recharge(
             }
 
             if status == "SUCCESS":
-                repo_mark_success(reference, payload)
+
+                repo_mark_success(
+                    reference,
+                    payload
+                )
 
             elif status == "PROCESSING":
-                repo_mark_processing(reference, payload)
+
+                repo_mark_processing(
+                    reference,
+                    payload
+                )
 
             else:
-                repo_mark_failed(reference, payload)
+
+                repo_mark_failed(
+                    reference,
+                    payload
+                )
 
             return TransactionResult(
                 ok=(status == "SUCCESS"),
@@ -562,10 +594,13 @@ def process_recharge(
                 status="FAILED",
             )
 
-            repo_mark_failed(reference, {
-                "status": "FAILED",
-                "error": str(exc),
-            })
+            repo_mark_failed(
+                reference,
+                {
+                    "status": "FAILED",
+                    "error": str(exc),
+                }
+            )
 
             raise TransactionServiceError(
                 str(exc)

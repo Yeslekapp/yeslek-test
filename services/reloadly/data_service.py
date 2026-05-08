@@ -310,7 +310,7 @@ def get_reloadly_plans(operator: Dict[str, Any] | None) -> List[Dict[str, Any]]:
                 display_name = description
 
             plans.append({
-                "id": None,
+                "id": f"{operator_id}_{amount}",
                 "operator_id": int(operator_id),
                 "name": description,
                 "amount": round(amount, 2),
