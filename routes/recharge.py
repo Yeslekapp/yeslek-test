@@ -408,12 +408,13 @@ def enter_number_get():
     session.pop("recharge_type", None)
     session.pop("recharge_amount", None)
     session.pop("recharge_total_amount", None)
+    session.pop("recharge_phone", None)
     session.pop("payment_success_payload", None)
     session.pop("recharge_data_plans", None)
     session.pop("received_display", None)
     session.pop("payment_idempotency_key", None)
     session.pop("last_payment_amount", None)
-    initial_phone = session.get("recharge_phone", "+93")
+    initial_phone = "+93"
     country_iso = detect_country_iso_from_phone(initial_phone) or "AF"
     city = get_city_for_country(country_iso)
 
