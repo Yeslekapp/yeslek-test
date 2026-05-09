@@ -398,7 +398,6 @@ def lookup_number():
 
 @recharge_bp.get("/enter-number")
 def enter_number_get():
-    print("SESSION ENTER NUMBER:", dict(session))
 
     # ---------------------------
     # RESET FLOW (IMPORTANT)
@@ -414,23 +413,31 @@ def enter_number_get():
     session.pop("received_display", None)
     session.pop("payment_idempotency_key", None)
     session.pop("last_payment_amount", None)
+
+    print("SESSION ENTER NUMBER:", dict(session))
+
     initial_phone = "+93"
-    country_iso = detect_country_iso_from_phone(initial_phone) or "AF"
+
+    country_iso = (
+        detect_country_iso_from_phone(initial_phone)
+        or "AF"
+    )
+
     city = get_city_for_country(country_iso)
 
     return render_template(
-    "recharge/enter_number.html",
-    initial_phone=initial_phone,
-    country_iso=country_iso,
-    city=city,
-    canonical_url="https://yeslek.com/recharge/enter-number",
+        "recharge/enter_number.html",
+        initial_phone=initial_phone,
+        country_iso=country_iso,
+        city=city,
+        canonical_url="https://yeslek.com/recharge/enter-number",
 
-    # ---------------------------
-    # SEO
-    # ---------------------------
-    seo_title="Recharge mobile internationale | Yeslek",
-    seo_description="Envoyez du crédit mobile instantanément dans plus de 150 pays avec Yeslek. Recharge rapide et sécurisée."
-)
+        # ---------------------------
+        # SEO
+        # ---------------------------
+        seo_title="Recharge mobile internationale | Yeslek",
+        seo_description="Envoyez du crédit mobile instantanément dans plus de 150 pays avec Yeslek. Recharge rapide et sécurisée."
+    )
 
 
 # ---------------------------
