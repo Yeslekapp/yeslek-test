@@ -1,0 +1,9 @@
+{% macro empty_state(icon="📭", title="", desc="") %}
+<div class="tz-admin-empty">
+  <div class="tz-admin-empty__icon">{{ icon }}</div>
+  <div class="tz-admin-empty__title">{{ title or t("admin.empty.title") }}</div>
+  {% if desc %}
+    <div class="tz-admin-empty__desc">{{ desc }}</div>
+  {% endif %}
+</div>
+{% endmacro %}

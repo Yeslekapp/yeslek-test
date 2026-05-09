@@ -1,0 +1,34 @@
+{% extends "admin/_layout.html" %}
+
+{% block title %}{{ t("admin.settings.title") }}{% endblock %}
+{% block admin_title %}{{ t("admin.settings.title") }}{% endblock %}
+{% block admin_subtitle %}{{ t("admin.settings.subtitle") }}{% endblock %}
+
+{% block admin_content %}
+<div class="tz-admin-grid--2">
+  <section class="tz-admin-card">
+    <div class="tz-admin-section-title">🛡️ {{ t("admin.settings.security") }}</div>
+    <div class="tz-admin-section-sub">{{ t("admin.settings.securityHint") }}</div>
+    <span class="tz-admin-chip tz-admin-chip--success">{{ t("common.active") }}</span>
+  </section>
+
+  <section class="tz-admin-card">
+    <div class="tz-admin-section-title">🔌 {{ t("admin.settings.integrations") }}</div>
+    <div class="tz-admin-kpi-row">
+      {% for item in settings.integrations %}
+        <span class="tz-admin-chip">{{ item }}</span>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="tz-admin-card">
+    <div class="tz-admin-section-title">🔔 {{ t("admin.settings.notifications") }}</div>
+    <span class="tz-admin-chip tz-admin-chip--success">{{ t("common.active") }}</span>
+  </section>
+
+  <section class="tz-admin-card">
+    <div class="tz-admin-section-title">🎨 {{ t("admin.settings.appearance") }}</div>
+    <span class="tz-admin-chip">{{ settings.appearance }}</span>
+  </section>
+</div>
+{% endblock %}

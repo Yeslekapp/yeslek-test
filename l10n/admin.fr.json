@@ -1,83 +1,214 @@
 {
+  "common": {
+    "back": "Retour",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "reset": "Réinitialiser",
+    "empty": "Aucune donnée",
+    "success": "Succès",
+    "failed": "Échec",
+    "pending": "En attente",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "view": "Voir",
+    "details": "Détails",
+    "date": "Date",
+    "amount": "Montant",
+    "status": "Statut",
+    "country": "Pays",
+    "phone": "Téléphone",
+    "email": "Email",
+    "name": "Nom",
+    "actions": "Actions"
+  },
   "admin": {
+    "brand": {
+      "name": "Yeslek Admin",
+      "subtitle": "Pilotage fintech top-up"
+    },
+    "system": {
+      "online": "Système en ligne"
+    },
     "nav": {
-      "title": "Admin",
-      "subtitle": "Pilotage Tikzok",
       "dashboard": "Dashboard",
       "users": "Clients",
       "recharges": "Recharges",
-      "transactions": "Transactions"
+      "transactions": "Transactions",
+      "payments": "Paiements",
+      "reloadly": "Reloadly",
+      "fraud": "Fraude",
+      "support": "Support",
+      "promotions": "Promotions",
+      "analytics": "Analytics",
+      "settings": "Paramètres",
+      "logs": "Logs"
     },
-
-    "search": "Rechercher un client...",
-
     "dashboard": {
       "title": "Dashboard admin",
-      "subtitle": "Vue rapide des performances et de l’activité récente.",
-      "recentTitle": "Activité récente",
-      "recentSubtitle": "Dernières recharges enregistrées."
+      "subtitle": "Vue complète des performances, paiements, recharges et risques.",
+      "totalRevenue": "Revenus totaux",
+      "totalRevenueHint": "Montant cumulé des recharges réussies.",
+      "todayTransactions": "Transactions du jour",
+      "successRate": "Taux de succès",
+      "failedTransactions": "Transactions échouées",
+      "activeUsers": "Utilisateurs actifs",
+      "stripeRevenue": "Revenus Stripe",
+      "reloadlyBalance": "Solde Reloadly",
+      "topUser": "Top client",
+      "topCountries": "Top pays",
+      "topCountriesHint": "Pays les plus actifs.",
+      "topOperators": "Top opérateurs",
+      "fraudAlerts": "Alertes fraude",
+      "recentActivity": "Activité récente",
+      "recentActivityHint": "Dernières recharges enregistrées.",
+      "systemHealth": "Santé système",
+      "systemHealthHint": "État des intégrations critiques."
     },
-
     "users": {
       "title": "Clients",
-      "subtitle": "{count} client(s) détecté(s) depuis l’historique.",
+      "subtitle": "{count} client(s) détecté(s).",
+      "searchPlaceholder": "Rechercher par nom, email ou téléphone...",
       "lastRecharge": "Dernière recharge",
-      "rechargesCount": "{count} recharge(s)"
+      "totalSpent": "Total dépensé",
+      "rechargeCount": "{count} recharge(s)",
+      "empty": "Aucun client trouvé."
     },
-
-    "userDetail": {
+    "user": {
       "title": "Détail client",
+      "profile": "Profil client",
       "total": "Total",
       "recharges": "Recharges",
-      "history": "Historique",
+      "average": "Moyenne",
       "countries": "Pays",
-      "cards": "Cartes utilisées"
+      "topCountry": "Top pays",
+      "payments": "Paiements",
+      "noCards": "Aucune carte enregistrée",
+      "activity": "Activité",
+      "riskScore": "Score de risque"
     },
-
     "recharges": {
       "title": "Recharges",
       "subtitle": "{count} recharge(s) enregistrée(s)."
     },
-
     "transactions": {
       "title": "Transactions",
-      "subtitle": "{count} transaction(s) disponibles depuis l’historique de succès."
+      "subtitle": "{count} transaction(s) disponible(s).",
+      "reference": "Référence",
+      "operator": "Opérateur",
+      "provider": "Provider",
+      "searchPlaceholder": "Rechercher une transaction...",
+      "empty": "Aucune transaction disponible."
     },
-
-    "metrics": {
-      "totalRevenue": "Revenus totaux",
-      "totalRevenueHint": "Montant cumulé des recharges réussies.",
-      "totalRecharges": "Recharges",
-      "totalRechargesHint": "Nombre total de recharges confirmées.",
-      "uniqueCustomers": "Clients uniques",
-      "uniqueCustomersHint": "Bénéficiaires distincts détectés.",
-      "averageAmount": "Panier moyen",
-      "averageAmountHint": "Montant moyen par recharge."
+    "payments": {
+      "title": "Paiements",
+      "subtitle": "Suivi des paiements Stripe, remboursements et statuts.",
+      "stripeId": "ID Stripe",
+      "method": "Méthode",
+      "captured": "Capturé",
+      "refunded": "Remboursé",
+      "empty": "Aucun paiement disponible."
     },
-
+    "reloadly": {
+      "title": "Reloadly",
+      "subtitle": "Suivi des opérateurs, pays, recharges et solde Reloadly.",
+      "balance": "Solde Reloadly",
+      "operators": "Opérateurs",
+      "countries": "Pays actifs",
+      "lastSync": "Dernière synchronisation",
+      "empty": "Aucune donnée Reloadly disponible."
+    },
+    "fraud": {
+      "title": "Fraud Detection",
+      "subtitle": "Détection des comportements suspects et transactions à risque.",
+      "alerts": "Alertes",
+      "riskScore": "Score de risque",
+      "low": "Faible",
+      "medium": "Moyen",
+      "high": "Élevé",
+      "blocked": "Bloqué",
+      "empty": "Aucune alerte fraude."
+    },
+    "support": {
+      "title": "Support",
+      "subtitle": "Suivi des tickets clients et incidents opérationnels.",
+      "openTickets": "Tickets ouverts",
+      "resolvedTickets": "Tickets résolus",
+      "priority": "Priorité",
+      "empty": "Aucun ticket support."
+    },
+    "promotions": {
+      "title": "Promotions",
+      "subtitle": "Gestion des campagnes, codes promo et offres ciblées.",
+      "code": "Code promo",
+      "discount": "Réduction",
+      "usage": "Utilisation",
+      "expiresAt": "Expire le",
+      "empty": "Aucune promotion active."
+    },
+    "analytics": {
+      "title": "Analytics",
+      "subtitle": "Analyse des revenus, pays, opérateurs et performances.",
+      "revenueTrend": "Évolution des revenus",
+      "countryPerformance": "Performance par pays",
+      "operatorPerformance": "Performance par opérateur",
+      "conversionRate": "Taux de conversion"
+    },
+    "settings": {
+      "title": "Paramètres",
+      "subtitle": "Configuration du panel admin et préférences opérationnelles.",
+      "security": "Sécurité",
+      "securityHint": "Accès admin sécurisé avec masquage des données sensibles.",
+      "notifications": "Notifications",
+      "integrations": "Intégrations",
+      "appearance": "Apparence"
+    },
+    "logs": {
+      "title": "Logs",
+      "subtitle": "Historique technique et opérationnel du système.",
+      "level": "Niveau",
+      "message": "Message",
+      "source": "Source",
+      "empty": "Aucun log disponible."
+    },
     "status": {
-      "success": "Succès"
+      "success": "Succès",
+      "failed": "Échec",
+      "pending": "En attente",
+      "processing": "Traitement",
+      "refunded": "Remboursé",
+      "blocked": "Bloqué"
     },
-
-    "labels": {
-      "phone": "Téléphone",
-      "email": "Email",
-      "country": "Pays",
-      "date": "Date",
-      "amount": "Montant"
-    },
-
     "tiers": {
       "vip": "VIP",
       "active": "Actif",
       "new": "Nouveau"
     },
-
+    "actions": {
+      "search": "Rechercher",
+      "filter": "Filtrer",
+      "reset": "Réinitialiser",
+      "exportCsv": "Exporter CSV",
+      "view": "Voir",
+      "viewAll": "Tout voir",
+      "details": "Détails",
+      "allStatuses": "Tous les statuts",
+      "toggleMenu": "Ouvrir le menu",
+      "toggleTheme": "Changer le thème"
+    },
     "empty": {
       "title": "Aucune donnée",
+      "description": "Les données apparaîtront ici dès qu’elles seront disponibles.",
       "users": "Aucun client n’a encore été détecté.",
-      "recharges": "Aucune recharge disponible pour le moment.",
-      "transactions": "Aucune transaction disponible pour le moment."
+      "transactions": "Aucune transaction disponible.",
+      "payments": "Aucun paiement disponible.",
+      "recharges": "Aucune recharge disponible."
+    },
+    "flash": {
+      "success": "Opération effectuée avec succès.",
+      "error": "Une erreur est survenue.",
+      "exportReady": "Export CSV généré avec succès.",
+      "filtersApplied": "Filtres appliqués."
     }
   }
 }

@@ -1,0 +1,37 @@
+{% extends "admin/_layout.html" %}
+{% from "admin/components/empty_state.html" import empty_state %}
+
+{% block title %}{{ t("admin.logs.title") }}{% endblock %}
+{% block admin_title %}{{ t("admin.logs.title") }}{% endblock %}
+{% block admin_subtitle %}{{ t("admin.logs.subtitle") }}{% endblock %}
+
+{% block admin_content %}
+<section class="tz-admin-card">
+  {% if not logs %}
+    {{ empty_state("🧾", t("admin.empty.title"), t("admin.logs.empty")) }}
+  {% else %}
+    <div class="tz-admin-table-wrap">
+      <table class="tz-admin-table">
+        <thead>
+          <tr>
+            <th>{{ t("admin.logs.level") }}</th>
+            <th>{{ t("admin.logs.source") }}</th>
+            <th>{{ t("admin.logs.message") }}</th>
+            <th>{{ t("common.date") }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in logs %}
+          <tr>
+            <td><span class="tz-admin-chip">{{ item.level }}</span></td>
+            <td>{{ item.source }}</td>
+            <td>{{ item.message }}</td>
+            <td>{{ item.date }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

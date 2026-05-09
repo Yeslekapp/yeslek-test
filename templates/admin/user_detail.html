@@ -1,133 +1,84 @@
-{% extends "base.html" %}
+{% extends "admin/_layout.html" %}
+{% from "admin/components/stat_card.html" import stat_card %}
+{% from "admin/components/empty_state.html" import empty_state %}
 
-{% block title %}{{ user.name or user.phone }}{% endblock %}
+{% block title %}{{ user.name or user.phone or t("admin.user.title") }}{% endblock %}
+{% block admin_title %}{{ user.name or user.phone or t("admin.user.title") }}{% endblock %}
+{% block admin_subtitle %}{{ t("admin.user.profile") }}{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-{% endblock %}
+{% block admin_content %}
+<div class="tz-admin-shell">
 
-{% block content %}
-<div class="tz-page tz-container">
-  <div class="tz-admin-shell">
+  <section class="tz-admin-card tz-admin-card--soft">
+    <div class="tz-admin-section-title">{{ user.name or "—" }}</div>
+    <div class="tz-admin-section-sub">✉ {{ user.email or "—" }}</div>
+    <div class="tz-admin-section-sub">📱 {{ user.phone or "—" }}</div>
+  </section>
 
-    <!-- HEADER -->
-    <div class="tz-history-header">
-      <button onclick="window.history.back()" class="tz-close-btn">✕</button>
-      <h2 class="tz-page-title">
-        {{ user.name or user.phone }}
-      </h2>
-    </div>
+  <div class="tz-admin-grid">
+    {{ stat_card(t("admin.user.total"), "%.2f €"|format(total|default(0)|float), "", "💰", "tz-admin-card--blue") }}
+    {{ stat_card(t("admin.user.recharges"), count|default(0), "", "📱", "tz-admin-card--green") }}
+    {{ stat_card(t("admin.user.average"), "%.2f €"|format(avg|default(0)|float), "", "📊") }}
+    {{ stat_card(t("admin.user.riskScore"), risk_score|default(0), "", "🛡️") }}
+  </div>
 
-    <!-- ================= PROFILE ================= -->
-    <section class="tz-card">
-      <div class="tz-strong">{{ user.name or "—" }}</div>
-      <div class="tz-muted">✉ {{ user.email or "—" }}</div>
-      <div class="tz-muted">📱 {{ user.phone or "—" }}</div>
-    </section>
-
-    <!-- ================= STATS ================= -->
-    <div class="tz-admin-grid">
-
-      <section class="tz-card tz-card--highlight">
-        <div class="tz-muted">💰 Total</div>
-        <div class="tz-admin-amount">{{ total }} €</div>
-      </section>
-
-      <section class="tz-card tz-card--green">
-        <div class="tz-muted">📱 Recharges</div>
-        <div class="tz-strong">{{ count }}</div>
-      </section>
-
-      <section class="tz-card">
-        <div class="tz-muted">📊 Moyenne</div>
-        <div class="tz-strong">{{ avg }} €</div>
-      </section>
-
-    </div>
-
-    <!-- ================= COUNTRY ================= -->
-    <section class="tz-card">
-      <div class="tz-admin-section-title">🌍 Pays</div>
+  <div class="tz-admin-grid--2">
+    <section class="tz-admin-card">
+      <div class="tz-admin-section-title">🌍 {{ t("admin.user.countries") }}</div>
 
       {% if top_country %}
-        <div class="tz-strong">Top: {{ top_country }}</div>
+        <div class="tz-admin-section-sub">{{ t("admin.user.topCountry") }}: {{ top_country }}</div>
       {% endif %}
 
-      <div class="tz-stack">
+      <div class="tz-admin-kpi-row">
         {% for c in countries %}
-          <span class="tz-admin-badge tz-admin-badge--soft">
-            {{ c }}
-          </span>
+          <span class="tz-admin-chip">{{ c }}</span>
+        {% else %}
+          <span class="tz-admin-section-sub">—</span>
         {% endfor %}
       </div>
     </section>
 
-    <!-- ================= CARDS ================= -->
-    <section class="tz-card">
-      <div class="tz-admin-section-title">💳 Paiements</div>
+    <section class="tz-admin-card">
+      <div class="tz-admin-section-title">💳 {{ t("admin.user.payments") }}</div>
 
       {% if cards %}
-        {% for card in cards %}
-          <div class="tz-admin-list-card">
-            <div class="tz-admin-list-left">
-              {{ card.brand }} •••• {{ card.last4 }}
-            </div>
-          </div>
-        {% endfor %}
-      {% else %}
-        <div class="tz-muted">Aucune carte</div>
-      {% endif %}
-    </section>
-
-    <!-- ================= HISTORY ================= -->
-    <section class="tz-card">
-
-      <div class="tz-admin-section-title">📜 Activité</div>
-      <div class="tz-divider"></div>
-
-      {% if not items %}
-        <div class="tz-admin-empty">
-          <div class="tz-admin-empty__icon">📭</div>
-          <div class="tz-admin-empty__title">Aucune activité</div>
-        </div>
-      {% else %}
-
         <div class="tz-admin-list">
-
-          {% for item in items %}
+          {% for card in cards %}
           <div class="tz-admin-list-card">
-
             <div class="tz-admin-list-left">
-              <div class="tz-admin-list-title">
-                {{ item.phone }}
-              </div>
-
-              <div class="tz-admin-list-sub">
-                {{ item.date }}
-              </div>
-
-              {% if item.country %}
-              <div class="tz-admin-list-sub">
-                🌍 {{ item.country }}
-              </div>
-              {% endif %}
+              <div class="tz-admin-list-title">{{ card.brand or "Card" }} •••• {{ card.last4 or "••••" }}</div>
             </div>
-
-            <div class="tz-admin-list-right">
-              <div class="tz-admin-amount">
-                + {{ item.amount }} €
-              </div>
-            </div>
-
           </div>
           {% endfor %}
-
         </div>
-
+      {% else %}
+        <div class="tz-admin-section-sub">{{ t("admin.user.noCards") }}</div>
       {% endif %}
-
     </section>
-
   </div>
+
+  <section class="tz-admin-card">
+    <div class="tz-admin-section-title">📜 {{ t("admin.user.activity") }}</div>
+
+    {% if not items %}
+      {{ empty_state("📭", t("admin.empty.title"), t("admin.empty.description")) }}
+    {% else %}
+      <div class="tz-admin-list">
+        {% for item in items %}
+        <div class="tz-admin-list-card">
+          <div class="tz-admin-list-left">
+            <div class="tz-admin-list-title">{{ item.phone or "—" }}</div>
+            <div class="tz-admin-list-sub">{{ item.operator or "—" }} • {{ item.country or "—" }} • {{ item.date or "—" }}</div>
+          </div>
+          <div class="tz-admin-list-right">
+            <div class="tz-admin-amount">+ {{ "%.2f"|format(item.amount|default(0)|float) }} €</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
 </div>
 {% endblock %}

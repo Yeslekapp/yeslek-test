@@ -1,0 +1,19 @@
+<header class="tz-admin-topbar">
+  <div class="tz-admin-topbar__left">
+    <button class="tz-admin-icon-btn" data-admin-sidebar-toggle aria-label="{{ t('admin.actions.toggleMenu') }}">☰</button>
+    <div>
+      <h1 class="tz-admin-page-title">
+        {% block admin_title %}{{ t("admin.brand.name") }}{% endblock %}
+      </h1>
+      <div class="tz-admin-page-subtitle">
+        {% block admin_subtitle %}{{ t("admin.brand.subtitle") }}{% endblock %}
+      </div>
+    </div>
+  </div>
+
+  <div class="tz-admin-topbar__right">
+    <span class="tz-admin-chip tz-admin-chip--success">● {{ t("admin.system.online") }}</span>
+    <button class="tz-admin-icon-btn" data-admin-theme-toggle aria-label="{{ t('admin.actions.toggleTheme') }}">◐</button>
+    <span class="tz-admin-chip">{{ admin_email or "Admin" }}</span>
+  </div>
+</header>

@@ -1,68 +1,30 @@
-{% extends "base.html" %}
+{% extends "admin/_layout.html" %}
+{% from "admin/components/status_badge.html" import status_badge %}
+{% from "admin/components/empty_state.html" import empty_state %}
+
 {% block title %}{{ t("admin.recharges.title") }}{% endblock %}
+{% block admin_title %}{{ t("admin.recharges.title") }}{% endblock %}
+{% block admin_subtitle %}{{ t("admin.recharges.subtitle", {"count": recharges_count}) }}{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-{% endblock %}
-
-{% block content %}
-<div class="tz-page tz-container">
-  <div class="tz-admin-shell">
-
-    <div class="tz-history-header">
-      <button
-        onclick="window.history.back()"
-        class="tz-close-btn"
-        aria-label="{{ t('common.back') }}"
-      >
-        ✕
-      </button>
-
-      <h2 class="tz-page-title">
-        {{ t("admin.recharges.title") }}
-      </h2>
+{% block admin_content %}
+<section class="tz-admin-card">
+  {% if not recharges %}
+    {{ empty_state("📱", t("admin.empty.title"), t("admin.empty.recharges")) }}
+  {% else %}
+    <div class="tz-admin-list">
+      {% for item in recharges %}
+      <div class="tz-admin-list-card">
+        <div class="tz-admin-list-left">
+          <div class="tz-admin-list-title">{{ item.phone }}</div>
+          <div class="tz-admin-list-sub">{{ item.operator }} • {{ item.country }} • {{ item.date }}</div>
+        </div>
+        <div class="tz-admin-list-right">
+          <div class="tz-admin-amount">+ {{ "%.2f"|format(item.amount|float) }} €</div>
+          {{ status_badge(item.status) }}
+        </div>
+      </div>
+      {% endfor %}
     </div>
-
-    <section class="tz-card tz-card--soft">
-      <div class="tz-admin-section-title">{{ t("admin.recharges.title") }}</div>
-      <div class="tz-admin-section-sub">
-        {{ t("admin.recharges.subtitle", {"count": recharges_count}) }}
-      </div>
-    </section>
-
-    <nav class="tz-admin-topnav">
-      <a href="{{ url_for('admin.dashboard_get') }}" class="tz-admin-tab">📊 {{ t("admin.nav.dashboard") }}</a>
-      <a href="{{ url_for('admin.users_get') }}" class="tz-admin-tab">👤 {{ t("admin.nav.users") }}</a>
-      <a href="{{ url_for('admin.recharges_get') }}" class="tz-admin-tab is-active">📱 {{ t("admin.nav.recharges") }}</a>
-      <a href="{{ url_for('admin.transactions_get') }}" class="tz-admin-tab">💳 {{ t("admin.nav.transactions") }}</a>
-    </nav>
-
-    {% if not recharges %}
-      <section class="tz-card">
-        <div class="tz-admin-empty">
-          <div class="tz-admin-empty__icon">📱</div>
-          <div class="tz-admin-empty__title">{{ t("admin.empty.title") }}</div>
-          <div class="tz-admin-empty__desc">{{ t("admin.empty.recharges") }}</div>
-        </div>
-      </section>
-    {% else %}
-      <div class="tz-admin-list">
-        {% for item in recharges %}
-        <div class="tz-admin-list-card">
-          <div class="tz-admin-list-left">
-            <div class="tz-admin-list-title">{{ item.phone }}</div>
-            <div class="tz-admin-list-sub">{{ item.date }}</div>
-          </div>
-
-          <div class="tz-admin-list-right">
-            <div class="tz-admin-amount">+ {{ "%.2f"|format(item.amount|float) }} €</div>
-            <span class="tz-admin-badge tz-admin-badge--success">{{ t("admin.status.success") }}</span>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-
-  </div>
-</div>
+  {% endif %}
+</section>
 {% endblock %}

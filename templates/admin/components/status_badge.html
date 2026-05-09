@@ -1,0 +1,24 @@
+{% macro status_badge(status) %}
+  {% set s = (status or "pending")|lower %}
+  <span class="tz-admin-chip
+    {% if s in ['success', 'paid', 'active', 'captured'] %}
+      tz-admin-chip--success
+    {% elif s in ['failed', 'error', 'blocked', 'declined'] %}
+      tz-admin-chip--danger
+    {% else %}
+      tz-admin-chip--warning
+    {% endif %}
+  ">
+    {% if s == "success" %}
+      {{ t("admin.status.success") }}
+    {% elif s == "failed" %}
+      {{ t("admin.status.failed") }}
+    {% elif s == "processing" %}
+      {{ t("admin.status.processing") }}
+    {% elif s == "blocked" %}
+      {{ t("admin.status.blocked") }}
+    {% else %}
+      {{ status or t("admin.status.pending") }}
+    {% endif %}
+  </span>
+{% endmacro %}

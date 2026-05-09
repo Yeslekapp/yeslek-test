@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="tz-admin-app">
+  {% include "admin/components/sidebar.html" %}
+
+  <main class="tz-admin-main">
+    {% include "admin/components/topbar.html" %}
+
+    <div class="tz-admin-content">
+      {% block admin_content %}{% endblock %}
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

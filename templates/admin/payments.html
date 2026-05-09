@@ -1,0 +1,42 @@
+{% extends "admin/_layout.html" %}
+{% from "admin/components/status_badge.html" import status_badge %}
+{% from "admin/components/empty_state.html" import empty_state %}
+
+{% block title %}{{ t("admin.payments.title") }}{% endblock %}
+{% block admin_title %}{{ t("admin.payments.title") }}{% endblock %}
+{% block admin_subtitle %}{{ t("admin.payments.subtitle") }}{% endblock %}
+
+{% block admin_content %}
+<section class="tz-admin-card">
+  {% if not payments %}
+    {{ empty_state("🏦", t("admin.empty.title"), t("admin.payments.empty")) }}
+  {% else %}
+    <div class="tz-admin-table-wrap">
+      <table class="tz-admin-table">
+        <thead>
+          <tr>
+            <th>{{ t("admin.payments.stripeId") }}</th>
+            <th>{{ t("common.phone") }}</th>
+            <th>{{ t("common.amount") }}</th>
+            <th>{{ t("admin.payments.method") }}</th>
+            <th>{{ t("common.status") }}</th>
+            <th>{{ t("common.date") }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in payments %}
+          <tr>
+            <td>{{ item.stripe_id }}</td>
+            <td>{{ item.phone }}</td>
+            <td>{{ "%.2f"|format(item.amount|float) }} €</td>
+            <td>{{ item.method }}</td>
+            <td>{{ status_badge(item.status) }}</td>
+            <td>{{ item.date }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

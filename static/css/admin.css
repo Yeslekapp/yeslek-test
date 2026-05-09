@@ -1,67 +1,230 @@
 /* ---------------------------
-# Admin UI
+# Admin Panel — Yeslek Pro
 --------------------------- */
+
+:root{
+  --ya-bg:#f5f7fb;
+  --ya-card:#ffffff;
+  --ya-card-soft:#f8fbff;
+  --ya-text:#101828;
+  --ya-muted:#667085;
+  --ya-border:rgba(16,24,40,.08);
+  --ya-primary:#2563eb;
+  --ya-primary-soft:rgba(37,99,235,.10);
+  --ya-success:#16a34a;
+  --ya-success-soft:rgba(22,163,74,.12);
+  --ya-danger:#dc2626;
+  --ya-danger-soft:rgba(220,38,38,.12);
+  --ya-warning:#f59e0b;
+  --ya-warning-soft:rgba(245,158,11,.14);
+  --ya-shadow:0 14px 40px rgba(16,24,40,.08);
+  --ya-radius:22px;
+}
+
+[data-theme="dark"]{
+  --ya-bg:#0b1220;
+  --ya-card:#111827;
+  --ya-card-soft:#101b2f;
+  --ya-text:#f9fafb;
+  --ya-muted:#a3aab8;
+  --ya-border:rgba(255,255,255,.09);
+  --ya-shadow:0 14px 40px rgba(0,0,0,.28);
+}
+
+.tz-admin-app{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:280px minmax(0,1fr);
+  background:var(--ya-bg);
+  color:var(--ya-text);
+}
+
+.tz-admin-sidebar{
+  position:sticky;
+  top:0;
+  height:100vh;
+  padding:18px;
+  background:linear-gradient(180deg,#0f172a,#111827);
+  color:#fff;
+  overflow:auto;
+}
+
+.tz-admin-sidebar__brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px;
+  margin-bottom:18px;
+}
+
+.tz-admin-logo{
+  width:42px;
+  height:42px;
+  border-radius:16px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#2563eb,#22c55e);
+  font-weight:900;
+  box-shadow:0 12px 28px rgba(37,99,235,.35);
+}
+
+.tz-admin-brand-title{
+  font-weight:900;
+  line-height:1.1;
+}
+
+.tz-admin-brand-sub{
+  font-size:12px;
+  color:rgba(255,255,255,.62);
+  margin-top:3px;
+}
+
+.tz-admin-menu{
+  display:grid;
+  gap:6px;
+}
+
+.tz-admin-menu a{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:44px;
+  padding:10px 12px;
+  color:rgba(255,255,255,.76);
+  text-decoration:none;
+  border-radius:14px;
+  font-weight:800;
+  transition:background .18s ease, color .18s ease, transform .18s ease;
+}
+
+.tz-admin-menu a:hover{
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  transform:translateX(2px);
+}
+
+.tz-admin-menu a.is-active{
+  background:rgba(37,99,235,.28);
+  color:#fff;
+}
+
+.tz-admin-main{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+
+.tz-admin-topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 22px;
+  background:rgba(245,247,251,.82);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--ya-border);
+}
+
+[data-theme="dark"] .tz-admin-topbar{
+  background:rgba(11,18,32,.82);
+}
+
+.tz-admin-topbar__left,
+.tz-admin-topbar__right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+
+.tz-admin-page-title{
+  font-size:20px;
+  font-weight:950;
+  margin:0;
+}
+
+.tz-admin-page-subtitle{
+  font-size:13px;
+  color:var(--ya-muted);
+  margin-top:2px;
+}
+
+.tz-admin-icon-btn{
+  width:42px;
+  height:42px;
+  border:1px solid var(--ya-border);
+  background:var(--ya-card);
+  color:var(--ya-text);
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  transition:transform .16s ease, box-shadow .16s ease;
+}
+
+.tz-admin-icon-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:var(--ya-shadow);
+}
+
+.tz-admin-content{
+  width:100%;
+  max-width:1440px;
+  margin:0 auto;
+  padding:22px;
+}
 
 .tz-admin-shell{
   display:grid;
-  gap:16px;
+  gap:18px;
 }
 
-/* ---------------------------
-Top navigation
---------------------------- */
-.tz-admin-topnav{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
+.tz-admin-card{
+  background:var(--ya-card);
+  border:1px solid var(--ya-border);
+  border-radius:var(--ya-radius);
+  box-shadow:0 4px 18px rgba(16,24,40,.04);
+  padding:18px;
+  animation:tz-admin-enter .24s ease both;
 }
 
-.tz-admin-tab{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  min-height:42px;
-  padding:10px 14px;
-  border-radius:14px;
-  background:#fff;
-  border:1px solid rgba(0,0,0,.08);
-  color:inherit;
-  text-decoration:none;
-  font-weight:700;
-  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+.tz-admin-card--soft{
+  background:linear-gradient(135deg,var(--ya-card),var(--ya-card-soft));
 }
 
-.tz-admin-tab:hover{
-  transform:translateY(-1px);
-  box-shadow:0 8px 18px rgba(0,0,0,.06);
+.tz-admin-card--blue{
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:white;
 }
 
-.tz-admin-tab:focus{
-  outline:none;
-  box-shadow:0 0 0 3px rgba(33,150,243,.25);
+.tz-admin-card--green{
+  background:linear-gradient(135deg,#16a34a,#15803d);
+  color:white;
 }
 
-.tz-admin-tab.is-active{
-  background:rgba(33,150,243,.10);
-  border-color:rgba(33,150,243,.24);
-  color:#0b63ce;
+.tz-admin-card--purple{
+  background:linear-gradient(135deg,#7c3aed,#5b21b6);
+  color:white;
 }
 
-/* ---------------------------
-Grid
---------------------------- */
 .tz-admin-grid{
   display:grid;
-  gap:14px;
-  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:16px;
+  grid-template-columns:repeat(4,minmax(0,1fr));
 }
 
-/* ---------------------------
-Stats
---------------------------- */
+.tz-admin-grid--2{
+  display:grid;
+  gap:16px;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+
 .tz-admin-stat{
-  min-height:132px;
+  min-height:150px;
   display:flex;
   flex-direction:column;
   justify-content:space-between;
@@ -69,39 +232,149 @@ Stats
 
 .tz-admin-stat__label{
   font-size:13px;
-  color:rgba(0,0,0,.55);
-  font-weight:700;
+  font-weight:900;
+  color:var(--ya-muted);
+}
+
+.tz-admin-card--blue .tz-admin-stat__label,
+.tz-admin-card--green .tz-admin-stat__label,
+.tz-admin-card--purple .tz-admin-stat__label{
+  color:rgba(255,255,255,.78);
 }
 
 .tz-admin-stat__value{
-  font-size:30px;
-  font-weight:900;
-  line-height:1.1;
+  font-size:32px;
+  font-weight:950;
+  line-height:1;
+  margin-top:12px;
 }
 
 .tz-admin-stat__sub{
+  margin-top:8px;
   font-size:12px;
-  color:rgba(0,0,0,.52);
+  color:var(--ya-muted);
 }
 
-/* ---------------------------
-Sections
---------------------------- */
+.tz-admin-section-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:14px;
+}
+
 .tz-admin-section-title{
   font-size:16px;
-  font-weight:800;
+  font-weight:950;
   margin:0;
 }
 
 .tz-admin-section-sub{
+  color:var(--ya-muted);
   font-size:13px;
-  color:rgba(0,0,0,.55);
   margin-top:4px;
 }
 
-/* ---------------------------
-List
---------------------------- */
+.tz-admin-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+}
+
+.tz-admin-search{
+  display:flex;
+  gap:10px;
+  width:100%;
+}
+
+.tz-admin-input,
+.tz-admin-select{
+  width:100%;
+  min-height:46px;
+  border-radius:15px;
+  border:1px solid var(--ya-border);
+  background:var(--ya-card);
+  color:var(--ya-text);
+  padding:0 14px;
+  font-weight:700;
+  outline:none;
+  transition:border-color .16s ease, box-shadow .16s ease;
+}
+
+.tz-admin-input:focus,
+.tz-admin-select:focus{
+  border-color:rgba(37,99,235,.5);
+  box-shadow:0 0 0 4px var(--ya-primary-soft);
+}
+
+.tz-admin-btn{
+  min-height:46px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:0 16px;
+  border-radius:15px;
+  border:1px solid var(--ya-border);
+  background:var(--ya-card);
+  color:var(--ya-text);
+  text-decoration:none;
+  cursor:pointer;
+  font-weight:900;
+  white-space:nowrap;
+  transition:transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.tz-admin-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:var(--ya-shadow);
+}
+
+.tz-admin-btn--primary{
+  background:var(--ya-primary);
+  color:white;
+  border-color:var(--ya-primary);
+}
+
+.tz-admin-table-wrap{
+  width:100%;
+  overflow:auto;
+  border:1px solid var(--ya-border);
+  border-radius:18px;
+}
+
+.tz-admin-table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:760px;
+}
+
+.tz-admin-table th,
+.tz-admin-table td{
+  padding:14px;
+  border-bottom:1px solid var(--ya-border);
+  text-align:left;
+  vertical-align:middle;
+}
+
+.tz-admin-table th{
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color:var(--ya-muted);
+  background:var(--ya-card-soft);
+}
+
+.tz-admin-table td{
+  font-size:14px;
+  font-weight:700;
+}
+
+.tz-admin-table tr:hover td{
+  background:rgba(37,99,235,.035);
+}
+
 .tz-admin-list{
   display:grid;
   gap:12px;
@@ -111,174 +384,200 @@ List
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
+  gap:14px;
   padding:16px;
-  border-radius:16px;
-  background:#fff;
-  box-shadow:0 4px 14px rgba(0,0,0,.04);
-  transition:transform .18s ease, box-shadow .18s ease;
+  border-radius:18px;
+  background:var(--ya-card);
+  border:1px solid var(--ya-border);
+  color:inherit;
+  text-decoration:none;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 
 .tz-admin-list-card:hover{
   transform:translateY(-2px);
-  box-shadow:0 12px 26px rgba(0,0,0,.08);
-}
-
-.tz-admin-list-card:active{
-  transform:scale(0.98);
-}
-
-.tz-admin-list-card:focus{
-  outline:none;
-  box-shadow:0 0 0 3px rgba(33,150,243,.25);
+  box-shadow:var(--ya-shadow);
+  border-color:rgba(37,99,235,.22);
 }
 
 .tz-admin-list-left{
   min-width:0;
-  flex:1;
 }
 
 .tz-admin-list-title{
-  font-size:15px;
-  font-weight:800;
+  font-weight:950;
   word-break:break-word;
 }
 
 .tz-admin-list-sub{
-  margin-top:4px;
+  color:var(--ya-muted);
   font-size:12px;
-  color:rgba(0,0,0,.58);
+  margin-top:4px;
   word-break:break-word;
 }
 
 .tz-admin-list-right{
   display:flex;
-  flex-direction:column;
   align-items:flex-end;
+  flex-direction:column;
   gap:8px;
   flex-shrink:0;
 }
 
-/* ---------------------------
-Amount
---------------------------- */
 .tz-admin-amount{
-  font-weight:900;
-  color:#2196f3;
+  color:var(--ya-primary);
   font-size:16px;
+  font-weight:950;
 }
 
-/* ---------------------------
-Badges
---------------------------- */
-.tz-admin-badge{
+.tz-admin-chip{
+  min-height:28px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-height:28px;
-  padding:6px 10px;
+  padding:5px 10px;
   border-radius:999px;
   font-size:12px;
-  font-weight:900;
-  letter-spacing:.3px;
+  font-weight:950;
+  background:rgba(16,24,40,.07);
+  color:var(--ya-muted);
 }
 
-.tz-admin-badge--success{
-  background:rgba(76,175,80,.12);
-  color:#2e7d32;
+.tz-admin-chip--success{
+  background:var(--ya-success-soft);
+  color:var(--ya-success);
 }
 
-.tz-admin-badge--soft{
-  background:rgba(0,0,0,.06);
-  color:rgba(0,0,0,.65);
+.tz-admin-chip--danger{
+  background:var(--ya-danger-soft);
+  color:var(--ya-danger);
 }
 
-/* ---------------------------
-Empty
---------------------------- */
+.tz-admin-chip--warning{
+  background:var(--ya-warning-soft);
+  color:#b45309;
+}
+
 .tz-admin-empty{
   text-align:center;
-  padding:26px 14px;
+  padding:34px 16px;
 }
 
 .tz-admin-empty__icon{
-  font-size:34px;
-  margin-bottom:8px;
+  font-size:36px;
+  margin-bottom:10px;
 }
 
 .tz-admin-empty__title{
-  font-weight:800;
-  margin-bottom:6px;
+  font-weight:950;
 }
 
 .tz-admin-empty__desc{
-  color:rgba(0,0,0,.56);
+  color:var(--ya-muted);
+  margin-top:6px;
   font-size:14px;
 }
 
-/* ---------------------------
-Search
---------------------------- */
-.tz-admin-search-input:focus{
-  border-color:rgba(33,150,243,.4);
-  box-shadow:0 0 0 3px rgba(33,150,243,.15);
+.tz-admin-kpi-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
 }
 
-/* ---------------------------
-Clickable card
---------------------------- */
-.tz-card-clickable{
-  transition:transform 0.15s ease, box-shadow 0.15s ease;
+.tz-admin-health{
+  display:grid;
+  gap:10px;
 }
 
-.tz-card-clickable:hover{
-  transform:translateY(-2px);
-  box-shadow:0 6px 20px rgba(0,0,0,0.08);
+.tz-admin-health-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px;
+  border-radius:14px;
+  background:var(--ya-card-soft);
 }
 
-/* ---------------------------
-Text helpers
---------------------------- */
-.tz-muted{
-  opacity:0.7;
-}
-
-.tz-fade{
-  opacity:0.85;
-}
-
-/* ---------------------------
-Loading skeleton
---------------------------- */
-.tz-skeleton{
+.tz-admin-skeleton{
+  min-height:18px;
   background:linear-gradient(
     90deg,
-    rgba(0,0,0,0.04) 25%,
-    rgba(0,0,0,0.08) 50%,
-    rgba(0,0,0,0.04) 75%
+    rgba(148,163,184,.16) 25%,
+    rgba(148,163,184,.28) 50%,
+    rgba(148,163,184,.16) 75%
   );
   background-size:200% 100%;
-  animation:tz-loading 1.2s infinite;
-  border-radius:10px;
+  animation:tz-admin-loading 1.2s infinite;
+  border-radius:12px;
 }
 
-@keyframes tz-loading{
-  0%{ background-position:200% 0; }
-  100%{ background-position:-200% 0; }
+@keyframes tz-admin-loading{
+  0%{background-position:200% 0;}
+  100%{background-position:-200% 0;}
 }
 
-/* ---------------------------
-Mobile
---------------------------- */
-@media (max-width: 640px){
+@keyframes tz-admin-enter{
+  from{
+    opacity:0;
+    transform:translateY(8px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
 
+@media (max-width:1180px){
   .tz-admin-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .tz-admin-app{
+    grid-template-columns:88px minmax(0,1fr);
+  }
+
+  .tz-admin-brand-text,
+  .tz-admin-menu span{
+    display:none;
+  }
+
+  .tz-admin-menu a{
+    justify-content:center;
+  }
+}
+
+@media (max-width:760px){
+  .tz-admin-app{
+    display:block;
+  }
+
+  .tz-admin-sidebar{
+    position:relative;
+    height:auto;
+    border-radius:0 0 24px 24px;
+  }
+
+  .tz-admin-menu{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+
+  .tz-admin-topbar{
+    position:relative;
+    align-items:flex-start;
+  }
+
+  .tz-admin-grid,
+  .tz-admin-grid--2{
     grid-template-columns:1fr;
   }
 
+  .tz-admin-content{
+    padding:16px;
+  }
+
   .tz-admin-list-card{
-    align-items:flex-start;
     flex-direction:column;
+    align-items:flex-start;
   }
 
   .tz-admin-list-right{
@@ -286,17 +585,16 @@ Mobile
     align-items:flex-start;
   }
 
-  .tz-admin-list-title{
-    font-size:14px;
+  .tz-admin-search{
+    flex-direction:column;
   }
+}
 
-  .tz-admin-amount{
-    font-size:16px;
+@media (prefers-reduced-motion:reduce){
+  *,
+  *::before,
+  *::after{
+    animation:none !important;
+    transition:none !important;
   }
-
-  .tz-admin-badge{
-    font-size:11px;
-    padding:5px 8px;
-  }
-
 }

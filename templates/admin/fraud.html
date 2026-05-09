@@ -1,0 +1,30 @@
+{% extends "admin/_layout.html" %}
+{% from "admin/components/empty_state.html" import empty_state %}
+
+{% block title %}{{ t("admin.fraud.title") }}{% endblock %}
+{% block admin_title %}{{ t("admin.fraud.title") }}{% endblock %}
+{% block admin_subtitle %}{{ t("admin.fraud.subtitle") }}{% endblock %}
+
+{% block admin_content %}
+<section class="tz-admin-card">
+  {% if not alerts %}
+    {{ empty_state("🛡️", t("admin.empty.title"), t("admin.fraud.empty")) }}
+  {% else %}
+    <div class="tz-admin-list">
+      {% for alert in alerts %}
+      <div class="tz-admin-list-card">
+        <div class="tz-admin-list-left">
+          <div class="tz-admin-list-title">{{ alert.title }}</div>
+          <div class="tz-admin-list-sub">{{ alert.description }}</div>
+          <div class="tz-admin-list-sub">{{ alert.date }}</div>
+        </div>
+        <div class="tz-admin-list-right">
+          <span class="tz-admin-chip tz-admin-chip--warning">{{ alert.level }}</span>
+          <strong>{{ alert.score }}/100</strong>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

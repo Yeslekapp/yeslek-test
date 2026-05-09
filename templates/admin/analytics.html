@@ -1,0 +1,39 @@
+{% extends "admin/_layout.html" %}
+{% from "admin/components/stat_card.html" import stat_card %}
+{% from "admin/components/empty_state.html" import empty_state %}
+
+{% block title %}{{ t("admin.analytics.title") }}{% endblock %}
+{% block admin_title %}{{ t("admin.analytics.title") }}{% endblock %}
+{% block admin_subtitle %}{{ t("admin.analytics.subtitle") }}{% endblock %}
+
+{% block admin_content %}
+<div class="tz-admin-shell">
+
+  <div class="tz-admin-grid">
+    {{ stat_card(t("admin.dashboard.totalRevenue"), "%.2f €"|format(analytics.total_revenue|float), "", "💰", "tz-admin-card--blue") }}
+    {{ stat_card(t("admin.transactions.title"), analytics.total_transactions, "", "💳") }}
+    {{ stat_card(t("admin.user.average"), "%.2f €"|format(analytics.average_amount|float), "", "📊") }}
+  </div>
+
+  <div class="tz-admin-grid--2">
+    <section class="tz-admin-card">
+      <div class="tz-admin-section-title">{{ t("admin.analytics.countryPerformance") }}</div>
+      {% for item in analytics.top_countries %}
+        <div class="tz-admin-health-row"><strong>{{ item.name }}</strong><span class="tz-admin-chip">{{ item.count }}</span></div>
+      {% else %}
+        {{ empty_state("🌍", t("admin.empty.title"), t("admin.empty.description")) }}
+      {% endfor %}
+    </section>
+
+    <section class="tz-admin-card">
+      <div class="tz-admin-section-title">{{ t("admin.analytics.operatorPerformance") }}</div>
+      {% for item in analytics.top_operators %}
+        <div class="tz-admin-health-row"><strong>{{ item.name }}</strong><span class="tz-admin-chip">{{ item.count }}</span></div>
+      {% else %}
+        {{ empty_state("📡", t("admin.empty.title"), t("admin.empty.description")) }}
+      {% endfor %}
+    </section>
+  </div>
+
+</div>
+{% endblock %}

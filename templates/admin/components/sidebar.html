@@ -1,0 +1,24 @@
+<aside class="tz-admin-sidebar">
+  <div class="tz-admin-sidebar__brand">
+    <div class="tz-admin-logo">Y</div>
+    <div class="tz-admin-brand-text">
+      <div class="tz-admin-brand-title">{{ t("admin.brand.name") }}</div>
+      <div class="tz-admin-brand-sub">{{ t("admin.brand.subtitle") }}</div>
+    </div>
+  </div>
+
+  <nav class="tz-admin-menu">
+    <a href="{{ url_for('admin.dashboard_get') }}" class="{% if active_admin_page == 'dashboard' %}is-active{% endif %}">📊 <span>{{ t("admin.nav.dashboard") }}</span></a>
+    <a href="{{ url_for('admin.users_get') }}" class="{% if active_admin_page == 'users' %}is-active{% endif %}">👤 <span>{{ t("admin.nav.users") }}</span></a>
+    <a href="{{ url_for('admin.recharges_get') }}" class="{% if active_admin_page == 'recharges' %}is-active{% endif %}">📱 <span>{{ t("admin.nav.recharges") }}</span></a>
+    <a href="{{ url_for('admin.transactions_get') }}" class="{% if active_admin_page == 'transactions' %}is-active{% endif %}">💳 <span>{{ t("admin.nav.transactions") }}</span></a>
+    <a href="{{ url_for('admin.payments_get') }}" class="{% if active_admin_page == 'payments' %}is-active{% endif %}">🏦 <span>{{ t("admin.nav.payments") }}</span></a>
+    <a href="{{ url_for('admin.reloadly_get') }}" class="{% if active_admin_page == 'reloadly' %}is-active{% endif %}">🌍 <span>{{ t("admin.nav.reloadly") }}</span></a>
+    <a href="{{ url_for('admin.fraud_get') }}" class="{% if active_admin_page == 'fraud' %}is-active{% endif %}">🛡️ <span>{{ t("admin.nav.fraud") }}</span></a>
+    <a href="{{ url_for('admin.support_get') }}" class="{% if active_admin_page == 'support' %}is-active{% endif %}">🎧 <span>{{ t("admin.nav.support") }}</span></a>
+    <a href="{{ url_for('admin.promotions_get') }}" class="{% if active_admin_page == 'promotions' %}is-active{% endif %}">🎁 <span>{{ t("admin.nav.promotions") }}</span></a>
+    <a href="{{ url_for('admin.analytics_get') }}" class="{% if active_admin_page == 'analytics' %}is-active{% endif %}">📈 <span>{{ t("admin.nav.analytics") }}</span></a>
+    <a href="{{ url_for('admin.settings_get') }}" class="{% if active_admin_page == 'settings' %}is-active{% endif %}">⚙️ <span>{{ t("admin.nav.settings") }}</span></a>
+    <a href="{{ url_for('admin.logs_get') }}" class="{% if active_admin_page == 'logs' %}is-active{% endif %}">🧾 <span>{{ t("admin.nav.logs") }}</span></a>
+  </nav>
+</aside>

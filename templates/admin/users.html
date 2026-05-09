@@ -1,146 +1,53 @@
-{% extends "base.html" %}
+{% extends "admin/_layout.html" %}
+{% from "admin/components/status_badge.html" import status_badge %}
+{% from "admin/components/empty_state.html" import empty_state %}
+
 {% block title %}{{ t("admin.users.title") }}{% endblock %}
+{% block admin_title %}{{ t("admin.users.title") }}{% endblock %}
+{% block admin_subtitle %}{{ t("admin.users.subtitle", {"count": users_count}) }}{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-{% endblock %}
+{% block admin_content %}
+<div class="tz-admin-shell">
 
-{% block content %}
-<div class="tz-page tz-container">
-  <div class="tz-admin-shell">
-
-    <!-- HEADER -->
-    <div class="tz-history-header">
-      <button
-        onclick="window.history.back()"
-        class="tz-close-btn"
-        aria-label="{{ t('common.back') }}"
-      >
-        ✕
-      </button>
-
-      <h2 class="tz-page-title">
-        {{ t("admin.users.title") }}
-      </h2>
-    </div>
-
-    <!-- SUMMARY -->
-    <section class="tz-card tz-card--soft">
-      <div class="tz-admin-section-title">{{ t("admin.users.title") }}</div>
-      <div class="tz-admin-section-sub">
-        {{ t("admin.users.subtitle", {"count": users_count}) }}
-      </div>
-    </section>
-
-    <!-- 🔍 SEARCH -->
+  <section class="tz-admin-card">
     <form method="get" class="tz-admin-search">
-      <input
-        type="text"
-        name="q"
-        value="{{ query }}"
-        placeholder="🔍 {{ t('admin.search') }}"
-        class="tz-input tz-admin-search-input"
-      >
+      <input class="tz-admin-input" type="text" name="q" value="{{ query }}" placeholder="{{ t('admin.users.searchPlaceholder') }}">
+      <button class="tz-admin-btn tz-admin-btn--primary" type="submit">🔍 {{ t("admin.actions.search") }}</button>
+      <button class="tz-admin-btn" type="button" data-admin-filter-reset>{{ t("admin.actions.reset") }}</button>
     </form>
+  </section>
 
-    <!-- NAV -->
-    <nav class="tz-admin-topnav">
-      <a href="{{ url_for('admin.dashboard_get') }}" class="tz-admin-tab">
-        📊 {{ t("admin.nav.dashboard") }}
-      </a>
-      <a href="{{ url_for('admin.users_get') }}" class="tz-admin-tab is-active">
-        👤 {{ t("admin.nav.users") }}
-      </a>
-      <a href="{{ url_for('admin.recharges_get') }}" class="tz-admin-tab">
-        📱 {{ t("admin.nav.recharges") }}
-      </a>
-      <a href="{{ url_for('admin.transactions_get') }}" class="tz-admin-tab">
-        💳 {{ t("admin.nav.transactions") }}
-      </a>
-    </nav>
-
+  <section class="tz-admin-card">
     {% if not users %}
-      <section class="tz-card">
-        <div class="tz-admin-empty">
-          <div class="tz-admin-empty__icon">👤</div>
-          <div class="tz-admin-empty__title">{{ t("admin.empty.title") }}</div>
-          <div class="tz-admin-empty__desc">{{ t("admin.empty.users") }}</div>
-        </div>
-      </section>
+      {{ empty_state("👤", t("admin.empty.title"), t("admin.users.empty")) }}
     {% else %}
-
       <div class="tz-admin-list">
-
         {% for user in users %}
-        <a href="{{ url_for('admin.user_detail_get', user_id=user.user_id) }}"
-           class="tz-admin-list-card tz-hover tz-card-clickable">
-
-          <!-- LEFT -->
+        <a href="{{ url_for('admin.user_detail_get', user_id=user.user_id) }}" class="tz-admin-list-card">
           <div class="tz-admin-list-left">
-
-            <!-- Name -->
-            <div class="tz-admin-list-title">
-              {{ user.name or user.phone }}
-            </div>
-
-            <!-- Email -->
+            <div class="tz-admin-list-title">{{ user.name or user.phone or "—" }}</div>
             {% if user.email %}
-            <div class="tz-admin-list-sub tz-fade">
-              ✉ {{ user.email }}
-            </div>
+              <div class="tz-admin-list-sub">✉ {{ user.email }}</div>
             {% endif %}
-
-            <!-- Phone -->
-            <div class="tz-admin-list-sub tz-muted">
-              📱 {{ user.phone }}
-            </div>
-
-            <!-- Last recharge -->
-            <div class="tz-admin-list-sub tz-muted">
-              {{ t("admin.users.lastRecharge") }}: {{ user.last_date }}
-            </div>
-
+            <div class="tz-admin-list-sub">📱 {{ user.phone }}</div>
+            <div class="tz-admin-list-sub">{{ t("admin.users.lastRecharge") }}: {{ user.last_date or "—" }}</div>
           </div>
 
-          <!-- RIGHT -->
           <div class="tz-admin-list-right">
-
-            <!-- Amount -->
-            <div class="tz-admin-amount">
-              {{ "%.2f"|format(user.total_amount|float) }} €
-            </div>
-
-            <!-- Tier -->
-            <span class="tz-admin-badge
-              {% if user.tier == 'vip' %}
-                tz-admin-badge--success
-              {% else %}
-                tz-admin-badge--soft
-              {% endif %}
-            ">
-              {% if user.tier == "vip" %}
-                👑 VIP
-              {% elif user.tier == "active" %}
-                ⭐ Active
-              {% else %}
-                🆕 New
+            <div class="tz-admin-amount">{{ "%.2f"|format(user.total_amount|float) }} €</div>
+            <span class="tz-admin-chip {% if user.tier == 'vip' %}tz-admin-chip--success{% endif %}">
+              {% if user.tier == "vip" %}👑 {{ t("admin.tiers.vip") }}
+              {% elif user.tier == "active" %}⭐ {{ t("admin.tiers.active") }}
+              {% else %}🆕 {{ t("admin.tiers.new") }}
               {% endif %}
             </span>
-
-            <!-- Count -->
-            <span class="tz-admin-badge tz-admin-badge--soft">
-              {{ user.recharge_count }}
-            </span>
-
+            <span class="tz-admin-chip">{{ t("admin.users.rechargeCount", {"count": user.recharge_count}) }}</span>
           </div>
-
         </a>
         {% endfor %}
-
       </div>
-
     {% endif %}
+  </section>
 
-  </div>
 </div>
 {% endblock %}

@@ -1,0 +1,40 @@
+{% extends "admin/_layout.html" %}
+{% from "admin/components/stat_card.html" import stat_card %}
+{% from "admin/components/empty_state.html" import empty_state %}
+
+{% block title %}{{ t("admin.reloadly.title") }}{% endblock %}
+{% block admin_title %}{{ t("admin.reloadly.title") }}{% endblock %}
+{% block admin_subtitle %}{{ t("admin.reloadly.subtitle") }}{% endblock %}
+
+{% block admin_content %}
+<div class="tz-admin-shell">
+
+  <div class="tz-admin-grid">
+    {{ stat_card(t("admin.reloadly.balance"), "%.2f €"|format(data.balance|default(0)|float), "", "🌍", "tz-admin-card--blue") }}
+    {{ stat_card(t("admin.reloadly.countries"), data.countries|length, "", "🏳️") }}
+    {{ stat_card(t("admin.reloadly.operators"), data.operators|length, "", "📡") }}
+    {{ stat_card(t("admin.reloadly.lastSync"), data.last_sync, "", "🔄") }}
+  </div>
+
+  <div class="tz-admin-grid--2">
+    <section class="tz-admin-card">
+      <div class="tz-admin-section-title">{{ t("admin.reloadly.countries") }}</div>
+      {% for item in data.countries %}
+        <div class="tz-admin-health-row"><strong>{{ item.name }}</strong><span class="tz-admin-chip">{{ item.count }}</span></div>
+      {% else %}
+        {{ empty_state("🌍", t("admin.empty.title"), t("admin.reloadly.empty")) }}
+      {% endfor %}
+    </section>
+
+    <section class="tz-admin-card">
+      <div class="tz-admin-section-title">{{ t("admin.reloadly.operators") }}</div>
+      {% for item in data.operators %}
+        <div class="tz-admin-health-row"><strong>{{ item.name }}</strong><span class="tz-admin-chip">{{ item.count }}</span></div>
+      {% else %}
+        {{ empty_state("📡", t("admin.empty.title"), t("admin.reloadly.empty")) }}
+      {% endfor %}
+    </section>
+  </div>
+
+</div>
+{% endblock %}

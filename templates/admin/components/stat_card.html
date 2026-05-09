@@ -1,0 +1,11 @@
+{% macro stat_card(label, value, sub="", icon="📊", variant="") %}
+<section class="tz-admin-card tz-admin-stat {{ variant }}">
+  <div>
+    <div class="tz-admin-stat__label">{{ icon }} {{ label }}</div>
+    <div class="tz-admin-stat__value">{{ value }}</div>
+  </div>
+  {% if sub %}
+    <div class="tz-admin-stat__sub">{{ sub }}</div>
+  {% endif %}
+</section>
+{% endmacro %}

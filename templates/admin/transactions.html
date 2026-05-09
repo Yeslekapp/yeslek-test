@@ -1,70 +1,59 @@
-{% extends "base.html" %}
+{% extends "admin/_layout.html" %}
+{% from "admin/components/status_badge.html" import status_badge %}
+{% from "admin/components/empty_state.html" import empty_state %}
+
 {% block title %}{{ t("admin.transactions.title") }}{% endblock %}
+{% block admin_title %}{{ t("admin.transactions.title") }}{% endblock %}
+{% block admin_subtitle %}{{ t("admin.transactions.subtitle", {"count": transactions_count}) }}{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-{% endblock %}
+{% block admin_content %}
+<div class="tz-admin-shell">
 
-{% block content %}
-<div class="tz-page tz-container">
-  <div class="tz-admin-shell">
+  <section class="tz-admin-card">
+    <form method="get" class="tz-admin-search">
+      <input class="tz-admin-input" type="text" name="q" value="{{ query }}" placeholder="{{ t('admin.transactions.searchPlaceholder') }}">
+      <select class="tz-admin-select" name="status" data-admin-auto-submit>
+        <option value="">{{ t("admin.actions.allStatuses") }}</option>
+        <option value="success" {% if status == "success" %}selected{% endif %}>{{ t("admin.status.success") }}</option>
+        <option value="failed" {% if status == "failed" %}selected{% endif %}>{{ t("admin.status.failed") }}</option>
+      </select>
+      <button class="tz-admin-btn tz-admin-btn--primary" type="submit">🔍 {{ t("admin.actions.search") }}</button>
+      <a class="tz-admin-btn" href="{{ url_for('admin.transactions_export_get') }}">⬇ {{ t("admin.actions.exportCsv") }}</a>
+    </form>
+  </section>
 
-    <div class="tz-history-header">
-      <button
-        onclick="window.history.back()"
-        class="tz-close-btn"
-        aria-label="{{ t('common.back') }}"
-      >
-        ✕
-      </button>
-
-      <h2 class="tz-page-title">
-        {{ t("admin.transactions.title") }}
-      </h2>
-    </div>
-
-    <section class="tz-card tz-card--soft">
-      <div class="tz-admin-section-title">{{ t("admin.transactions.title") }}</div>
-      <div class="tz-admin-section-sub">
-        {{ t("admin.transactions.subtitle", {"count": transactions_count}) }}
-      </div>
-    </section>
-
-    <nav class="tz-admin-topnav">
-      <a href="{{ url_for('admin.dashboard_get') }}" class="tz-admin-tab">📊 {{ t("admin.nav.dashboard") }}</a>
-      <a href="{{ url_for('admin.users_get') }}" class="tz-admin-tab">👤 {{ t("admin.nav.users") }}</a>
-      <a href="{{ url_for('admin.recharges_get') }}" class="tz-admin-tab">📱 {{ t("admin.nav.recharges") }}</a>
-      <a href="{{ url_for('admin.transactions_get') }}" class="tz-admin-tab is-active">💳 {{ t("admin.nav.transactions") }}</a>
-    </nav>
-
+  <section class="tz-admin-card">
     {% if not transactions %}
-      <section class="tz-card">
-        <div class="tz-admin-empty">
-          <div class="tz-admin-empty__icon">💳</div>
-          <div class="tz-admin-empty__title">{{ t("admin.empty.title") }}</div>
-          <div class="tz-admin-empty__desc">{{ t("admin.empty.transactions") }}</div>
-        </div>
-      </section>
+      {{ empty_state("💳", t("admin.empty.title"), t("admin.transactions.empty")) }}
     {% else %}
-      <div class="tz-admin-list">
-        {% for item in transactions %}
-        <div class="tz-admin-list-card">
-          <div class="tz-admin-list-left">
-            <div class="tz-admin-list-title">{{ item.reference }}</div>
-            <div class="tz-admin-list-sub">
-              {{ item.phone }} • {{ item.date }}
-            </div>
-          </div>
-
-          <div class="tz-admin-list-right">
-            <div class="tz-admin-amount">{{ "%.2f"|format(item.amount|float) }} €</div>
-            <span class="tz-admin-badge tz-admin-badge--success">{{ t("admin.status.success") }}</span>
-          </div>
-        </div>
-        {% endfor %}
+      <div class="tz-admin-table-wrap">
+        <table class="tz-admin-table">
+          <thead>
+            <tr>
+              <th>{{ t("admin.transactions.reference") }}</th>
+              <th>{{ t("common.phone") }}</th>
+              <th>{{ t("admin.transactions.operator") }}</th>
+              <th>{{ t("common.amount") }}</th>
+              <th>{{ t("common.status") }}</th>
+              <th>{{ t("common.date") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in transactions %}
+            <tr>
+              <td>{{ item.reference }}</td>
+              <td>{{ item.phone }}</td>
+              <td>{{ item.operator }}</td>
+              <td>{{ "%.2f"|format(item.amount|float) }} €</td>
+              <td>{{ status_badge(item.status) }}</td>
+              <td>{{ item.date }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     {% endif %}
+  </section>
 
-  </div>
 </div>
 {% endblock %}

@@ -1,0 +1,16 @@
+{% extends "admin/_layout.html" %}
+{% from "admin/components/empty_state.html" import empty_state %}
+
+{% block title %}{{ t("admin.promotions.title") }}{% endblock %}
+{% block admin_title %}{{ t("admin.promotions.title") }}{% endblock %}
+{% block admin_subtitle %}{{ t("admin.promotions.subtitle") }}{% endblock %}
+
+{% block admin_content %}
+<section class="tz-admin-card">
+  {% if not promotions %}
+    {{ empty_state("🎁", t("admin.empty.title"), t("admin.promotions.empty")) }}
+  {% else %}
+    <div class="tz-admin-list"></div>
+  {% endif %}
+</section>
+{% endblock %}
