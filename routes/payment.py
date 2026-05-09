@@ -1119,7 +1119,7 @@ def stripe_webhook_post():
     if forfait_id_raw:
 
         try:
-            plan_id = int(forfait_id_raw)
+            plan_id = str(forfait_id_raw).strip()
 
         except Exception:
 
