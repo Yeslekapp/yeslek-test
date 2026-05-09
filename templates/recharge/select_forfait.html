@@ -25,7 +25,12 @@
     </button>
   </div>
 
-  <form class="tz-stack" id="selectForfaitForm">
+  <form
+  class="tz-stack"
+  id="selectForfaitForm"
+  method="POST"
+  action="{{ url_for('recharge.select_forfait_post') }}"
+>
 
     {# ---------------------------
        Phone + Operator Card
@@ -137,10 +142,17 @@
         </div>
 
       {% endif %}
+       
+        <input type="hidden" id="selectedPlanId" value="">
+        <input type="hidden" id="selectedPlanGb" value="">
+        <input type="hidden" id="selectedPlanPrice" value="">
 
-      <input type="hidden" id="selectedPlanId" value="">
-      <input type="hidden" id="selectedPlanGb" value="">
-      <input type="hidden" id="selectedPlanPrice" value="">
+      <input
+       type="hidden"
+       id="selectedPlanName"
+       name="name"
+       value=""
+      >
 
     </section>
 

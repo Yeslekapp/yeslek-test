@@ -197,44 +197,37 @@ def select_forfait_get():
 # ---------------------------
 # Select Forfait (POST)
 # ---------------------------
+
 @recharge_bp.post("/select-forfait")
 def select_forfait_post():
 
     session.pop("received_display", None)
 
-    data = request.get_json(silent=True) or {}
-
-    # ---------------------------
-    # DATA plans Reloadly
-    # utilisent name (id = None)
-    # ---------------------------
-    plan_name = data.get("name")
+    plan_name = request.form.get("name")
 
     if not plan_name:
-        return jsonify({
-            "ok": False,
-            "error": "missing_plan_name"
-        }), 400
+        return redirect(
+            url_for("recharge.select_forfait_get")
+        )
 
     plans = session.get("recharge_data_plans") or []
 
-    # ---------------------------
-    # 🔥 FIX CRASH (operator manquant)
-    # ---------------------------
     operator = session.get("recharge_operator")
 
     # ---------------------------
-    # Fallback anti-404
+    # fallback session vide
     # ---------------------------
     if not plans and operator:
+
         try:
             plans = get_reloadly_plans(operator)
             session["recharge_data_plans"] = plans
+
         except Exception:
             plans = []
 
     # ---------------------------
-    # Find selected plan by name
+    # Find selected plan
     # ---------------------------
     selected = next(
         (
@@ -245,13 +238,12 @@ def select_forfait_post():
     )
 
     if not selected:
-        return jsonify({
-            "ok": False,
-            "error": "plan_not_found"
-        }), 404
+        return redirect(
+            url_for("recharge.select_forfait_get")
+        )
 
     # ---------------------------
-    # Save selected forfait
+    # SAVE FORFAIT
     # ---------------------------
     session["recharge_type"] = "DATA"
 
@@ -263,11 +255,48 @@ def select_forfait_post():
         "validity": selected.get("validity"),
     }
 
+    # ---------------------------
+    # SAVE AMOUNT
+    # ---------------------------
+    amount = float(
+        selected.get("amount", 0)
+    )
+
+    session["recharge_amount"] = amount
+
+    # ---------------------------
+    # Fees
+    # ---------------------------
+    phone = session.get("recharge_phone")
+
+    currency = CurrencyService.currency_from_phone(
+        phone
+    )
+
+    breakdown = FeesService.breakdown(
+        amount,
+        currency
+    )
+
+    session["recharge_total_amount"] = float(
+        breakdown["total"]
+    )
+
+    # ---------------------------
+    # RESET PAYMENT IDEMPOTENCY
+    # ---------------------------
+    session.pop("payment_idempotency_key", None)
+    session.pop("last_payment_amount", None)
+    session.pop("payment_hash", None)
+
     session.modified = True
 
-    return jsonify({
-        "ok": True
-    })
+    # ---------------------------
+    # NORMAL REDIRECT
+    # ---------------------------
+    return redirect(
+        url_for("payment.method_get")
+    )
 
 # ---------------------------
 # API: get forfaits live (OPTIMIZED)

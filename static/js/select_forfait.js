@@ -39,7 +39,7 @@
   let scrollTimeout = null;
   let isAutoSelecting = false;
   let forfaitsLoaded = false;
-  let forfaitsReady = false;
+  let forfaitsReady = true;
   // ---------------------------
   // Helpers
   // ---------------------------
@@ -207,69 +207,57 @@
 // Submit
 // ---------------------------
 
-async function submitSelection() {
+function submitSelection() {
 
   // 🔒 attendre que les forfaits soient prêts
   if (!forfaitsReady) {
+
     if (typeof tzToast === "function") {
       tzToast("Chargement...");
     }
+
     return;
   }
 
   // 🔒 sécurité UX
   if (isSubmitting) return;
 
-  // 🔥 UX: message si rien sélectionné
+  // 🔥 UX
   if (!selectedButton) {
+
     if (typeof tzToast === "function") {
       tzToast("Sélectionnez un forfait");
     }
+
     return;
   }
 
-  const planId = selectedPlanId.value;
-  const price = Number(selectedPlanPrice.value);
+  const planName =
+    selectedPlanId.dataset.name || "";
 
-  if (!planId || price <= 0) return;
+  const price =
+    Number(selectedPlanPrice.value);
+
+  if (!planName || price <= 0) {
+    return;
+  }
 
   setLoading(true);
 
-  try {
+// ---------------------------
+// Hidden input
+// ---------------------------
 
-    const res = await fetch("/recharge/select-forfait", {
-    method: "POST",
-    headers: {
-    "Content-Type": "application/json"
-   },
-   body: JSON.stringify({
-    id: planId,
-    name: selectedPlanId.dataset.name || "",
-    gb: selectedPlanGb.value,
-    price: selectedPlanPrice.value
-  })
-});
+const hiddenInput =
+  document.getElementById("selectedPlanName");
 
-    const data = await res.json();
+hiddenInput.value = planName;
 
-    if (!data.ok) throw new Error("forfait_save_error");
+  // ---------------------------
+  // REAL HTML SUBMIT
+  // ---------------------------
 
-    // 🔥 UX: mini feedback avant redirect
-    continueBtn.textContent = "✔";
-    continueBtn.style.opacity = "0.8";
-
-    setTimeout(() => {
-      window.location.href = "/payment/method";
-    }, 120);
-
-  } catch (e) {
-    console.error(e);
-    setLoading(false);
-
-    if (typeof tzToast === "function") {
-      tzToast("Erreur, réessayez");
-    }
-  }
+  form.submit();
 }
 
   // ---------------------------
