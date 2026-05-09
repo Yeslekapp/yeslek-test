@@ -2409,3 +2409,29 @@ LOGOUT FIX (isolé propre)
   color: #000;
   transform: translateY(-2px);
 }
+
+/* ---------------------------
+# Form fields alignment FIX
+--------------------------- */
+.tz-field{
+  width:100%;
+}
+
+.tz-field .tz-input,
+.tz-field #card-number,
+.tz-field #card-expiry,
+.tz-field #card-cvc{
+  width:100%;
+  box-sizing:border-box;
+}
+
+.tz-card{
+  overflow:visible;
+}
+
+
+/* OTP input centered clean */
+.tz-otp__input{
+  width:100%;
+  box-sizing:border-box;
+}
