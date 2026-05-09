@@ -54,6 +54,19 @@ class StripeService:
             raise
 
     # ---------------------------
+    # Retrieve Payment Method
+    # ---------------------------
+    @staticmethod
+    def retrieve_payment_method(payment_method_id: str):
+
+        try:
+            return stripe.PaymentMethod.retrieve(payment_method_id)
+
+        except Exception as e:
+            print("❌ Stripe retrieve payment method error:", e)
+            raise
+
+    # ---------------------------
     # Construct Webhook Event
     # ---------------------------
     @staticmethod
