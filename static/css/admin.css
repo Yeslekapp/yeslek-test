@@ -571,9 +571,9 @@
     grid-template-columns:1fr;
   }
 
-  .tz-admin-content{
-    padding:16px;
-  }
+.tz-admin-content{
+  padding:12px 6px 12px 2px;
+}
 
   .tz-admin-list-card{
     flex-direction:column;
