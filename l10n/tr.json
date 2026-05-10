@@ -223,7 +223,12 @@
       "orderLabel": "Sipariş",
       "referenceLabel": "Referans",
       "processing": "Yükleme yapılıyor... lütfen bekleyin ⏳",
-      "done": "Yükleme başarıyla gönderildi ✅"
+      "done": "Yükleme başarıyla gönderildi ✅",
+      "paidAmount": "Ödenen tutar",
+      "receivedAmount": "Alınan kredi",
+      "phoneLabel": "Numara",
+      "shareReceipt": "Makbuzu paylaş",
+      "successMessage": "Yükleme başarıyla tamamlandı 🎉"
     },
 
     "empty": {

@@ -223,7 +223,12 @@
       "orderLabel": "Order",
       "referenceLabel": "Reference",
       "processing": "Top-up in progress... please wait ⏳",
-      "done": "Top-up sent successfully ✅"
+      "done": "Top-up sent successfully ✅",
+      "paidAmount": "Paid amount",
+      "receivedAmount": "Received credit",
+      "phoneLabel": "Number",
+      "shareReceipt": "Share receipt",
+      "successMessage": "Top-up completed successfully 🎉"
     },
 
     "empty": {

@@ -223,7 +223,12 @@
       "orderLabel": "Bestellung",
       "referenceLabel": "Referenz",
       "processing": "Aufladung läuft... bitte warten ⏳",
-      "done": "Aufladung erfolgreich gesendet ✅"
+      "done": "Aufladung erfolgreich gesendet ✅",
+      "paidAmount": "Bezahlter Betrag",
+      "receivedAmount": "Erhaltenes Guthaben",
+      "phoneLabel": "Nummer",
+      "shareReceipt": "Beleg teilen",
+      "successMessage": "Aufladung erfolgreich durchgeführt 🎉"
     },
 
     "empty": {

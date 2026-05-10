@@ -223,7 +223,12 @@
       "orderLabel": "سفارش",
       "referenceLabel": "مرجع",
       "processing": "در حال انجام شارژ... لطفاً صبر کنید ⏳",
-      "done": "شارژ با موفقیت ارسال شد ✅"
+      "done": "شارژ با موفقیت ارسال شد ✅",
+      "paidAmount": "مبلغ پرداخت‌شده",
+      "receivedAmount": "اعتبار دریافت‌شده",
+      "phoneLabel": "شماره",
+      "shareReceipt": "اشتراک‌گذاری رسید",
+      "successMessage": "شارژ با موفقیت انجام شد 🎉"
     },
 
     "empty": {

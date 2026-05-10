@@ -223,7 +223,12 @@
       "orderLabel": "الطلب",
       "referenceLabel": "المرجع",
       "processing": "جاري الشحن... يرجى الانتظار ⏳",
-      "done": "تم إرسال الشحن بنجاح ✅"
+      "done": "تم إرسال الشحن بنجاح ✅",
+      "paidAmount": "المبلغ المدفوع",
+      "receivedAmount": "الرصيد المستلم",
+      "phoneLabel": "الرقم",
+      "shareReceipt": "مشاركة الإيصال",
+      "successMessage": "تمت إعادة الشحن بنجاح 🎉"
     },
 
     "empty": {

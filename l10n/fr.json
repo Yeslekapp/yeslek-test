@@ -225,7 +225,12 @@
       "orderLabel": "Commande",
       "referenceLabel": "Référence",
       "processing": "Recharge en cours... veuillez patienter ⏳",
-      "done": "Recharge envoyée avec succès ✅"
+      "done": "Recharge envoyée avec succès ✅",
+      "paidAmount": "Montant payé",
+      "receivedAmount": "Credit reçu",
+      "phoneLabel": "Numéro",
+      "shareReceipt": "Partager le reçu",
+      "successMessage": "Recharge effectuée avec succès 🎉"
     },
 
     "empty": {

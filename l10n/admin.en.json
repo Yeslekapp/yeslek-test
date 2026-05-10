@@ -1,37 +1,97 @@
 {
+  "common": {
+    "back": "Back",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "reset": "Reset",
+    "empty": "No data",
+    "success": "Success",
+    "failed": "Failed",
+    "pending": "Pending",
+    "active": "Active",
+    "inactive": "Inactive",
+    "view": "View",
+    "details": "Details",
+    "date": "Date",
+    "amount": "Amount",
+    "status": "Status",
+    "country": "Country",
+    "phone": "Phone",
+    "email": "Email",
+    "name": "Name",
+    "actions": "Actions"
+  },
+
   "admin": {
+    "brand": {
+      "name": "Yeslek Admin",
+      "subtitle": "Fintech top-up management"
+    },
+
+    "system": {
+      "online": "System online"
+    },
+
     "nav": {
-      "title": "Admin",
-      "subtitle": "Tikzok control panel",
       "dashboard": "Dashboard",
       "users": "Customers",
       "recharges": "Top-ups",
-      "transactions": "Transactions"
+      "transactions": "Transactions",
+      "payments": "Payments",
+      "reloadly": "Reloadly",
+      "fraud": "Fraud",
+      "support": "Support",
+      "promotions": "Promotions",
+      "analytics": "Analytics",
+      "settings": "Settings",
+      "logs": "Logs"
     },
-
-    "search": "Search customer...",
 
     "dashboard": {
       "title": "Admin dashboard",
-      "subtitle": "Quick overview of performance and recent activity.",
-      "recentTitle": "Recent activity",
-      "recentSubtitle": "Latest successful top-ups."
+      "subtitle": "Complete overview of performance, payments, top-ups and risks.",
+      "totalRevenue": "Total revenue",
+      "totalRevenueHint": "Total amount of successful top-ups.",
+      "todayTransactions": "Today's transactions",
+      "successRate": "Success rate",
+      "failedTransactions": "Failed transactions",
+      "activeUsers": "Active users",
+      "stripeRevenue": "Stripe revenue",
+      "reloadlyBalance": "Reloadly balance",
+      "topUser": "Top customer",
+      "topCountries": "Top countries",
+      "topCountriesHint": "Most active countries.",
+      "topOperators": "Top operators",
+      "fraudAlerts": "Fraud alerts",
+      "recentActivity": "Recent activity",
+      "recentActivityHint": "Latest recorded top-ups.",
+      "systemHealth": "System health",
+      "systemHealthHint": "Status of critical integrations."
     },
 
     "users": {
       "title": "Customers",
-      "subtitle": "{count} customer(s) detected from history.",
+      "subtitle": "{count} customer(s) detected.",
+      "searchPlaceholder": "Search by name, email or phone...",
       "lastRecharge": "Last top-up",
-      "rechargesCount": "{count} top-up(s)"
+      "totalSpent": "Total spent",
+      "rechargeCount": "{count} top-up(s)",
+      "empty": "No customers found."
     },
 
-    "userDetail": {
+    "user": {
       "title": "Customer details",
+      "profile": "Customer profile",
       "total": "Total",
       "recharges": "Top-ups",
-      "history": "History",
+      "average": "Average",
       "countries": "Countries",
-      "cards": "Payment methods"
+      "topCountry": "Top country",
+      "payments": "Payments",
+      "noCards": "No saved cards",
+      "activity": "Activity",
+      "riskScore": "Risk score"
     },
 
     "recharges": {
@@ -41,30 +101,100 @@
 
     "transactions": {
       "title": "Transactions",
-      "subtitle": "{count} transaction(s) available from successful history."
+      "subtitle": "{count} transaction(s) available.",
+      "reference": "Reference",
+      "operator": "Operator",
+      "provider": "Provider",
+      "searchPlaceholder": "Search a transaction...",
+      "empty": "No transactions available."
     },
 
-    "metrics": {
-      "totalRevenue": "Total revenue",
-      "totalRevenueHint": "Total amount of successful top-ups.",
-      "totalRecharges": "Top-ups",
-      "totalRechargesHint": "Total number of confirmed top-ups.",
-      "uniqueCustomers": "Unique customers",
-      "uniqueCustomersHint": "Distinct recipients detected.",
-      "averageAmount": "Average order value",
-      "averageAmountHint": "Average amount per top-up."
+    "payments": {
+      "title": "Payments",
+      "subtitle": "Track Stripe payments, refunds and statuses.",
+      "stripeId": "Stripe ID",
+      "method": "Method",
+      "captured": "Captured",
+      "refunded": "Refunded",
+      "empty": "No payments available."
+    },
+
+    "reloadly": {
+      "title": "Reloadly",
+      "subtitle": "Track operators, countries, top-ups and Reloadly balance.",
+      "balance": "Reloadly balance",
+      "operators": "Operators",
+      "countries": "Active countries",
+      "lastSync": "Last synchronization",
+      "empty": "No Reloadly data available."
+    },
+
+    "fraud": {
+      "title": "Fraud Detection",
+      "subtitle": "Detection of suspicious behavior and risky transactions.",
+      "alerts": "Alerts",
+      "riskScore": "Risk score",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "blocked": "Blocked",
+      "empty": "No fraud alerts."
+    },
+
+    "support": {
+      "title": "Support",
+      "subtitle": "Track customer tickets and operational incidents.",
+      "openTickets": "Open tickets",
+      "resolvedTickets": "Resolved tickets",
+      "priority": "Priority",
+      "empty": "No support tickets."
+    },
+
+    "promotions": {
+      "title": "Promotions",
+      "subtitle": "Manage campaigns, promo codes and targeted offers.",
+      "code": "Promo code",
+      "discount": "Discount",
+      "usage": "Usage",
+      "expiresAt": "Expires on",
+      "empty": "No active promotions."
+    },
+
+    "analytics": {
+      "title": "Analytics",
+      "subtitle": "Revenue, countries, operators and performance analytics.",
+      "revenueTrend": "Revenue trend",
+      "countryPerformance": "Country performance",
+      "operatorPerformance": "Operator performance",
+      "conversionRate": "Conversion rate"
+    },
+
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Admin panel configuration and operational preferences.",
+      "security": "Security",
+      "securityHint": "Secure admin access with sensitive data masking.",
+      "notifications": "Notifications",
+      "integrations": "Integrations",
+      "appearance": "Appearance"
+    },
+
+    "logs": {
+      "title": "Logs",
+      "subtitle": "Technical and operational system history.",
+      "level": "Level",
+      "message": "Message",
+      "source": "Source",
+      "empty": "No logs available."
     },
 
     "status": {
-      "success": "Success"
-    },
-
-    "labels": {
-      "phone": "Phone",
-      "email": "Email",
-      "country": "Country",
-      "date": "Date",
-      "amount": "Amount"
+      "success": "Success",
+      "failed": "Failed",
+      "pending": "Pending",
+      "processing": "Processing",
+      "refunded": "Refunded",
+      "blocked": "Blocked"
     },
 
     "tiers": {
@@ -73,11 +203,33 @@
       "new": "New"
     },
 
+    "actions": {
+      "search": "Search",
+      "filter": "Filter",
+      "reset": "Reset",
+      "exportCsv": "Export CSV",
+      "view": "View",
+      "viewAll": "View all",
+      "details": "Details",
+      "allStatuses": "All statuses",
+      "toggleMenu": "Open menu",
+      "toggleTheme": "Change theme"
+    },
+
     "empty": {
       "title": "No data",
+      "description": "Data will appear here as soon as it becomes available.",
       "users": "No customers detected yet.",
-      "recharges": "No top-ups available yet.",
-      "transactions": "No transactions available yet."
+      "transactions": "No transactions available.",
+      "payments": "No payments available.",
+      "recharges": "No top-ups available."
+    },
+
+    "flash": {
+      "success": "Operation completed successfully.",
+      "error": "An error occurred.",
+      "exportReady": "CSV export generated successfully.",
+      "filtersApplied": "Filters applied."
     }
   }
 }
