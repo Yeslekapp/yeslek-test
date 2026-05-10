@@ -634,14 +634,63 @@ phoneInput?.addEventListener("keydown", (e) => {
 });
 
 phoneInput?.addEventListener("paste", (e) => {
+
   e.preventDefault();
 
-  const paste = (e.clipboardData || window.clipboardData).getData("text");
+  const paste =
+    (e.clipboardData || window.clipboardData)
+      .getData("text");
 
-  let cleaned = sanitizeToPhoneInput(paste);
+  let cleaned =
+    String(paste || "")
+      .replace(/[^\d+]/g, "");
+
+  const country = getSelectedCountry();
+
+  const dial =
+    digitsOnly(country?.dial || "");
+
+  // ---------------------------
+  // déjà international
+  // ex: +93789456123
+  // ---------------------------
+  if (cleaned.startsWith("+")) {
+
+    cleaned =
+      "+" + digitsOnly(cleaned);
+
+  } else {
+
+    cleaned = digitsOnly(cleaned);
+
+    // ---------------------------
+    // ex: 0789456123
+    // ---------------------------
+    if (cleaned.startsWith("0")) {
+      cleaned = cleaned.slice(1);
+    }
+
+    // ---------------------------
+    // ex: 93789456123
+    // ---------------------------
+    if (!cleaned.startsWith(dial)) {
+      cleaned = dial + cleaned;
+    }
+
+    cleaned = "+" + cleaned;
+  }
+
+  // limite E164
+  cleaned =
+    "+" + digitsOnly(cleaned).slice(0, 15);
 
   setPhoneValue(cleaned);
+
+  lastLookupKey = "";
+  lastLookupValid = false;
+
   validateAndSync();
+
 });
 
   // ---------------------------

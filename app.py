@@ -84,14 +84,16 @@ def create_app() -> Flask:
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=365 * 5)
 
     # ---------------------------
-    # Cookies (LOCAL vs PROD)
+    # Cookies (FINAL GOOGLE FIX)
     # ---------------------------
-    if os.getenv("ENV") == "production":
-        app.config["SESSION_COOKIE_SAMESITE"] = "None"
-        app.config["SESSION_COOKIE_SECURE"] = True
-    else:
-        app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-        app.config["SESSION_COOKIE_SECURE"] = False
+
+    is_prod = os.getenv("ENV") == "production"
+
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = is_prod
+
+     # garde login Google après reload / fermeture
+    app.config["SESSION_REFRESH_EACH_REQUEST"] = False
 
     # ---------------------------
     # Global config (TOUJOURS ACTIF)

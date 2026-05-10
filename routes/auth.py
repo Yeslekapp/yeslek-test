@@ -160,9 +160,12 @@ def google_callback():
         # ---------------------------
         # SESSION LOGIN
         # ---------------------------
+        session.clear()
+
         session["user_id"] = user.id
         session["user_email"] = email
         session["user_name"] = name
+
         session.permanent = True
 
         # cleanup

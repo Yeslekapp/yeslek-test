@@ -2133,12 +2133,32 @@ Keyboard animation smooth
 --------------------------- */
 
 .tz-btn-dynamic{
-  transition: all .25s ease;
+
+  position:fixed;
+
+  bottom:20px;
+
+  left:16px;
+  right:16px;
+
+  width:auto;
+  max-width:520px;
+
+  margin-left:auto;
+  margin-right:auto;
+
+  box-sizing:border-box;
+
+  z-index:100;
+
+  transition:
+    bottom .25s ease,
+    opacity .25s ease;
 }
 
-/* optionnel (plus smooth) */
+/* keyboard */
 body.tz-keyboard-open .tz-btn-dynamic{
-  transform: translateY(-10px);
+  bottom:12px;
 }
 
 /* ---------------------------
@@ -2161,7 +2181,7 @@ LOGOUT FIX (isolé propre)
   font-weight:700;
   text-decoration:none;
 
-  position: static !important; /* 🔥 FIX CRITIQUE */
+  position:static !important;
 }
 
 .tz-logout-btn-primary{

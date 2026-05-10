@@ -6,6 +6,7 @@
 
   <!-- ================= HEADER ================= -->
   <div class="tz-auth__header">
+
     <h1 class="tz-auth__title">
       {{ t("auth.otp_title") }}
     </h1>
@@ -14,6 +15,7 @@
       {{ t("auth.otp_sent_to") }}
       <span class="tz-strong">{{ email }}</span>
     </p>
+
   </div>
 
   <!-- ================= CARD ================= -->
@@ -21,27 +23,60 @@
 
     <form method="post" id="otp-form" data-tz-form>
 
-      <!-- INPUT -->
+      <!-- ================= OTP ================= -->
       <div class="tz-field">
 
-        <label class="tz-label" for="code">
+        <label class="tz-label">
           {{ t("auth.otp_label") }}
         </label>
 
-        <input
-          id="code"
-          name="code"
-          class="tz-input tz-otp__input{% if error %} tz-input--error{% endif %}"
-          placeholder="{{ t('auth.otp_placeholder') }}"
-          inputmode="numeric"
-          autocomplete="one-time-code"
-          pattern="[0-9]*"
-          maxlength="6"
-          data-tz-otp
-          autofocus
-          required
-        />
+        <!-- OTP BOXES -->
+        <div class="tz-otp-group">
 
+          <input
+            type="text"
+            maxlength="1"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            class="tz-otp-box"
+            data-index="0"
+          >
+
+          <input
+            type="text"
+            maxlength="1"
+            inputmode="numeric"
+            class="tz-otp-box"
+            data-index="1"
+          >
+
+          <input
+            type="text"
+            maxlength="1"
+            inputmode="numeric"
+            class="tz-otp-box"
+            data-index="2"
+          >
+
+          <input
+            type="text"
+            maxlength="1"
+            inputmode="numeric"
+            class="tz-otp-box"
+            data-index="3"
+          >
+
+        </div>
+
+        <!-- REAL INPUT -->
+        <input
+          type="hidden"
+          name="code"
+          id="realOtpInput"
+          required
+        >
+
+        <!-- HELP -->
         {% if error %}
         <div class="tz-help tz-help--error">
           {{ t("auth.otp_invalid") }}
@@ -54,11 +89,16 @@
 
       </div>
 
-      <!-- CHANGE EMAIL -->
+      <!-- ================= CHANGE EMAIL ================= -->
       <div class="tz-resend" style="margin-top:15px;">
-        <a class="tz-link-btn" href="{{ url_for('auth.login') }}">
+
+        <a
+          class="tz-link-btn"
+          href="{{ url_for('auth.login') }}"
+        >
           {{ t("auth.change_email") }}
         </a>
+
       </div>
 
     </form>
@@ -67,56 +107,272 @@
 
   <!-- ================= FIXED BUTTON ================= -->
   <div class="tz-auth-submit-fixed">
-    <button type="submit" form="otp-form" class="tz-primary-btn">
+
+    <button
+      type="submit"
+      form="otp-form"
+      class="tz-primary-btn"
+      id="otpSubmitBtn"
+    >
       {{ t("common.continue") }}
     </button>
+
   </div>
 
 </div>
+
+<!-- ================= OTP STYLE ================= -->
+
+<style>
+
+/* ---------------------------
+# OTP PREMIUM UI
+--------------------------- */
+
+.tz-otp-group{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+
+  margin-top:8px;
+}
+
+.tz-otp-box{
+  width:64px;
+  height:74px;
+
+  border-radius:20px;
+  border:2px solid rgba(0,0,0,.08);
+
+  text-align:center;
+
+  font-size:30px;
+  font-weight:900;
+
+  background:#fff;
+
+  transition:
+    transform .15s ease,
+    border-color .15s ease,
+    box-shadow .15s ease,
+    background .15s ease;
+}
+
+/* colors */
+.tz-otp-box:nth-child(1){
+  background:#eef4ff;
+}
+
+.tz-otp-box:nth-child(2){
+  background:#f7f0ff;
+}
+
+.tz-otp-box:nth-child(3){
+  background:#fff5ed;
+}
+
+.tz-otp-box:nth-child(4){
+  background:#effff4;
+}
+
+/* focus */
+.tz-otp-box:focus{
+  outline:none;
+
+  border-color:#2196f3;
+
+  box-shadow:
+    0 0 0 5px rgba(33,150,243,.12);
+
+  transform:translateY(-2px);
+}
+
+/* filled animation */
+.tz-otp-box.is-filled{
+  transform:scale(1.04);
+}
+
+/* mobile */
+@media (max-width:480px){
+
+  .tz-otp-group{
+    gap:10px;
+  }
+
+  .tz-otp-box{
+    width:58px;
+    height:68px;
+    font-size:26px;
+  }
+
+}
+
+</style>
 
 <!-- ================= JS ================= -->
 
 <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 
 <script>
+
 /* ---------------------------
 OTP UX + Security
 --------------------------- */
 
 // 🔒 bloque retour arrière
 history.replaceState(null, "", location.href);
+
 window.addEventListener("popstate", () => {
   history.pushState(null, "", location.href);
 });
 
-// 🔄 reload si page restaurée (mobile cache)
+// 🔄 reload si page restaurée
 window.addEventListener("pageshow", (event) => {
+
   if (event.persisted) {
     window.location.reload();
   }
+
 });
 
-// ⚡ auto-submit si 6 chiffres
-document.addEventListener("input", function (e) {
-  if (e.target.matches("[data-tz-otp]")) {
-    if (e.target.value.length === 6) {
-      document.getElementById("otp-form").submit();
+/* ---------------------------
+# OTP 4 BOXES LOGIC
+--------------------------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const boxes = document.querySelectorAll(".tz-otp-box");
+
+  const hiddenInput =
+    document.getElementById("realOtpInput");
+
+  const form =
+    document.getElementById("otp-form");
+
+  const submitBtn =
+    document.getElementById("otpSubmitBtn");
+
+  if (!boxes.length) return;
+
+  // auto focus first
+  boxes[0].focus();
+
+  boxes.forEach((box, index) => {
+
+    // ---------------------------
+    // INPUT
+    // ---------------------------
+    box.addEventListener("input", (e) => {
+
+      let value = e.target.value
+        .replace(/\D/g, "")
+        .slice(0, 1);
+
+      e.target.value = value;
+
+      // animation
+      if (value) {
+        box.classList.add("is-filled");
+      } else {
+        box.classList.remove("is-filled");
+      }
+
+      // next focus
+      if (value && index < boxes.length - 1) {
+
+        setTimeout(() => {
+          boxes[index + 1].focus();
+        }, 80);
+
+      }
+
+      updateOtp();
+
+    });
+
+    // ---------------------------
+    // BACKSPACE
+    // ---------------------------
+    box.addEventListener("keydown", (e) => {
+
+      if (
+        e.key === "Backspace" &&
+        !box.value &&
+        index > 0
+      ) {
+
+        boxes[index - 1].focus();
+
+      }
+
+    });
+
+    // ---------------------------
+    // PASTE SUPPORT
+    // ---------------------------
+    box.addEventListener("paste", (e) => {
+
+      e.preventDefault();
+
+      const pasted = (
+        e.clipboardData.getData("text") || ""
+      )
+      .replace(/\D/g, "")
+      .slice(0, 4);
+
+      pasted.split("").forEach((char, i) => {
+
+        if (boxes[i]) {
+
+          boxes[i].value = char;
+          boxes[i].classList.add("is-filled");
+
+        }
+
+      });
+
+      updateOtp();
+
+    });
+
+  });
+
+  /* ---------------------------
+  # UPDATE OTP
+  --------------------------- */
+
+  function updateOtp(){
+
+    const code = Array.from(boxes)
+      .map(box => box.value)
+      .join("");
+
+    hiddenInput.value = code;
+
+    // auto submit
+    if (code.length === 4) {
+
+      if (submitBtn) {
+
+        submitBtn.disabled = true;
+
+        submitBtn.style.opacity = ".7";
+
+        submitBtn.innerHTML = "Chargement...";
+
+      }
+
+      setTimeout(() => {
+        form.submit();
+      }, 180);
+
     }
+
   }
+
 });
 
-// 🎯 micro animation focus
-const input = document.querySelector("[data-tz-otp]");
-if (input) {
-  input.addEventListener("focus", () => {
-    input.style.transition = "0.2s";
-    input.style.transform = "scale(1.02)";
-  });
-
-  input.addEventListener("blur", () => {
-    input.style.transform = "scale(1)";
-  });
-}
 </script>
 
 {% endblock %}
