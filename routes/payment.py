@@ -768,7 +768,7 @@ def card_get():
         forfait_display=_get_forfait_display(),
         final_amount=ctx["final_amount"],
         save_card=session.get("payment_save_card", True),
-        cards=OrderService.get_saved_cards(session.get("user_id")),
+        cards=CardService.get_user_cards(session.get("user_id")),
         received_display=received_display
     )
 
@@ -1225,20 +1225,19 @@ def stripe_webhook_post():
         # ---------------------------
         try:
             save_card = metadata.get("save_card") == "true"
-
+            print("SAVE CARD USER:", user_id)
+            print("SAVE CARD FLAG:", save_card)
             if save_card and user_id:
                 payment_method = event_data.get("payment_method")
-
+                print("PAYMENT METHOD:", payment_method)
                 if payment_method:
                     pm = StripeService.retrieve_payment_method(payment_method)
                     card_data = getattr(pm, "card", None)
 
                     if card_data:
-                        OrderService.maybe_store_card_tokenized(
-                            user_id=user_id,
-                            save_card=True,
-                            number=str(card_data.last4),
-                            expiry=f"{card_data.exp_month}/{card_data.exp_year}",
+                        CardService.save_card(
+                        user_id=str(user_id),
+                        payment_method=pm,
                         )
 
         except Exception as e:

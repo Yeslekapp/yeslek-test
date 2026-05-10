@@ -145,6 +145,65 @@ cardExpiry.on("change", (event) => {
     }
   }
 // ---------------------------
+// Saved cards selection
+// ---------------------------
+
+const savedCards =
+  document.querySelectorAll(".tz-saved-card");
+
+const selectedCardBox =
+  document.getElementById("selectedCardBox");
+
+const selectedCardText =
+  document.getElementById("selectedCardText");
+
+const selectedSavedCard =
+  document.getElementById("selectedSavedCard");
+
+const changeCardBtn =
+  document.getElementById("changeCardBtn");
+
+savedCards.forEach((card) => {
+
+  card.addEventListener("click", () => {
+
+    const last4 = card.dataset.last4;
+    const expiry = card.dataset.expiry;
+    const brand = card.dataset.brand;
+    const cardId = card.dataset.id;
+
+    selectedSavedCard.value = cardId;
+
+    selectedCardText.innerHTML =
+      `💳 ${brand} •••• ${last4} (${expiry})`;
+
+    selectedCardBox.style.display = "block";
+
+    // cache formulaire Stripe
+    document
+      .querySelector("#card-number")
+      ?.closest(".tz-card")
+      ?.classList.add("tz-hidden");
+
+  });
+
+});
+
+// changer carte
+changeCardBtn?.addEventListener("click", () => {
+
+  selectedSavedCard.value = "";
+
+  selectedCardBox.style.display = "none";
+
+  document
+    .querySelector("#card-number")
+    ?.closest(".tz-card")
+    ?.classList.remove("tz-hidden");
+
+});
+
+// ---------------------------
 // Submit (FINAL SAFE)
 // ---------------------------
 let lock = false;
@@ -328,6 +387,7 @@ if (result.paymentIntent?.status === "succeeded") {
 
     {% for card in cards %}
     <div class="tz-saved-card"
+         data-id="{{ card.id }}"
          data-last4="{{ card.last4 }}"
          data-expiry="{{ card.expiry }}"
          data-brand="{{ card.brand }}"
@@ -349,6 +409,11 @@ if (result.paymentIntent?.status === "succeeded") {
 <div id="selectedCardBox" class="tz-card tz-card--soft" style="display:none;">
   <div class="tz-row">
     <div id="selectedCardText"></div>
+    <input
+     type="hidden"
+     id="selectedSavedCard"
+     name="saved_card_id"
+    >
     <button type="button" id="changeCardBtn">Changer</button>
   </div>
 </div>

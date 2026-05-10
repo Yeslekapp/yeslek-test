@@ -44,7 +44,10 @@
   <div class="tz-list">
 
     {% for card in cards %}
-    <div class="tz-card-item pro {% if card.is_default %}is-default{% endif %}">
+    <div
+    class="tz-card-item pro {% if card.is_default %}is-default{% endif %}"
+    data-card-id="{{ card.id }}"
+    >
 
       <!-- LEFT -->
       <div class="tz-card-item-left">
@@ -69,6 +72,18 @@
         {% endif %}
 
       </div>
+
+       <!-- SELECT -->
+        <button
+          type="button"
+          class="tz-card-select-btn"
+          data-select-card="{{ card.id }}"
+          data-last4="{{ card.last4 }}"
+          data-brand="{{ card.brand }}"
+          data-expiry="{{ card.expiry }}"
+        >
+         {{ t("payment.useThisCard") }}
+       </button>
 
       <!-- RIGHT ACTIONS -->
       <div class="tz-card-item-right">
