@@ -2,15 +2,40 @@
 {# SEO META GLOBAL (PRODUCTION) #}
 {# --------------------------- #}
 
-{% set default_title = "Yeslek® | Recharge mobile internationale instantanée | Envoyer du crédit" %}
-{% set default_description = "Envoyez du crédit mobile instantanément dans plus de 150 pays avec Yeslek. Recharge rapide, paiement sécurisé, livraison immédiate." %}
+{% set default_title = t("seo.defaultTitle") %}
+{% set default_description = t("seo.defaultDescription") %}
 
 {% set seo_title = seo_title if seo_title else default_title %}
 {% set seo_description = seo_description if seo_description else default_description %}
 
 <title>{{ seo_title }}</title>
 
-<meta name="description" content="{{ seo_description }}">
+<meta charset="utf-8">
+
+<meta
+  name="description"
+  content="{{ seo_description }}"
+>
+
+<meta
+  name="keywords"
+  content="{{ t('seo.keywords') }}"
+>
+
+<meta
+  name="author"
+  content="Yeslek"
+>
+
+<meta
+  name="theme-color"
+  content="#2f7de1"
+>
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1"
+>
 
 {# --------------------------- #}
 {# ROBOTS #}
@@ -29,50 +54,183 @@
 {% if canonical_url %}
 <link rel="canonical" href="{{ canonical_url }}">
 {% else %}
-<link rel="canonical" href="{{ request.url }}">
+<link rel="canonical" href="{{ request.base_url }}">
 {% endif %}
 
 {# --------------------------- #}
-{# OPEN GRAPH (Facebook / WhatsApp) #}
+{# HREFLANG #}
 {# --------------------------- #}
 
-<meta property="og:title" content="{{ seo_title }}">
-<meta property="og:description" content="{{ seo_description }}">
-<meta property="og:type" content="website">
-<meta property="og:url" content="{{ canonical_url if canonical_url else request.url }}">
-<meta property="og:site_name" content="Yeslek">
+<link
+  rel="alternate"
+  hreflang="fr"
+  href="https://yeslek.com/?lang=fr"
+>
 
-{# IMAGE (IMPORTANT pour partage) #}
-<meta property="og:image" content="https://yeslek.com/static/images/logo.png">
+<link
+  rel="alternate"
+  hreflang="en"
+  href="https://yeslek.com/?lang=en"
+>
+
+<link
+  rel="alternate"
+  hreflang="tr"
+  href="https://yeslek.com/?lang=tr"
+>
+
+<link
+  rel="alternate"
+  hreflang="x-default"
+  href="https://yeslek.com/"
+>
+
+{# --------------------------- #}
+{# OPEN GRAPH #}
+{# --------------------------- #}
+
+<meta property="og:type" content="website">
+
+<meta
+  property="og:site_name"
+  content="Yeslek"
+>
+
+<meta
+  property="og:title"
+  content="{{ seo_title }}"
+>
+
+<meta
+  property="og:description"
+  content="{{ seo_description }}"
+>
+
+<meta
+  property="og:url"
+  content="{{ canonical_url if canonical_url else request.base_url }}"
+>
+
+<meta
+  property="og:image"
+  content="https://yeslek.com/static/images/logo.png"
+>
+
+<meta
+  property="og:image:width"
+  content="1200"
+>
+
+<meta
+  property="og:image:height"
+  content="630"
+>
+
+<meta
+  property="og:locale"
+  content="{{ session.get('lang', 'fr') }}"
+>
 
 {# --------------------------- #}
 {# TWITTER #}
 {# --------------------------- #}
 
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{ seo_title }}">
-<meta name="twitter:description" content="{{ seo_description }}">
-<meta name="twitter:image" content="https://yeslek.com/static/images/logo.png">
+<meta
+  name="twitter:card"
+  content="summary_large_image"
+>
+
+<meta
+  name="twitter:title"
+  content="{{ seo_title }}"
+>
+
+<meta
+  name="twitter:description"
+  content="{{ seo_description }}"
+>
+
+<meta
+  name="twitter:image"
+  content="https://yeslek.com/static/images/logo.png"
+>
 
 {# --------------------------- #}
-{# STRUCTURED DATA (SEO BOOST) #}
+{# MOBILE / PWA #}
+{# --------------------------- #}
+
+<meta
+  name="apple-mobile-web-app-capable"
+  content="yes"
+>
+
+<meta
+  name="mobile-web-app-capable"
+  content="yes"
+>
+
+<meta
+  name="apple-mobile-web-app-status-bar-style"
+  content="black-translucent"
+>
+
+{# --------------------------- #}
+{# FAVICON #}
+{# --------------------------- #}
+
+<link
+  rel="icon"
+  type="image/png"
+  sizes="32x32"
+  href="{{ url_for('static', filename='images/logo.png') }}"
+>
+
+<link
+  rel="icon"
+  type="image/png"
+  sizes="192x192"
+  href="{{ url_for('static', filename='images/logo.png') }}"
+>
+
+<link
+  rel="apple-touch-icon"
+  href="{{ url_for('static', filename='images/logo.png') }}"
+>
+
+{# --------------------------- #}
+{# STRUCTURED DATA - ORGANIZATION #}
+{# --------------------------- #}
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Yeslek",
+  "url": "https://yeslek.com",
+  "logo": "https://yeslek.com/static/images/logo.png",
+  "description": "{{ t('seo.organizationDescription') }}",
+  "sameAs": []
+}
+</script>
+
+{# --------------------------- #}
+{# STRUCTURED DATA - SERVICE #}
 {# --------------------------- #}
 
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Service",
-  "name": "Recharge mobile internationale",
+  "serviceType": "{{ t('seo.serviceType') }}",
   "provider": {
     "@type": "Organization",
     "name": "Yeslek"
   },
-  "areaServed": "Worldwide",
-  "description": "Envoyer du crédit mobile instantanément dans plus de 150 pays.",
+  "areaServed": {
+    "@type": "Place",
+    "name": "Worldwide"
+  },
+  "description": "{{ t('seo.serviceDescription') }}",
   "url": "https://yeslek.com"
 }
 </script>
-<link rel="alternate" hreflang="fr" href="https://yeslek.com/?lang=fr">
-<link rel="alternate" hreflang="en" href="https://yeslek.com/?lang=en">
-<link rel="alternate" hreflang="tr" href="https://yeslek.com/?lang=tr">
-<link rel="alternate" hreflang="x-default" href="https://yeslek.com/">

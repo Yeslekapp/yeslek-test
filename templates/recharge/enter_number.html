@@ -1,3 +1,6 @@
+{% set canonical_url = "https://yeslek.com/" %}
+{% set meta_robots = "noindex, follow" %}
+
 {% extends "base.html" %}
 {% block title %}{{ t("recharge.enterNumber.title") }}{% endblock %}
 
@@ -19,22 +22,19 @@
 <div class="tz-seo-block">
 
   <h1>
-    Recharge mobile internationale instantanée avec Yeslek
+    {{ t("seo.heroTitle") }}
   </h1>
 
   <p>
-    Envoyez du crédit mobile à l’étranger en quelques secondes avec Yeslek.
-    Recharge rapide, sécurisée et disponible dans plus de 150 pays.
+    {{ t("seo.heroDescription1") }}
   </p>
 
   <p>
-    Service de mobile top-up fiable pour Orange, MTN, Vodafone, Airtel et plus.
-    Paiement sécurisé et livraison immédiate.
+    {{ t("seo.heroDescription2") }}
   </p>
 
   <p>
-    Plateforme simple pour recharger un téléphone à l’international
-    sans compte local ni carte SIM.
+    {{ t("seo.heroDescription3") }}
   </p>
 
 </div>

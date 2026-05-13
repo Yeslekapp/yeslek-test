@@ -284,6 +284,18 @@
     "month": "Monat",
     "months": "Monate"
   },
+  "seo": {
+  "defaultTitle": "Yeslek | Sofortige internationale Handyaufladung | Mobilguthaben senden",
+  "defaultDescription": "Senden Sie mit Yeslek sofort Mobilguthaben in mehr als 150 Länder. Schnelle Aufladung, sichere Zahlung und sofortige Lieferung.",
+  "keywords": "Handyaufladung, internationales Guthaben, Mobilguthaben senden, Airtime, Internetpaket, Yeslek",
+  "organizationDescription": "Sofortige internationale Handyaufladung.",
+  "serviceDescription": "Senden Sie sofort Mobilguthaben in mehr als 150 Länder.",
+  "serviceType": "Internationale Handyaufladung",
+  "heroTitle": "Sofortige internationale Handyaufladung mit Yeslek",
+  "heroDescription1": "Senden Sie mit Yeslek in Sekunden Mobilguthaben ins Ausland. Schnell, sicher und in über 150 Ländern verfügbar.",
+  "heroDescription2": "Zuverlässiger Mobile-Top-up-Service für Orange, MTN, Vodafone, Airtel und mehr. Sichere Zahlung und sofortige Lieferung.",
+  "heroDescription3": "Einfache Plattform zum internationalen Aufladen von Telefonen ohne lokales Konto oder SIM-Karte."
+},
 
   "profile": {
     "name": "Name",

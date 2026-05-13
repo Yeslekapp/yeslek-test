@@ -284,6 +284,18 @@
     "month": "شهر",
     "months": "أشهر"
   },
+  "seo": {
+  "defaultTitle": "Yeslek | شحن رصيد دولي فوري | إرسال رصيد الهاتف",
+  "defaultDescription": "أرسل رصيد الهاتف فورًا إلى أكثر من 150 دولة مع Yeslek. شحن سريع، دفع آمن وتسليم فوري.",
+  "keywords": "شحن رصيد, شحن دولي, تحويل رصيد, شحن هاتف, تعبئة رصيد, Yeslek",
+  "organizationDescription": "شحن رصيد دولي فوري.",
+  "serviceDescription": "أرسل رصيد الهاتف فورًا إلى أكثر من 150 دولة.",
+  "serviceType": "شحن رصيد دولي",
+  "heroTitle": "شحن رصيد دولي فوري مع Yeslek",
+  "heroDescription1": "أرسل رصيد الهاتف إلى الخارج خلال ثوانٍ مع Yeslek. شحن سريع وآمن متوفر في أكثر من 150 دولة.",
+  "heroDescription2": "خدمة موثوقة لشحن الرصيد لـ Orange وMTN وVodafone وAirtel وغيرهم. دفع آمن وتسليم فوري.",
+  "heroDescription3": "منصة بسيطة لشحن الهواتف دوليًا بدون حساب محلي أو شريحة SIM."
+},
 
   "profile": {
     "name": "الاسم",

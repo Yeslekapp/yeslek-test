@@ -285,6 +285,19 @@
     "months": "months"
   },
 
+  "seo": {
+  "defaultTitle": "Yeslek | Instant international mobile top-up | Send mobile credit",
+  "defaultDescription": "Send mobile top-up instantly to more than 150 countries with Yeslek. Fast recharge, secure payment and instant delivery.",
+  "keywords": "mobile recharge, mobile top up, international recharge, send credit, airtime top up, internet recharge, Yeslek",
+  "organizationDescription": "Instant international mobile top-up.",
+  "serviceDescription": "Send mobile top-up instantly to more than 150 countries.",
+  "serviceType": "International mobile top-up",
+  "heroTitle": "Instant international mobile top-up with Yeslek",
+  "heroDescription1": "Send mobile credit abroad in seconds with Yeslek. Fast, secure recharge available in more than 150 countries.",
+  "heroDescription2": "Reliable mobile top-up service for Orange, MTN, Vodafone, Airtel and more. Secure payment and instant delivery.",
+  "heroDescription3": "Simple platform to recharge phones internationally without a local account or SIM card."
+},
+
   "profile": {
     "name": "Name",
     "email": "Email",

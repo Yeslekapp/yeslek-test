@@ -164,11 +164,6 @@
     }
   },
 
-  "points": {
-    "title": "Points",
-    "available": "Points disponibles : {points}"
-  },
-
   "methods": {
     "card": {
       "title": "Carte bancaire",
@@ -287,6 +282,20 @@
     "months": "mois"
   },
 
+
+
+"seo": {
+  "defaultTitle": "Yeslek | Recharge mobile internationale instantanée | Envoyer du crédit",
+  "defaultDescription": "Envoyez du crédit mobile instantanément dans plus de 150 pays avec Yeslek. Recharge rapide, paiement sécurisé et livraison immédiate.",
+  "keywords": "recharge mobile, mobile top up, recharge internationale, envoyer du crédit, recharge airtime, recharge internet, Yeslek",
+  "organizationDescription": "Recharge mobile internationale instantanée.",
+  "serviceDescription": "Envoyez du crédit mobile instantanément dans plus de 150 pays.",
+  "serviceType": "Recharge mobile internationale",
+  "heroTitle": "Recharge mobile internationale instantanée avec Yeslek",
+  "heroDescription1": "Envoyez du crédit mobile à l’étranger en quelques secondes avec Yeslek. Recharge rapide, sécurisée et disponible dans plus de 150 pays.",
+  "heroDescription2": "Service de mobile top-up fiable pour Orange, MTN, Vodafone, Airtel et plus. Paiement sécurisé et livraison immédiate.",
+  "heroDescription3": "Plateforme simple pour recharger un téléphone à l’international sans compte local ni carte SIM."
+},
 
   "profile": {
     "name": "Nom",
