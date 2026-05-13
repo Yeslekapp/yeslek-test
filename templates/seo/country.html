@@ -2,15 +2,15 @@
 
 {% block content %}
 
-<div class="tz-page">
+<div class="tz-page tz-page--seo">
 
-  <div class="tz-card">
+  <section class="tz-card tz-card--soft">
 
-    <h1>
+    <h1 class="tz-seo-title">
       {{ seo_title }}
     </h1>
 
-    <p>
+    <p class="tz-seo-description">
       {{ seo_description }}
     </p>
 
@@ -22,7 +22,42 @@
       {{ t("seo.heroDescription2") }}
     </p>
 
-  </div>
+    <p>
+      {{ t("seo.heroDescription3") }}
+    </p>
+
+    <div class="tz-seo-actions">
+
+      <a
+        href="{{ url_for('recharge.enter_number_get') }}"
+        class="tz-primary-btn"
+      >
+        {{ t("common.continue") }}
+      </a>
+
+    </div>
+
+  </section>
+
+  <section class="tz-card tz-card--soft">
+
+    <h2>
+      {{ seo_title }}
+    </h2>
+
+    <p>
+      {{ seo_description }}
+    </p>
+
+    <p>
+      {{ t("seo.countryContent1") }}
+    </p>
+
+    <p>
+      {{ t("seo.countryContent2") }}
+    </p>
+
+  </section>
 
 </div>
 
