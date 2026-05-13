@@ -296,6 +296,43 @@
   "heroDescription2": "خدمة موثوقة لشحن الرصيد لـ Orange وMTN وVodafone وAirtel وغيرهم. دفع آمن وتسليم فوري.",
   "heroDescription3": "منصة بسيطة لشحن الهواتف دوليًا بدون حساب محلي أو شريحة SIM."
 },
+"seoCountries": {
+  "afghanistanTitle": "شحن رصيد أفغانستان مع Yeslek",
+  "afghanistanDescription": "أرسل رصيد الهاتف إلى أفغانستان فوراً مع Yeslek.",
+
+  "pakistanTitle": "شحن رصيد باكستان مع Yeslek",
+  "pakistanDescription": "أرسل رصيد الهاتف إلى باكستان فوراً مع Yeslek.",
+
+  "indeTitle": "شحن رصيد الهند مع Yeslek",
+  "indeDescription": "أرسل رصيد الهاتف إلى الهند فوراً مع Yeslek.",
+
+  "cubaTitle": "شحن رصيد كوبا مع Yeslek",
+  "cubaDescription": "أرسل رصيد الهاتف إلى كوبا فوراً مع Yeslek.",
+
+  "turquieTitle": "شحن رصيد تركيا مع Yeslek",
+  "turquieDescription": "أرسل رصيد الهاتف إلى تركيا فوراً مع Yeslek.",
+
+  "marocTitle": "شحن رصيد المغرب مع Yeslek",
+  "marocDescription": "أرسل رصيد الهاتف إلى المغرب فوراً مع Yeslek.",
+
+  "algerieTitle": "شحن رصيد الجزائر مع Yeslek",
+  "algerieDescription": "أرسل رصيد الهاتف إلى الجزائر فوراً مع Yeslek.",
+
+  "tunisieTitle": "شحن رصيد تونس مع Yeslek",
+  "tunisieDescription": "أرسل رصيد الهاتف إلى تونس فوراً مع Yeslek.",
+
+  "bangladeshTitle": "شحن رصيد بنغلاديش مع Yeslek",
+  "bangladeshDescription": "أرسل رصيد الهاتف إلى بنغلاديش فوراً مع Yeslek.",
+
+  "senegalTitle": "شحن رصيد السنغال مع Yeslek",
+  "senegalDescription": "أرسل رصيد الهاتف إلى السنغال فوراً مع Yeslek.",
+
+  "camerounTitle": "شحن رصيد الكاميرون مع Yeslek",
+  "camerounDescription": "أرسل رصيد الهاتف إلى الكاميرون فوراً مع Yeslek.",
+
+  "nigeriaTitle": "شحن رصيد نيجيريا مع Yeslek",
+  "nigeriaDescription": "أرسل رصيد الهاتف إلى نيجيريا فوراً مع Yeslek."
+},
 
   "profile": {
     "name": "الاسم",

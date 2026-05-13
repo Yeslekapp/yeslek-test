@@ -296,7 +296,43 @@
   "heroDescription2": "Zuverlässiger Mobile-Top-up-Service für Orange, MTN, Vodafone, Airtel und mehr. Sichere Zahlung und sofortige Lieferung.",
   "heroDescription3": "Einfache Plattform zum internationalen Aufladen von Telefonen ohne lokales Konto oder SIM-Karte."
 },
+"seoCountries": {
+  "afghanistanTitle": "افغانستان Mobile-Aufladung mit Yeslek",
+  "afghanistanDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben nach Afghanistan.",
 
+  "pakistanTitle": "Pakistan Mobile-Aufladung mit Yeslek",
+  "pakistanDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben nach Pakistan.",
+
+  "indeTitle": "Indien Mobile-Aufladung mit Yeslek",
+  "indeDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben nach Indien.",
+
+  "cubaTitle": "Kuba Mobile-Aufladung mit Yeslek",
+  "cubaDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben nach Kuba.",
+
+  "turquieTitle": "Türkei Mobile-Aufladung mit Yeslek",
+  "turquieDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben in die Türkei.",
+
+  "marocTitle": "Marokko Mobile-Aufladung mit Yeslek",
+  "marocDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben nach Marokko.",
+
+  "algerieTitle": "Algerien Mobile-Aufladung mit Yeslek",
+  "algerieDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben nach Algerien.",
+
+  "tunisieTitle": "Tunesien Mobile-Aufladung mit Yeslek",
+  "tunisieDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben nach Tunesien.",
+
+  "bangladeshTitle": "Bangladesch Mobile-Aufladung mit Yeslek",
+  "bangladeshDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben nach Bangladesch.",
+
+  "senegalTitle": "Senegal Mobile-Aufladung mit Yeslek",
+  "senegalDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben nach Senegal.",
+
+  "camerounTitle": "Kamerun Mobile-Aufladung mit Yeslek",
+  "camerounDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben nach Kamerun.",
+
+  "nigeriaTitle": "Nigeria Mobile-Aufladung mit Yeslek",
+  "nigeriaDescription": "Senden Sie mit Yeslek sofort mobiles Guthaben nach Nigeria."
+},
   "profile": {
     "name": "Name",
     "email": "E-Mail",

@@ -296,6 +296,43 @@
   "heroDescription2": "Orange, MTN, Vodafone, Airtel ve daha fazlası için güvenilir mobil yükleme hizmeti. Güvenli ödeme ve anında teslimat.",
   "heroDescription3": "Yerel hesap veya SIM karta ihtiyaç duymadan uluslararası telefon yükleme platformu."
 },
+"seoCountries": {
+  "afghanistanTitle": "Yeslek ile Afganistan mobil yükleme",
+  "afghanistanDescription": "Yeslek ile Afganistan’a anında mobil kredi gönderin.",
+
+  "pakistanTitle": "Yeslek ile Pakistan mobil yükleme",
+  "pakistanDescription": "Yeslek ile Pakistan’a anında mobil kredi gönderin.",
+
+  "indeTitle": "Yeslek ile Hindistan mobil yükleme",
+  "indeDescription": "Yeslek ile Hindistan’a anında mobil kredi gönderin.",
+
+  "cubaTitle": "Yeslek ile Küba mobil yükleme",
+  "cubaDescription": "Yeslek ile Küba’ya anında mobil kredi gönderin.",
+
+  "turquieTitle": "Yeslek ile Türkiye mobil yükleme",
+  "turquieDescription": "Yeslek ile Türkiye’ye anında mobil kredi gönderin.",
+
+  "marocTitle": "Yeslek ile Fas mobil yükleme",
+  "marocDescription": "Yeslek ile Fas’a anında mobil kredi gönderin.",
+
+  "algerieTitle": "Yeslek ile Cezayir mobil yükleme",
+  "algerieDescription": "Yeslek ile Cezayir’e anında mobil kredi gönderin.",
+
+  "tunisieTitle": "Yeslek ile Tunus mobil yükleme",
+  "tunisieDescription": "Yeslek ile Tunus’a anında mobil kredi gönderin.",
+
+  "bangladeshTitle": "Yeslek ile Bangladeş mobil yükleme",
+  "bangladeshDescription": "Yeslek ile Bangladeş’e anında mobil kredi gönderin.",
+
+  "senegalTitle": "Yeslek ile Senegal mobil yükleme",
+  "senegalDescription": "Yeslek ile Senegal’e anında mobil kredi gönderin.",
+
+  "camerounTitle": "Yeslek ile Kamerun mobil yükleme",
+  "camerounDescription": "Yeslek ile Kamerun’a anında mobil kredi gönderin.",
+
+  "nigeriaTitle": "Yeslek ile Nijerya mobil yükleme",
+  "nigeriaDescription": "Yeslek ile Nijerya’ya anında mobil kredi gönderin."
+},
   "profile": {
     "name": "Ad",
     "email": "E-posta",

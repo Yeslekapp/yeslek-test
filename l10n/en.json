@@ -297,7 +297,43 @@
   "heroDescription2": "Reliable mobile top-up service for Orange, MTN, Vodafone, Airtel and more. Secure payment and instant delivery.",
   "heroDescription3": "Simple platform to recharge phones internationally without a local account or SIM card."
 },
+"seoCountries": {
+  "afghanistanTitle": "Afghanistan mobile recharge with Yeslek",
+  "afghanistanDescription": "Send mobile top-up to Afghanistan instantly with Yeslek.",
 
+  "pakistanTitle": "Pakistan mobile recharge with Yeslek",
+  "pakistanDescription": "Send mobile top-up to Pakistan instantly with Yeslek.",
+
+  "indeTitle": "India mobile recharge with Yeslek",
+  "indeDescription": "Send mobile top-up to India instantly with Yeslek.",
+
+  "cubaTitle": "Cuba mobile recharge with Yeslek",
+  "cubaDescription": "Send mobile top-up to Cuba instantly with Yeslek.",
+
+  "turquieTitle": "Turkey mobile recharge with Yeslek",
+  "turquieDescription": "Send mobile top-up to Turkey instantly with Yeslek.",
+
+  "marocTitle": "Morocco mobile recharge with Yeslek",
+  "marocDescription": "Send mobile top-up to Morocco instantly with Yeslek.",
+
+  "algerieTitle": "Algeria mobile recharge with Yeslek",
+  "algerieDescription": "Send mobile top-up to Algeria instantly with Yeslek.",
+
+  "tunisieTitle": "Tunisia mobile recharge with Yeslek",
+  "tunisieDescription": "Send mobile top-up to Tunisia instantly with Yeslek.",
+
+  "bangladeshTitle": "Bangladesh mobile recharge with Yeslek",
+  "bangladeshDescription": "Send mobile top-up to Bangladesh instantly with Yeslek.",
+
+  "senegalTitle": "Senegal mobile recharge with Yeslek",
+  "senegalDescription": "Send mobile top-up to Senegal instantly with Yeslek.",
+
+  "camerounTitle": "Cameroon mobile recharge with Yeslek",
+  "camerounDescription": "Send mobile top-up to Cameroon instantly with Yeslek.",
+
+  "nigeriaTitle": "Nigeria mobile recharge with Yeslek",
+  "nigeriaDescription": "Send mobile top-up to Nigeria instantly with Yeslek."
+},
   "profile": {
     "name": "Name",
     "email": "Email",

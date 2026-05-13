@@ -296,6 +296,43 @@
   "heroDescription2": "د Orange، MTN، Vodafone، Airtel او نورو لپاره د باور وړ موبايل ريچارج خدمت. خوندي تاديه او فوري سپارل.",
   "heroDescription3": "يوه ساده پلېټفارم د نړيوال موبايل ريچارج لپاره پرته له محلي حساب يا سيم کارت."
 },
+"seoCountries": {
+  "afghanistanTitle": "د Yeslek له لارې افغانستان موبایل ریچارج",
+  "afghanistanDescription": "د Yeslek له لارې افغانستان ته سمدستي موبایل کریډیټ واستوئ.",
+
+  "pakistanTitle": "د Yeslek له لارې پاکستان موبایل ریچارج",
+  "pakistanDescription": "د Yeslek له لارې پاکستان ته سمدستي موبایل کریډیټ واستوئ.",
+
+  "indeTitle": "د Yeslek له لارې هند موبایل ریچارج",
+  "indeDescription": "د Yeslek له لارې هند ته سمدستي موبایل کریډیټ واستوئ.",
+
+  "cubaTitle": "د Yeslek له لارې کیوبا موبایل ریچارج",
+  "cubaDescription": "د Yeslek له لارې کیوبا ته سمدستي موبایل کریډیټ واستوئ.",
+
+  "turquieTitle": "د Yeslek له لارې ترکیه موبایل ریچارج",
+  "turquieDescription": "د Yeslek له لارې ترکیې ته سمدستي موبایل کریډیټ واستوئ.",
+
+  "marocTitle": "د Yeslek له لارې مراکش موبایل ریچارج",
+  "marocDescription": "د Yeslek له لارې مراکش ته سمدستي موبایل کریډیټ واستوئ.",
+
+  "algerieTitle": "د Yeslek له لارې الجزایر موبایل ریچارج",
+  "algerieDescription": "د Yeslek له لارې الجزایر ته سمدستي موبایل کریډیټ واستوئ.",
+
+  "tunisieTitle": "د Yeslek له لارې تونس موبایل ریچارج",
+  "tunisieDescription": "د Yeslek له لارې تونس ته سمدستي موبایل کریډیټ واستوئ.",
+
+  "bangladeshTitle": "د Yeslek له لارې بنګله‌دېش موبایل ریچارج",
+  "bangladeshDescription": "د Yeslek له لارې بنګله‌دېش ته سمدستي موبایل کریډیټ واستوئ.",
+
+  "senegalTitle": "د Yeslek له لارې سینیګال موبایل ریچارج",
+  "senegalDescription": "د Yeslek له لارې سینیګال ته سمدستي موبایل کریډیټ واستوئ.",
+
+  "camerounTitle": "د Yeslek له لارې کامرون موبایل ریچارج",
+  "camerounDescription": "د Yeslek له لارې کامرون ته سمدستي موبایل کریډیټ واستوئ.",
+
+  "nigeriaTitle": "د Yeslek له لارې نایجیریا موبایل ریچارج",
+  "nigeriaDescription": "د Yeslek له لارې نایجیریا ته سمدستي موبایل کریډیټ واستوئ."
+},
   "profile": {
     "name": "نوم",
     "email": "برېښنالیک",

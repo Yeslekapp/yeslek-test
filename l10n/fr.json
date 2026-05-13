@@ -297,6 +297,32 @@
   "heroDescription3": "Plateforme simple pour recharger un téléphone à l’international sans compte local ni carte SIM."
 },
 
+"seoCountries": {
+  "afghanistanTitle": "Recharge Afghanistan avec Yeslek",
+  "afghanistanDescription": "Envoyez du crédit mobile en Afghanistan instantanément avec Yeslek.",
+  "pakistanTitle": "Recharge Pakistan avec Yeslek",
+  "pakistanDescription": "Envoyez du crédit mobile au Pakistan instantanément avec Yeslek.",
+  "indeTitle": "Recharge Inde avec Yeslek",
+  "indeDescription": "Envoyez du crédit mobile en Inde instantanément avec Yeslek.",
+  "cubaTitle": "Recharge Cuba avec Yeslek",
+  "cubaDescription": "Envoyez du crédit mobile à Cuba instantanément avec Yeslek.",
+  "turquieTitle": "Recharge Turquie avec Yeslek",
+  "turquieDescription": "Envoyez du crédit mobile en Turquie instantanément avec Yeslek.",
+  "marocTitle": "Recharge Maroc avec Yeslek",
+  "marocDescription": "Envoyez du crédit mobile au Maroc instantanément avec Yeslek.",
+  "algerieTitle": "Recharge Algérie avec Yeslek",
+  "algerieDescription": "Envoyez du crédit mobile en Algérie instantanément avec Yeslek.",
+  "tunisieTitle": "Recharge Tunisie avec Yeslek",
+  "tunisieDescription": "Envoyez du crédit mobile en Tunisie instantanément avec Yeslek.",
+  "bangladeshTitle": "Recharge Bangladesh avec Yeslek",
+  "bangladeshDescription": "Envoyez du crédit mobile au Bangladesh instantanément avec Yeslek.",
+  "senegalTitle": "Recharge Sénégal avec Yeslek",
+  "senegalDescription": "Envoyez du crédit mobile au Sénégal instantanément avec Yeslek.",
+  "camerounTitle": "Recharge Cameroun avec Yeslek",
+  "camerounDescription": "Envoyez du crédit mobile au Cameroun instantanément avec Yeslek.",
+  "nigeriaTitle": "Recharge Nigeria avec Yeslek",
+  "nigeriaDescription": "Envoyez du crédit mobile au Nigeria instantanément avec Yeslek."
+},
   "profile": {
     "name": "Nom",
     "email": "Email",

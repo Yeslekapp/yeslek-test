@@ -296,6 +296,43 @@
   "heroDescription2": "سرویس مطمئن شارژ موبایل برای Orange، MTN، Vodafone، Airtel و بیشتر. پرداخت امن و تحویل فوری.",
   "heroDescription3": "پلتفرم ساده برای شارژ بین‌المللی تلفن بدون نیاز به حساب محلی یا سیم‌کارت."
 },
+"seoCountries": {
+  "afghanistanTitle": "شارژ موبایل افغانستان با Yeslek",
+  "afghanistanDescription": "با Yeslek فوراً به افغانستان شارژ موبایل ارسال کنید.",
+
+  "pakistanTitle": "شارژ موبایل پاکستان با Yeslek",
+  "pakistanDescription": "با Yeslek فوراً به پاکستان شارژ موبایل ارسال کنید.",
+
+  "indeTitle": "شارژ موبایل هند با Yeslek",
+  "indeDescription": "با Yeslek فوراً به هند شارژ موبایل ارسال کنید.",
+
+  "cubaTitle": "شارژ موبایل کوبا با Yeslek",
+  "cubaDescription": "با Yeslek فوراً به کوبا شارژ موبایل ارسال کنید.",
+
+  "turquieTitle": "شارژ موبایل ترکیه با Yeslek",
+  "turquieDescription": "با Yeslek فوراً به ترکیه شارژ موبایل ارسال کنید.",
+
+  "marocTitle": "شارژ موبایل مراکش با Yeslek",
+  "marocDescription": "با Yeslek فوراً به مراکش شارژ موبایل ارسال کنید.",
+
+  "algerieTitle": "شارژ موبایل الجزایر با Yeslek",
+  "algerieDescription": "با Yeslek فوراً به الجزایر شارژ موبایل ارسال کنید.",
+
+  "tunisieTitle": "شارژ موبایل تونس با Yeslek",
+  "tunisieDescription": "با Yeslek فوراً به تونس شارژ موبایل ارسال کنید.",
+
+  "bangladeshTitle": "شارژ موبایل بنگلادش با Yeslek",
+  "bangladeshDescription": "با Yeslek فوراً به بنگلادش شارژ موبایل ارسال کنید.",
+
+  "senegalTitle": "شارژ موبایل سنگال با Yeslek",
+  "senegalDescription": "با Yeslek فوراً به سنگال شارژ موبایل ارسال کنید.",
+
+  "camerounTitle": "شارژ موبایل کامرون با Yeslek",
+  "camerounDescription": "با Yeslek فوراً به کامرون شارژ موبایل ارسال کنید.",
+
+  "nigeriaTitle": "شارژ موبایل نیجریه با Yeslek",
+  "nigeriaDescription": "با Yeslek فوراً به نیجریه شارژ موبایل ارسال کنید."
+},
   "profile": {
     "name": "نام",
     "email": "ایمیل",
