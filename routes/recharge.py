@@ -464,7 +464,6 @@ def enter_number_get():
         # SEO
         # ---------------------------
         canonical_url="https://yeslek.com/",
-        meta_robots="noindex, follow",
 
         seo_title="Recharge mobile internationale | Yeslek",
         seo_description=(
