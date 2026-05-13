@@ -18,7 +18,7 @@ except Exception:
     pass
 
 import config
-
+from flask import send_from_directory
 from routes.recharge import recharge_bp
 from routes.payment import payment_bp
 from routes.auth import auth_bp
@@ -114,6 +114,10 @@ def create_app() -> Flask:
     @app.context_processor
     def inject_stripe_key():
         return dict(STRIPE_PUBLIC_KEY=config.STRIPE_PUBLIC_KEY)
+
+    @app.route("/sitemap.xml")
+    def sitemap():
+        return send_from_directory("static", "sitemap.xml")
 
     # ---------------------------
     # App meta
@@ -241,35 +245,6 @@ def create_app() -> Flask:
 # App Init
 # ---------------------------
 app = create_app()
-
-# ---------------------------
-# SEO - Sitemap XML
-# ---------------------------
-from flask import Response
-from datetime import datetime
-
-@app.route("/sitemap.xml")
-def sitemap():
-
-    pages = []
-
-    pages.append(url_for("index", _external=True))
-    pages.append(url_for("recharge.enter_number_get", _external=True))
-
-    xml = ['<?xml version="1.0" encoding="UTF-8"?>']
-    xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
-
-    for page in pages:
-        xml.append("<url>")
-        xml.append(f"<loc>{page}</loc>")
-        xml.append(f"<lastmod>{datetime.utcnow().date()}</lastmod>")
-        xml.append("<changefreq>daily</changefreq>")
-        xml.append("<priority>0.9</priority>")
-        xml.append("</url>")
-
-    xml.append("</urlset>")
-
-    return Response("\n".join(xml), mimetype="application/xml")
 
 # ---------------------------
 # SEO - Robots.txt
