@@ -176,7 +176,12 @@ def google_callback():
         # ---------------------------
         # REDIRECT FINAL
         # ---------------------------
-        return redirect(url_for("recharge.enter_number_get"))
+        next_url = (
+        session.pop("auth_next_url", None)
+        or url_for("recharge.select_amount_get")
+      )
+
+        return redirect(next_url)
 
     except Exception as e:
         print("GOOGLE CALLBACK ERROR:", str(e))
@@ -259,7 +264,12 @@ def facebook_callback():
 
         print("SESSION AFTER FACEBOOK LOGIN:", dict(session))
 
-        return redirect(url_for("recharge.enter_number_get"))
+        next_url = (
+        session.pop("auth_next_url", None)
+        or url_for("recharge.select_amount_get")
+     )
+
+        return redirect(next_url)
 
     except Exception as e:
         print("FACEBOOK ERROR:", e)
@@ -270,6 +280,13 @@ def facebook_callback():
 # ============================================================
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+        # ---------------------------
+    # SAVE NEXT PAGE
+    # ---------------------------
+    next_url = request.args.get("next")
+
+    if next_url:
+        session["auth_next_url"] = next_url
 
     if request.method == "POST":
 
@@ -334,7 +351,12 @@ def email_code():
         session.pop("pending_email", None)
         session.pop("email_last_sent", None)
 
-        return redirect("/", code=303)
+        next_url = (
+        session.pop("auth_next_url", None)
+        or url_for("recharge.select_amount_get")
+        )
+
+        return redirect(next_url, code=303)
 
     return render_template("auth/email_code.html", email=email_value)
 
@@ -411,7 +433,12 @@ def otp():
 
         session.pop("pending_phone", None)
 
-        return redirect("/", code=303)
+        next_url = (
+        session.pop("auth_next_url", None)
+        or url_for("recharge.select_amount_get")
+      )
+
+        return redirect(next_url, code=303)
 
     return render_template(
         "auth/otp.html",
