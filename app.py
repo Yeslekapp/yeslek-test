@@ -28,6 +28,7 @@ from routes.history import history_bp
 from routes.admin import admin_bp
 from routes.reloadly import reloadly_bp
 from routes.seo import seo_bp
+from routes.legal import legal_bp
 # ---------------------------
 # Create tables (TEMP)
 # ---------------------------
@@ -240,6 +241,7 @@ def create_app() -> Flask:
     app.register_blueprint(admin_bp)
     app.register_blueprint(reloadly_bp)
     app.register_blueprint(seo_bp)
+    app.register_blueprint(legal_bp)
 
     return app
 
