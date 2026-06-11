@@ -24,7 +24,49 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 # CONFIG OTP
 # ---------------------------
 OTP_RESEND_COOLDOWN = 30
+_EMAIL_SEND_CACHE = {}
+_IP_SEND_CACHE = {}
+_BLOCKED_EMAIL_CACHE = {}
+_BLOCKED_IP_CACHE = {}
 
+EMAIL_COOLDOWN_SECONDS = 60
+IP_WINDOW_SECONDS = 600
+IP_MAX_REQUESTS = 5
+BLOCK_SECONDS = 3600
+
+
+def _client_ip():
+    forwarded = request.headers.get("X-Forwarded-For", "")
+
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+
+    return request.remote_addr or "unknown"
+
+
+def _cleanup_rate_limit_cache():
+    now = time.time()
+
+    for email in list(_EMAIL_SEND_CACHE.keys()):
+        if now - _EMAIL_SEND_CACHE[email] > IP_WINDOW_SECONDS:
+            _EMAIL_SEND_CACHE.pop(email, None)
+
+    for ip in list(_IP_SEND_CACHE.keys()):
+        _IP_SEND_CACHE[ip] = [
+            item for item in _IP_SEND_CACHE[ip]
+            if now - item < IP_WINDOW_SECONDS
+        ]
+
+        if not _IP_SEND_CACHE[ip]:
+            _IP_SEND_CACHE.pop(ip, None)
+
+    for email in list(_BLOCKED_EMAIL_CACHE.keys()):
+        if now > _BLOCKED_EMAIL_CACHE[email]:
+            _BLOCKED_EMAIL_CACHE.pop(email, None)
+
+    for ip in list(_BLOCKED_IP_CACHE.keys()):
+        if now > _BLOCKED_IP_CACHE[ip]:
+            _BLOCKED_IP_CACHE.pop(ip, None)
 # ---------------------------
 # GOOGLE CONFIG
 # ---------------------------
@@ -299,8 +341,27 @@ def login():
         if name:
             session["user_name"] = name
 
-        last_sent = session.get("email_last_sent")
-        if last_sent and time.time() - last_sent < OTP_RESEND_COOLDOWN:
+        _cleanup_rate_limit_cache()
+
+        ip = _client_ip()
+        now = time.time()
+
+        if email_value in _BLOCKED_EMAIL_CACHE:
+            return render_template("auth/email_login.html", error=True)
+
+        if ip in _BLOCKED_IP_CACHE:
+            return render_template("auth/email_login.html", error=True)
+
+        last_email_sent = _EMAIL_SEND_CACHE.get(email_value)
+
+        if last_email_sent and now - last_email_sent < EMAIL_COOLDOWN_SECONDS:
+            _BLOCKED_EMAIL_CACHE[email_value] = now + BLOCK_SECONDS
+            return render_template("auth/email_login.html", error=True)
+
+        ip_requests = _IP_SEND_CACHE.get(ip, [])
+
+        if len(ip_requests) >= IP_MAX_REQUESTS:
+            _BLOCKED_IP_CACHE[ip] = now + BLOCK_SECONDS
             return render_template("auth/email_login.html", error=True)
 
         try:
@@ -310,8 +371,11 @@ def login():
             print("EMAIL ERROR:", e)
             return render_template("auth/email_login.html", error=True)
 
+        _EMAIL_SEND_CACHE[email_value] = now
+        _IP_SEND_CACHE[ip] = ip_requests + [now]
+
         session["pending_email"] = email_value
-        session["email_last_sent"] = time.time()
+        session["email_last_sent"] = now
 
         return redirect(url_for("auth.email_code"))
 
