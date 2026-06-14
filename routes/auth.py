@@ -76,7 +76,9 @@ from config import (
     GOOGLE_REDIRECT_URI,
     FACEBOOK_APP_ID,
     FACEBOOK_APP_SECRET,
-    FACEBOOK_REDIRECT_URI
+    FACEBOOK_REDIRECT_URI,
+    TURNSTILE_SITE_KEY,
+    TURNSTILE_SECRET_KEY,
 )
 
 # ---------------------------
@@ -99,7 +101,89 @@ def _mask_phone(phone: str) -> str:
         return "****"
     return f"{p[:3]} **** {p[-2:]}"
 
+# ---------------------------
+# Cloudflare Turnstile
+# ---------------------------
 
+TURNSTILE_VERIFY_URL = (
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+)
+
+
+def _verify_turnstile(token: str) -> bool:
+    clean_token = str(token or "").strip()
+
+    if not clean_token:
+        return False
+
+    if not TURNSTILE_SECRET_KEY:
+        print("TURNSTILE ERROR: missing secret key")
+        return False
+
+    try:
+        response = requests.post(
+            TURNSTILE_VERIFY_URL,
+            data={
+                "secret": TURNSTILE_SECRET_KEY,
+                "response": clean_token,
+                "remoteip": _client_ip(),
+            },
+            timeout=5,
+        )
+
+        if response.status_code != 200:
+            print(
+                "TURNSTILE ERROR STATUS:",
+                response.status_code,
+            )
+            return False
+
+        result = response.json()
+
+        if result.get("success") is not True:
+            print(
+                "TURNSTILE VALIDATION FAILED:",
+                result.get("error-codes", []),
+            )
+            return False
+
+        hostname = str(
+            result.get("hostname") or ""
+        ).strip().lower()
+
+        allowed_hostnames = {
+            "yeslek.com",
+            "www.yeslek.com",
+        }
+
+        if hostname not in allowed_hostnames:
+            print(
+                "TURNSTILE INVALID HOSTNAME:",
+                hostname,
+            )
+            return False
+
+        return True
+
+    except Exception as exc:
+        print(
+            "TURNSTILE VERIFY ERROR:",
+            exc,
+        )
+        return False
+
+
+def _render_email_login(
+    *,
+    error: bool = False,
+    captcha_error: bool = False,
+):
+    return render_template(
+        "auth/email_login.html",
+        error=error,
+        captcha_error=captcha_error,
+        turnstile_site_key=TURNSTILE_SITE_KEY,
+    )
 # ============================================================
 # GOOGLE LOGIN
 # ============================================================
@@ -320,66 +404,167 @@ def facebook_callback():
 # ============================================================
 # LOGIN EMAIL
 # ============================================================
+# ============================================================
+# LOGIN EMAIL
+# ============================================================
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-        # ---------------------------
-    # SAVE NEXT PAGE
     # ---------------------------
+    # Save next page
+    # ---------------------------
+
     next_url = request.args.get("next")
 
     if next_url:
         session["auth_next_url"] = next_url
 
     if request.method == "POST":
+        name = (
+            request.form.get("name")
+            or ""
+        ).strip()
 
-        name = (request.form.get("name") or "").strip()
-        email_value = (request.form.get("email") or "").strip().lower()
+        email_value = (
+            request.form.get("email")
+            or ""
+        ).strip().lower()
+
+        turnstile_token = (
+            request.form.get("cf-turnstile-response")
+            or ""
+        ).strip()
+
+        # ---------------------------
+        # Validate email
+        # ---------------------------
 
         if not _valid_email(email_value):
-            return render_template("auth/email_login.html", error=True)
+            return _render_email_login(
+                error=True,
+            )
+
+        # ---------------------------
+        # Validate Cloudflare Turnstile
+        # ---------------------------
+
+        if not _verify_turnstile(turnstile_token):
+            return _render_email_login(
+                captcha_error=True,
+            )
 
         if name:
             session["user_name"] = name
+
+        # ---------------------------
+        # Rate-limit cleanup
+        # ---------------------------
 
         _cleanup_rate_limit_cache()
 
         ip = _client_ip()
         now = time.time()
 
+        # ---------------------------
+        # Existing blocks
+        # ---------------------------
+
         if email_value in _BLOCKED_EMAIL_CACHE:
-            return render_template("auth/email_login.html", error=True)
+            return _render_email_login(
+                error=True,
+            )
 
         if ip in _BLOCKED_IP_CACHE:
-            return render_template("auth/email_login.html", error=True)
+            return _render_email_login(
+                error=True,
+            )
 
-        last_email_sent = _EMAIL_SEND_CACHE.get(email_value)
+        # ---------------------------
+        # Email cooldown
+        # ---------------------------
 
-        if last_email_sent and now - last_email_sent < EMAIL_COOLDOWN_SECONDS:
-            _BLOCKED_EMAIL_CACHE[email_value] = now + BLOCK_SECONDS
-            return render_template("auth/email_login.html", error=True)
+        last_email_sent = _EMAIL_SEND_CACHE.get(
+            email_value
+        )
 
-        ip_requests = _IP_SEND_CACHE.get(ip, [])
+        if (
+            last_email_sent
+            and now - last_email_sent
+            < EMAIL_COOLDOWN_SECONDS
+        ):
+            _BLOCKED_EMAIL_CACHE[
+                email_value
+            ] = now + BLOCK_SECONDS
+
+            return _render_email_login(
+                error=True,
+            )
+
+        # ---------------------------
+        # IP rate limit
+        # ---------------------------
+
+        ip_requests = _IP_SEND_CACHE.get(
+            ip,
+            [],
+        )
 
         if len(ip_requests) >= IP_MAX_REQUESTS:
-            _BLOCKED_IP_CACHE[ip] = now + BLOCK_SECONDS
-            return render_template("auth/email_login.html", error=True)
+            _BLOCKED_IP_CACHE[
+                ip
+            ] = now + BLOCK_SECONDS
+
+            return _render_email_login(
+                error=True,
+            )
+
+        # ---------------------------
+        # Send OTP
+        # ---------------------------
 
         try:
-            lang = session.get("lang", "fr")
-            EmailOTPService.send_verification(email_value, lang)
-        except Exception as e:
-            print("EMAIL ERROR:", e)
-            return render_template("auth/email_login.html", error=True)
+            lang = session.get(
+                "lang",
+                "fr",
+            )
+
+            EmailOTPService.send_verification(
+                email_value,
+                lang,
+            )
+
+        except Exception as exc:
+            print(
+                "EMAIL ERROR:",
+                exc,
+            )
+
+            return _render_email_login(
+                error=True,
+            )
+
+        # ---------------------------
+        # Save rate-limit values
+        # ---------------------------
 
         _EMAIL_SEND_CACHE[email_value] = now
-        _IP_SEND_CACHE[ip] = ip_requests + [now]
+        _IP_SEND_CACHE[ip] = (
+            ip_requests + [now]
+        )
+
+        # ---------------------------
+        # Save session
+        # ---------------------------
 
         session["pending_email"] = email_value
         session["email_last_sent"] = now
+        session.modified = True
 
-        return redirect(url_for("auth.email_code"))
+        return redirect(
+            url_for("auth.email_code")
+        )
 
-    return render_template("auth/email_login.html")
+    return _render_email_login()
 
 
 # ============================================================

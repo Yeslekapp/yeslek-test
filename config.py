@@ -86,6 +86,13 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_MODE = "live"
 
 # ---------------------------
+# Cloudflare Turnstile
+# ---------------------------
+
+TURNSTILE_SITE_KEY = os.getenv("TURNSTILE_SITE_KEY", "")
+TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
+
+# ---------------------------
 # Payment settings
 # ---------------------------
 

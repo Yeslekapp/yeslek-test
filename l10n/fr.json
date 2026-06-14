@@ -61,6 +61,7 @@
     "continue_phone": "Avec téléphone",
     "continue_email": "Email",
     "resend": "Renvoyer",
+    "captcha_failed": "Veuillez confirmer que vous n’êtes pas un robot.",
     "change_email": "Modifier l’email",
     "change_phone": "Modifier le numéro",
     "logout_confirm": "Voulez-vous vous déconnecter ?",

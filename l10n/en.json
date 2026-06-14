@@ -31,6 +31,7 @@
     "name": "Name",
     "name_placeholder": "Your name or first name",
     "login": "Login",
+    "captcha_failed": "Please confirm that you are not a robot.",
     "logout": "Logout",
     "choose": "Choose a method",
     "choose_hint": "Access your account in seconds",

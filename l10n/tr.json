@@ -31,6 +31,7 @@
     "name": "Ad",
     "name_placeholder": "Adınız veya isminiz",
     "login": "Giriş",
+    "captcha_failed": "Lütfen robot olmadığınızı doğrulayın.",
     "logout": "Çıkış",
     "choose": "Bir yöntem seçin",
     "choose_hint": "Hesabınıza saniyeler içinde erişin",

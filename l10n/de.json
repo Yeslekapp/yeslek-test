@@ -30,6 +30,7 @@
   "auth": {
     "name": "Name",
     "name_placeholder": "Ihr Name oder Vorname",
+    "captcha_failed": "Bitte bestätigen Sie, dass Sie kein Roboter sind.",
     "login": "Anmelden",
     "logout": "Abmelden",
     "choose": "Methode wählen",
