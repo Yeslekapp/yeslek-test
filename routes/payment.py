@@ -7,6 +7,7 @@ from __future__ import annotations  # ✅ TOUJOURS EN PREMIER
 from datetime import datetime, timezone
 import uuid
 import logging
+import hmac
 from typing import Any, Dict, Optional
 
 from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
@@ -23,7 +24,10 @@ from services.reloadly.transaction_service import (
     process_recharge,
     refresh_transaction_status,
 )
-
+from services.security.payment_guard_service import (
+    PaymentGuardError,
+    PaymentGuardService,
+)
 payment_bp = Blueprint("payment", __name__, url_prefix="/payment")
 
 logger = logging.getLogger(__name__)
@@ -196,6 +200,41 @@ def _get_or_create_payment_idempotency_key() -> str:
 
     return idem_key
 
+# ---------------------------
+# Payment form nonce
+# ---------------------------
+
+def _ensure_payment_form_nonce() -> str:
+
+    nonce = _safe_str(
+        session.get("payment_form_nonce")
+    )
+
+    if not nonce:
+        nonce = uuid.uuid4().hex
+        session["payment_form_nonce"] = nonce
+
+    return nonce
+
+
+def _validate_payment_form_nonce(data: Dict[str, Any]) -> bool:
+
+    expected = _safe_str(
+        session.get("payment_form_nonce")
+    )
+
+    received = _safe_str(
+        (data or {}).get("payment_form_nonce")
+        or request.headers.get("X-Yeslek-Payment-Nonce")
+    )
+
+    if not expected or not received:
+        return False
+
+    return hmac.compare_digest(
+        expected,
+        received,
+    )
 
 def _get_payment_intent_id() -> str:
     candidates = [
@@ -217,26 +256,38 @@ def _build_checkout_metadata(idem_key: str) -> Dict[str, str]:
     ctx = _get_payment_context()
 
     # ---------------------------
-    # PROTECTION IDEMPOTENCY
+    # Idempotency amount sync
     # ---------------------------
-    current_amount = float(ctx["final_amount"])
-    last_amount = session.get("last_payment_amount")
+    current_amount = float(
+        ctx["final_amount"]
+    )
 
-    # IMPORTANT : définir AVANT tout
+    last_amount = session.get(
+        "last_payment_amount"
+    )
+
+    if last_amount and float(last_amount) != current_amount:
+        idem_key = str(uuid.uuid4())
+        session["payment_idempotency_key"] = idem_key
+
+    session["last_payment_amount"] = current_amount
+
+    # ---------------------------
+    # Safe session objects
+    # ---------------------------
     forfait = session.get("recharge_forfait")
+
     if not isinstance(forfait, dict):
         forfait = {}
 
     operator = session.get("recharge_operator")
+
     if not isinstance(operator, dict):
         operator = {}
 
-    # reset si montant change
-    if last_amount and float(last_amount) != current_amount:
-        session.pop("payment_idempotency_key", None)
-
-    session["last_payment_amount"] = current_amount
-
+    # ---------------------------
+    # Metadata
+    # ---------------------------
     return {
         "payment_idempotency_key": idem_key,
         "recharge_phone": _safe_str(ctx["phone"]),
@@ -246,18 +297,26 @@ def _build_checkout_metadata(idem_key: str) -> Dict[str, str]:
         "country_iso": _safe_str(session.get("country_iso")).upper(),
         "user_id": _safe_str(session.get("user_id")),
         "user_email": _safe_str(
-            session.get("user_email") or session.get("pending_email")
+            session.get("user_email")
+            or session.get("pending_email")
         ),
         "forfait_id": _safe_str(
-         forfait.get("id")
-               or forfait.get("name")
-             ),
-        "operator_id": _safe_str(operator.get("id")),
-        "operator_name": _safe_str(operator.get("name")),
-        "operator_logo": _safe_str(operator.get("logo_url")),
-        "save_card": str(session.get("payment_save_card", True)).lower(),
+            forfait.get("id")
+            or forfait.get("name")
+        ),
+        "operator_id": _safe_str(
+            operator.get("id")
+        ),
+        "operator_name": _safe_str(
+            operator.get("name")
+        ),
+        "operator_logo": _safe_str(
+            operator.get("logo_url")
+        ),
+        "save_card": str(
+            session.get("payment_save_card", True)
+        ).lower(),
     }
-
 
 def _store_payment_success_payload(payload: Dict[str, Any]) -> None:
     session["payment_success_payload"] = payload
@@ -727,7 +786,11 @@ def card_get():
 
     if amount is None:
         return redirect(url_for("recharge.select_amount_get"))
-
+    # ---------------------------
+    # Default payment method
+    # ---------------------------
+    if not session.get("payment_selected_method"):
+        session["payment_selected_method"] = "card"
     _get_or_create_payment_idempotency_key()
 
     # ---------------------------
@@ -769,7 +832,8 @@ def card_get():
         final_amount=ctx["final_amount"],
         save_card=session.get("payment_save_card", True),
         cards=CardService.get_user_cards(session.get("user_id")),
-        received_display=received_display
+        received_display=received_display,
+        payment_form_nonce=_ensure_payment_form_nonce(),
     )
 
 # ---------------------------
@@ -840,7 +904,8 @@ def method_get():
         save_card=session.get("payment_save_card", True),
         is_forfait_minutes=False,
         received_display=received_display,
-        from_wallet=from_wallet   # IMPORTANT
+        from_wallet=from_wallet,
+        payment_form_nonce=_ensure_payment_form_nonce(),
     )
 
 @payment_bp.post("/method")
@@ -864,45 +929,174 @@ def method_post():
 @payment_bp.post("/card")
 def card_post():
 
-    if session.get("payment_selected_method") != "card":
-        return redirect(url_for("payment.method_get"))
+    # ---------------------------
+    # Request payload
+    # ---------------------------
+    data = request.get_json(
+        silent=True
+    ) or {}
 
+    # ---------------------------
+    # Method guard
+    # ---------------------------
+    if session.get("payment_selected_method", "card") != "card":
+        return jsonify(
+            {
+                "error": "invalid_payment_method",
+            }
+        ), 400
+
+    # ---------------------------
+    # Nonce anti-bot
+    # ---------------------------
+    if not _validate_payment_form_nonce(data):
+        logger.warning(
+            "Payment nonce blocked | ip=%s",
+            PaymentGuardService.client_ip(),
+        )
+
+        return jsonify(
+            {
+                "error": "invalid_payment_session",
+            }
+        ), 403
+
+    # ---------------------------
+    # Login required
+    # ---------------------------
+    if not session.get("user_id"):
+        return jsonify(
+            {
+                "error": "login_required",
+            }
+        ), 401
+
+    # ---------------------------
+    # Save card sync
+    # ---------------------------
+    if "save_card" in data:
+        session["payment_save_card"] = bool(
+            data.get("save_card")
+        )
+
+    # ---------------------------
+    # Payment context
+    # ---------------------------
     ctx = _get_payment_context()
+
     if ctx["final_amount"] <= 0:
-     return jsonify({"error": "invalid_amount"}), 400
-     
+        return jsonify(
+            {
+                "error": "invalid_amount",
+            }
+        ), 400
 
     if not ctx["recharge_amount"]:
-        return redirect(url_for("recharge.select_amount_get"))
+        return jsonify(
+            {
+                "error": "missing_recharge_amount",
+            }
+        ), 400
 
+    # ---------------------------
+    # Idempotency
+    # ---------------------------
     idem_key = _get_or_create_payment_idempotency_key()
 
-    existing = IdempotencyService.get_result(idem_key)
-    if existing:
-        _store_payment_success_payload(existing)
-        return jsonify({"success": True, "already_processed": True})
+    existing = IdempotencyService.get_result(
+        idem_key
+    )
 
-    metadata = _build_checkout_metadata(idem_key)
-    print("PAYMENT METADATA DEBUG:", metadata)
-    print("SESSION FORFAIT:", session.get("recharge_forfait"))
-    print("SESSION OPERATOR:", session.get("recharge_operator"))
+    if existing:
+        _store_payment_success_payload(
+            existing
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "already_processed": True,
+            }
+        ), 200
+
+    # ---------------------------
+    # Anti card testing guard
+    # ---------------------------
+    try:
+        risk_context = PaymentGuardService.assert_allowed(
+            phone=ctx["phone"],
+            user_id=session.get("user_id"),
+            user_email=(
+                session.get("user_email")
+                or session.get("pending_email")
+            ),
+            amount=ctx["final_amount"],
+        )
+    except PaymentGuardError as exc:
+
+        logger.warning(
+            "Payment guard blocked | code=%s | user_id=%s | phone=%s",
+            exc.code,
+            session.get("user_id"),
+            ctx["phone"],
+        )
+
+        return jsonify(
+            {
+                "error": exc.code,
+            }
+        ), exc.status_code
+
+    # ---------------------------
+    # Metadata
+    # ---------------------------
+    metadata = _build_checkout_metadata(
+        idem_key
+    )
+    idem_key = metadata.get(
+        "payment_idempotency_key"
+    ) or idem_key
+    metadata.update(
+        risk_context.get("metadata") or {}
+    )
+
+    metadata["payment_channel"] = _safe_str(
+        data.get("payment_channel") or "card"
+    )
+
+    # ---------------------------
+    # Create Stripe intent
+    # ---------------------------
     try:
         intent = StripeService.create_payment_intent(
             amount=ctx["final_amount"],
             currency="eur",
             metadata=metadata,
+            idempotency_key=idem_key,
+            customer_email=metadata.get("user_email"),
         )
 
         session["last_payment_intent_id"] = intent.id
 
-        return jsonify({
-            "client_secret": intent.client_secret,
-            "payment_intent_id": intent.id,
-        })
+        return jsonify(
+            {
+                "client_secret": intent.client_secret,
+                "payment_intent_id": intent.id,
+            }
+        )
 
     except Exception as exc:
-        print("Stripe payment intent error:", exc)
-        return jsonify({"error": "payment_error"}), 400
+
+        logger.exception(
+            "Stripe payment intent error: %s",
+            exc,
+        )
+
+        return jsonify(
+            {
+                "error": "payment_error",
+            }
+        ), 400
 
 # ---------------------------
 # Stripe webhook (FINAL PRODUCTION ULTRA SAFE)
@@ -938,6 +1132,34 @@ def stripe_webhook_post():
     event_data = (
         event.get("data") or {}
     ).get("object") or {}
+
+    metadata = dict(
+        event_data.get("metadata") or {}
+    )
+
+    # ---------------------------
+    # Track failed card attempts
+    # ---------------------------
+    if event_type in {
+        "payment_intent.payment_failed",
+        "payment_intent.canceled",
+    }:
+
+        try:
+            PaymentGuardService.record_failed_payment(
+                metadata=metadata,
+            )
+
+        except Exception:
+            logger.exception(
+                "Payment guard failed-event tracking error"
+            )
+
+        return jsonify(
+            {
+                "ok": True,
+            }
+        ), 200
 
     # ---------------------------
     # Only handle success payments
@@ -1503,6 +1725,7 @@ def payment_success():
 def success_finish_post():
     session.pop("payment_success_payload", None)
     session.pop("payment_idempotency_key", None)
+    session.pop("payment_form_nonce", None)
     session.pop("payment_toast", None)
     session.pop("payment_selected_method", None)
     session.pop("payment_save_card", None)

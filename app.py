@@ -205,7 +205,32 @@ def create_app() -> Flask:
         session["is_admin"] = user_email in config.ADMIN_EMAILS
 
 
+    # ---------------------------
+    # Security headers
+    # ---------------------------
+    @app.after_request
+    def _security_headers(response):
 
+        response.headers.setdefault(
+            "X-Content-Type-Options",
+            "nosniff"
+        )
+
+        response.headers.setdefault(
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        )
+
+        response.headers.setdefault(
+            "Referrer-Policy",
+            "strict-origin-when-cross-origin"
+        )
+
+        if request.path.startswith("/payment"):
+            response.headers["Cache-Control"] = "no-store, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+
+        return response
     # ---------------------------
     # Translation helper
     # ---------------------------

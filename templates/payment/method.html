@@ -95,11 +95,24 @@ paymentRequest.on('paymentmethod', async (ev) => {
     payBtn.classList.add("tz-wallet-loading");
     payBtn.textContent = "Paiement...";
 
-const res = await fetch("/payment/card", {
-     method: "POST"
-   });
+    const res = await fetch("/payment/card", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest"
+      },
+      body: JSON.stringify({
+        payment_form_nonce: form.dataset.paymentNonce || "",
+        payment_channel: "wallet",
+        save_card: saveCardInput?.value === "1"
+      })
+    });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data.error || "server_error");
+    }
 
     const confirmResult = await stripe.confirmCardPayment(
       data.client_secret,
@@ -161,7 +174,8 @@ const res = await fetch("/payment/card", {
         action="{{ url_for('payment.method_post') }}"
         class="tz-stack"
         id="paymentMethodForm"
-        data-amount="{{ "%.2f"|format(amount) }}"
+        data-amount="{{ "%.2f"|format(final_amount) }}"
+        data-payment-nonce="{{ payment_form_nonce }}"
         data-toast-key="{{ session.get('payment_toast','') }}">
 
 

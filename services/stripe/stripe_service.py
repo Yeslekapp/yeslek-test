@@ -2,6 +2,8 @@
 # Stripe Service
 # ---------------------------
 
+from __future__ import annotations
+
 import stripe
 import config
 
@@ -19,22 +21,58 @@ class StripeService:
         amount: float,
         currency: str = "eur",
         metadata: dict | None = None,
+        idempotency_key: str | None = None,
+        customer_email: str | None = None,
     ):
 
-        safe_amount = max(float(amount), 0.50)
-        unit_amount = int(round(safe_amount * 100))
+        safe_amount = float(amount)
+
+        if safe_amount < 0.50:
+            raise ValueError("invalid_amount")
+
+        if safe_amount > 80.00:
+            raise ValueError("amount_too_high")
+
+        unit_amount = int(
+            round(safe_amount * 100)
+        )
+
+        params = {
+            "amount": unit_amount,
+            "currency": currency,
+            "metadata": metadata or {},
+
+            # ---------------------------
+            # Customer display / bank label
+            # ---------------------------
+            "description": "Yeslek recharge mobile",
+            "statement_descriptor_suffix": "RECHARGE",
+
+            # ---------------------------
+            # Payment methods
+            # ---------------------------
+            "automatic_payment_methods": {
+                "enabled": True,
+            },
+
+            # ---------------------------
+            # Card testing protection
+            # ---------------------------
+            "payment_method_options": {
+                "card": {
+                    "request_three_d_secure": "automatic",
+                }
+            },
+        }
+
+        if customer_email:
+            params["receipt_email"] = customer_email
 
         try:
-            intent = stripe.PaymentIntent.create(
-                amount=unit_amount,
-                currency=currency,
-                metadata=metadata or {},
-
-                # ✅ IMPORTANT FIX CB + VISA + MASTERCARD
-                automatic_payment_methods={"enabled": True},
+            return stripe.PaymentIntent.create(
+                **params,
+                idempotency_key=idempotency_key,
             )
-
-            return intent
 
         except Exception as e:
             print("❌ Stripe create_payment_intent error:", e)
@@ -47,7 +85,9 @@ class StripeService:
     def retrieve_payment(payment_id: str):
 
         try:
-            return stripe.PaymentIntent.retrieve(payment_id)
+            return stripe.PaymentIntent.retrieve(
+                payment_id
+            )
 
         except Exception as e:
             print("❌ Stripe retrieve error:", e)
@@ -60,7 +100,9 @@ class StripeService:
     def retrieve_payment_method(payment_method_id: str):
 
         try:
-            return stripe.PaymentMethod.retrieve(payment_method_id)
+            return stripe.PaymentMethod.retrieve(
+                payment_method_id
+            )
 
         except Exception as e:
             print("❌ Stripe retrieve payment method error:", e)

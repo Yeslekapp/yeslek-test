@@ -254,12 +254,23 @@ form.addEventListener("submit", async (e) => {
 
     const res = await fetch("/payment/card", {
       method: "POST",
-      headers: { "Content-Type": "application/json" }
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest"
+      },
+      body: JSON.stringify({
+        payment_form_nonce: form.dataset.paymentNonce || "",
+        payment_channel: "card",
+        save_card: saveInput?.value === "1",
+        card_name: nameEl?.value || ""
+      })
     });
 
-    if (!res.ok) throw new Error("server_error");
+    const data = await res.json().catch(() => ({}));
 
-    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "server_error");
+    }
 
     if (!data.client_secret) throw new Error("no_client_secret");
 
@@ -419,7 +430,11 @@ if (result.paymentIntent?.status === "succeeded") {
 </div>
     <!-- ================= FORM ================= -->
 
-    <form class="tz-stack" id="cardPaymentForm" autocomplete="off" novalidate>
+    <form class="tz-stack"
+          id="cardPaymentForm"
+          autocomplete="off"
+          data-payment-nonce="{{ payment_form_nonce }}"
+          novalidate>
 
       <input type="hidden" name="amount" value="{{ amount }}">
 
