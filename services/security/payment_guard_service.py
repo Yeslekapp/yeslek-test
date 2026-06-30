@@ -460,7 +460,7 @@ class PaymentGuardService:
                     event_key=event_key,
                     event_type="stripe_failed",
                     limit=50,
-                    window_seconds=300,
+                    window_seconds=8640,
                     block_seconds=86400,
                     now=now,
                 )
