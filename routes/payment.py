@@ -1065,6 +1065,37 @@ def card_post():
     )
 
     # ---------------------------
+    # Save card customer
+    # ---------------------------
+    save_card = bool(
+        session.get("payment_save_card", True)
+    )
+
+    stripe_customer_id = None
+
+    if save_card:
+        try:
+            stripe_customer_id = CardService.get_or_create_stripe_customer_id(
+                user_id=str(session.get("user_id")),
+                email=metadata.get("user_email"),
+            )
+
+            if stripe_customer_id:
+                metadata["stripe_customer_id"] = stripe_customer_id
+
+        except Exception:
+
+            logger.exception(
+                "Stripe customer create error"
+            )
+
+            return jsonify(
+                {
+                    "error": "payment_customer_error",
+                }
+            ), 400
+
+    # ---------------------------
     # Create Stripe intent
     # ---------------------------
     try:
@@ -1074,6 +1105,8 @@ def card_post():
             metadata=metadata,
             idempotency_key=idem_key,
             customer_email=metadata.get("user_email"),
+            customer_id=stripe_customer_id,
+            save_card=save_card,
         )
 
         session["last_payment_intent_id"] = intent.id
@@ -1443,27 +1476,62 @@ def stripe_webhook_post():
         _store_payment_success_payload(payload_obj)
 
         # ---------------------------
-        # Save card (Stripe metadata)
+        # Save card
         # ---------------------------
         try:
-            save_card = metadata.get("save_card") == "true"
-            print("SAVE CARD USER:", user_id)
-            print("SAVE CARD FLAG:", save_card)
-            if save_card and user_id:
-                payment_method = event_data.get("payment_method")
-                print("PAYMENT METHOD:", payment_method)
-                if payment_method:
-                    pm = StripeService.retrieve_payment_method(payment_method)
-                    card_data = getattr(pm, "card", None)
+            save_card = (
+                _safe_str(metadata.get("save_card")).lower()
+                == "true"
+            )
 
-                    if card_data:
-                        CardService.save_card(
+            payment_method_id = _safe_str(
+                event_data.get("payment_method")
+            )
+
+            stripe_customer_id = _safe_str(
+                event_data.get("customer")
+                or metadata.get("stripe_customer_id")
+            )
+
+            logger.info(
+                "SAVE CARD CHECK | user_id=%s | save_card=%s | payment_method=%s | customer=%s",
+                user_id,
+                save_card,
+                payment_method_id,
+                stripe_customer_id,
+            )
+
+            if save_card and user_id and payment_method_id:
+
+                pm = StripeService.retrieve_payment_method(
+                    payment_method_id
+                )
+
+                card_data = getattr(
+                    pm,
+                    "card",
+                    None,
+                )
+
+                if card_data:
+                    CardService.save_card(
                         user_id=str(user_id),
                         payment_method=pm,
-                        )
+                        stripe_customer_id=stripe_customer_id,
+                    )
+
+                    logger.info(
+                        "CARD SAVED | user_id=%s | payment_method=%s | customer=%s",
+                        user_id,
+                        payment_method_id,
+                        stripe_customer_id,
+                    )
 
         except Exception as e:
-            logger.exception("CARD SAVE ERROR: %s", e)
+            logger.exception(
+                "CARD SAVE ERROR: %s",
+                e,
+            )
 
         # ---------------------------
         # Email
@@ -1717,7 +1785,50 @@ def payment_success():
         received_display=received_display,
         phone=session.get("recharge_phone"),
     )
+# ---------------------------
+# Set default card
+# ---------------------------
+@payment_bp.post("/cards/<card_id>/default")
+def set_default_card_post(card_id):
 
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return redirect(
+            url_for("auth.login_get")
+        )
+
+    CardService.set_default_card(
+        user_id=str(user_id),
+        card_id=card_id,
+    )
+
+    return redirect(
+        url_for("account.card_storage_get")
+    )
+
+
+# ---------------------------
+# Delete card
+# ---------------------------
+@payment_bp.post("/cards/<card_id>/delete")
+def delete_card_post(card_id):
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return redirect(
+            url_for("auth.login_get")
+        )
+
+    CardService.delete_card(
+        card_id=card_id,
+        user_id=str(user_id),
+    )
+
+    return redirect(
+        url_for("account.card_storage_get")
+    )
 # ---------------------------
 # payment_bp.post
 # ---------------------------

@@ -14,6 +14,34 @@ stripe.api_key = config.STRIPE_SECRET_KEY
 class StripeService:
 
     # ---------------------------
+    # Create Customer
+    # ---------------------------
+    @staticmethod
+    def create_customer(
+        *,
+        email: str | None = None,
+        user_id: str | None = None,
+    ):
+
+        params = {
+            "metadata": {
+                "user_id": str(user_id or ""),
+            }
+        }
+
+        if email:
+            params["email"] = email
+
+        try:
+            return stripe.Customer.create(
+                **params
+            )
+
+        except Exception as e:
+            print("❌ Stripe create_customer error:", e)
+            raise
+
+    # ---------------------------
     # Create Payment Intent
     # ---------------------------
     @staticmethod
@@ -23,6 +51,8 @@ class StripeService:
         metadata: dict | None = None,
         idempotency_key: str | None = None,
         customer_email: str | None = None,
+        customer_id: str | None = None,
+        save_card: bool = False,
     ):
 
         safe_amount = float(amount)
@@ -67,6 +97,15 @@ class StripeService:
 
         if customer_email:
             params["receipt_email"] = customer_email
+
+        # ---------------------------
+        # Save card support
+        # ---------------------------
+        if customer_id:
+            params["customer"] = customer_id
+
+        if save_card and customer_id:
+            params["setup_future_usage"] = "off_session"
 
         try:
             return stripe.PaymentIntent.create(

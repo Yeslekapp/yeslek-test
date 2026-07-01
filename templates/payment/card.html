@@ -262,6 +262,7 @@ form.addEventListener("submit", async (e) => {
         payment_form_nonce: form.dataset.paymentNonce || "",
         payment_channel: "card",
         save_card: saveInput?.value === "1",
+        saved_card_id: selectedSavedCard?.value || "",
         card_name: nameEl?.value || ""
       })
     });
