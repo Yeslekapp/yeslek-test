@@ -89,10 +89,8 @@ def create_app() -> Flask:
     # Cookies (FINAL GOOGLE FIX)
     # ---------------------------
 
-    is_prod = os.getenv("ENV") == "production"
-
-    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-    app.config["SESSION_COOKIE_SECURE"] = is_prod
+    app.config["SESSION_COOKIE_SAMESITE"] = config.SESSION_COOKIE_SAMESITE
+    app.config["SESSION_COOKIE_SECURE"] = config.SESSION_COOKIE_SECURE
 
      # garde login Google après reload / fermeture
     app.config["SESSION_REFRESH_EACH_REQUEST"] = False
