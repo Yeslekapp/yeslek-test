@@ -303,6 +303,42 @@ def apple_pay_verification():
 @app.route("/")
 def index():
     return redirect(url_for("recharge.enter_number_get"))
+# ---------------------------
+# Debug: Stripe environment check
+# ---------------------------
+@app.route("/__debug/stripe")
+def debug_stripe_config():
+
+    if not config.IS_TEST:
+        return {
+            "ok": False,
+            "error": "not_available_in_production",
+        }, 404
+
+    public_key = config.STRIPE_PUBLIC_KEY or ""
+    secret_key = config.STRIPE_SECRET_KEY or ""
+
+    return {
+        "ok": True,
+        "app_env": config.ENV,
+        "app_base_url": config.APP_BASE_URL,
+        "stripe_mode": config.STRIPE_MODE,
+        "stripe_public_key_type": (
+            "test"
+            if public_key.startswith("pk_test_")
+            else "live"
+            if public_key.startswith("pk_live_")
+            else "missing"
+        ),
+        "stripe_secret_key_type": (
+            "test"
+            if secret_key.startswith("sk_test_")
+            else "live"
+            if secret_key.startswith("sk_live_")
+            else "missing"
+        ),
+        "stripe_public_key_prefix": public_key[:12],
+    }
 
 if __name__ == "__main__":
     app.run(
