@@ -29,6 +29,8 @@ ENV = os.getenv(
     "production",
 ).strip().lower()
 
+APP_ENV = ENV
+
 IS_PROD = ENV in {
     "production",
     "prod",
@@ -131,23 +133,23 @@ if RELOADLY_ENV in {
     RELOADLY_BASE_URL = os.getenv(
         "RELOADLY_BASE_URL",
         "https://topups-sandbox.reloadly.com",
-    )
+    ).rstrip("/")
 
     RELOADLY_AUDIENCE = os.getenv(
         "RELOADLY_AUDIENCE",
         "https://topups-sandbox.reloadly.com",
-    )
+    ).rstrip("/")
 
 else:
     RELOADLY_BASE_URL = os.getenv(
         "RELOADLY_BASE_URL",
         "https://topups.reloadly.com",
-    )
+    ).rstrip("/")
 
     RELOADLY_AUDIENCE = os.getenv(
         "RELOADLY_AUDIENCE",
         "https://topups.reloadly.com",
-    )
+    ).rstrip("/")
 
 
 # ---------------------------
@@ -157,22 +159,62 @@ else:
 STRIPE_PUBLIC_KEY = os.getenv(
     "STRIPE_PUBLIC_KEY",
     "",
-)
+).strip()
 
 STRIPE_SECRET_KEY = os.getenv(
     "STRIPE_SECRET_KEY",
     "",
-)
+).strip()
 
 STRIPE_WEBHOOK_SECRET = os.getenv(
     "STRIPE_WEBHOOK_SECRET",
     "",
-)
+).strip()
 
 STRIPE_MODE = os.getenv(
     "STRIPE_MODE",
     "live" if IS_PROD else "test",
 ).strip().lower()
+
+
+# ---------------------------
+# Stripe safety guard
+# ---------------------------
+
+if IS_TEST:
+
+    if STRIPE_PUBLIC_KEY.startswith("pk_live_"):
+        raise RuntimeError(
+            "SECURITY ERROR: test environment uses Stripe LIVE public key"
+        )
+
+    if STRIPE_SECRET_KEY.startswith("sk_live_"):
+        raise RuntimeError(
+            "SECURITY ERROR: test environment uses Stripe LIVE secret key"
+        )
+
+    if STRIPE_MODE != "test":
+        raise RuntimeError(
+            "SECURITY ERROR: test environment must use STRIPE_MODE=test"
+        )
+
+
+if IS_PROD:
+
+    if STRIPE_PUBLIC_KEY.startswith("pk_test_"):
+        raise RuntimeError(
+            "SECURITY ERROR: production environment uses Stripe TEST public key"
+        )
+
+    if STRIPE_SECRET_KEY.startswith("sk_test_"):
+        raise RuntimeError(
+            "SECURITY ERROR: production environment uses Stripe TEST secret key"
+        )
+
+    if STRIPE_MODE != "live":
+        raise RuntimeError(
+            "SECURITY ERROR: production environment must use STRIPE_MODE=live"
+        )
 
 
 # ---------------------------
@@ -333,3 +375,11 @@ if not IS_PROD:
     print("[RELOADLY ENV]", RELOADLY_ENV)
     print("[RELOADLY BASE URL]", RELOADLY_BASE_URL)
     print("[STRIPE MODE]", STRIPE_MODE)
+    print(
+        "[STRIPE PUBLIC KEY TYPE]",
+        "test"
+        if STRIPE_PUBLIC_KEY.startswith("pk_test_")
+        else "live"
+        if STRIPE_PUBLIC_KEY.startswith("pk_live_")
+        else "missing",
+    )
