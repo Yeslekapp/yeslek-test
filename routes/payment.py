@@ -15,6 +15,7 @@ from services.account.card_service import CardService
 from services.communication.email_service import EmailService
 from services.core.idempotency_service import IdempotencyService
 from services.order.order_service import OrderService
+from services.order.order_reference_service import OrderReferenceService
 from services.stripe.stripe_service import StripeService
 from services.reloadly.transaction_service import (
     TransactionServiceError,
@@ -366,10 +367,28 @@ def _build_success_payload(
     operator = session.get("recharge_operator") or {}
 
     # ---------------------------
-    # Reference format (SAFE)
+    # Customer order reference
     # ---------------------------
-    ref = f"{transaction_id:012d}" if transaction_id else "000000000000"
+    try:
+        order_ref = OrderReferenceService.generate_order_reference()
 
+    except Exception:
+        logger.exception(
+            "Order reference generation error"
+        )
+
+        order_ref = (
+            f"{int(transaction_id):09d}"
+            if transaction_id
+            else uuid.uuid4().hex[:9].upper()
+        )
+
+    # ---------------------------
+    # Reloadly transaction reference
+    # ---------------------------
+    reloadly_ref = _safe_str(
+        transaction_reference
+    )
     # ---------------------------
     # Taxes
     # ---------------------------
@@ -431,12 +450,16 @@ def _build_success_payload(
         "transaction_id": transaction_id,
 
         # ---------------------------
-        # Reference
+        # Customer reference
         # ---------------------------
-        "transaction_reference": ref,
-        "reference": ref,
-        "order_number": ref,
+        "reference": order_ref,
+        "order_number": order_ref,
 
+        # ---------------------------
+        # Reloadly internal reference
+        # ---------------------------
+        "transaction_reference": reloadly_ref,
+        "reloadly_reference": reloadly_ref,
         # ---------------------------
         # Meta
         # ---------------------------
@@ -538,11 +561,6 @@ def _resolve_payment_status() -> Dict[str, Any]:
                     tx_result.transaction_id
                 )
 
-                payload["reference"] = (
-                    tx_result.custom_identifier
-                    or payload.get("reference")
-                )
-
                 payload["transaction_reference"] = (
                     tx_result.custom_identifier
                     or payload.get(
@@ -550,6 +568,12 @@ def _resolve_payment_status() -> Dict[str, Any]:
                     )
                 )
 
+                payload["reloadly_reference"] = (
+                    tx_result.custom_identifier
+                    or payload.get(
+                        "reloadly_reference"
+                    )
+                )
                 session[
                     "payment_success_payload"
                 ] = payload
@@ -1841,9 +1865,9 @@ def payment_success():
                 or reference
             )
 
-            payload["reference"] = (
+            payload["reloadly_reference"] = (
                 tx.custom_identifier
-                or reference
+                or payload.get("reloadly_reference")
             )
 
             session["payment_success_payload"] = payload
