@@ -42,7 +42,16 @@ from services.core.db_service import db_cursor
 def _ensure_payment_tables() -> None:
 
     with db_cursor(commit=True) as cur:
-
+        cur.execute(
+            """
+            CREATE SEQUENCE IF NOT EXISTS yeslek_order_ref_seq
+            START WITH 1
+            INCREMENT BY 1
+            MINVALUE 1
+            NO MAXVALUE
+            CACHE 1;
+            """
+        )
         cur.execute(
             """
             CREATE TABLE IF NOT EXISTS stripe_customers (
