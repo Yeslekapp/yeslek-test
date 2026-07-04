@@ -333,10 +333,34 @@ def _build_checkout_metadata(idem_key: str) -> Dict[str, str]:
     order_ref = _get_or_create_order_reference()
 
     # ---------------------------
+    # Payment language
+    # ---------------------------
+    payment_lang = _safe_str(
+        session.get("lang")
+        or request.cookies.get("lang")
+        or request.args.get("lang")
+        or "en"
+    ).lower()
+
+    if payment_lang not in {
+        "fr",
+        "en",
+        "ar",
+        "fa",
+        "ps",
+        "uz",
+        "tr",
+        "de",
+    }:
+        payment_lang = "en"
+
+    # ---------------------------
     # Metadata
     # ---------------------------
     return {
         "payment_idempotency_key": idem_key,
+        "lang": payment_lang,
+        "locale": payment_lang,
         "order_reference": order_ref,
         "order_number": order_ref,
         "recharge_phone": _safe_str(ctx["phone"]),
@@ -1520,6 +1544,24 @@ def stripe_webhook_post():
         metadata.get("user_id")
     )
 
+    payment_lang = _safe_str(
+        metadata.get("lang")
+        or metadata.get("locale")
+        or "en"
+    ).lower()
+
+    if payment_lang not in {
+        "fr",
+        "en",
+        "ar",
+        "fa",
+        "ps",
+        "uz",
+        "tr",
+        "de",
+    }:
+        payment_lang = "en"
+
     base_amount = _safe_float(
         metadata.get("base_amount"),
         0.0
@@ -1683,7 +1725,8 @@ def stripe_webhook_post():
                 or metadata.get("order_number")
             ),
         )
-
+        payload_obj["lang"] = payment_lang
+        payload_obj["locale"] = payment_lang
         # ---------------------------
         # Gestion erreurs recharge
         # ---------------------------
@@ -1770,6 +1813,7 @@ def stripe_webhook_post():
                 EmailService.send_payment_success(
                     email=user_email,
                     payload=payload_obj,
+                    lang=payment_lang,
                     phone=phone,
                     country_name=country_iso,
                     operator_name=operator_name,

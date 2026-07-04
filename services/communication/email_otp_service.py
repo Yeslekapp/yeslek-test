@@ -29,6 +29,7 @@ class EmailOTPService:
         "ps",
         "uz",
         "tr",
+        "de",
     }
 
     RTL_LANGUAGES = {
@@ -78,7 +79,7 @@ class EmailOTPService:
         safe_lang = str(lang or "").strip().lower()
 
         if safe_lang not in EmailOTPService.ALLOWED_LANGUAGES:
-            return "fr"
+            return "en"
 
         return safe_lang
 
@@ -150,11 +151,19 @@ class EmailOTPService:
                 exc,
             )
 
-            with open(
-                "l10n/fr.json",
-                encoding="utf-8",
-            ) as file:
-                return json.load(file)
+            try:
+                with open(
+                    "l10n/en.json",
+                    encoding="utf-8",
+                ) as file:
+                    return json.load(file)
+
+            except Exception:
+                with open(
+                    "l10n/fr.json",
+                    encoding="utf-8",
+                ) as file:
+                    return json.load(file)
 
     # ---------------------------
     # Send verification email
@@ -163,7 +172,7 @@ class EmailOTPService:
     @staticmethod
     def send_verification(
         email: str,
-        lang: str = "fr",
+        lang: str = "en",
     ) -> str:
         clean_email = EmailOTPService._validate_email(email)
         safe_lang = EmailOTPService._safe_lang(lang)
@@ -358,26 +367,37 @@ class EmailOTPService:
                 f"Votre code Yeslek est : {code}\n"
                 "Expire dans 5 minutes."
             ),
+
             "en": (
                 f"Your Yeslek code is: {code}\n"
                 "Expires in 5 minutes."
             ),
+
             "tr": (
                 f"Yeslek doğrulama kodunuz: {code}\n"
                 "5 dakika içinde geçerlidir."
             ),
+
+            "de": (
+                f"Ihr Yeslek-Code lautet: {code}\n"
+                "Läuft in 5 Minuten ab."
+            ),
+
             "ar": (
                 f"رمز التحقق الخاص بك: {code}\n"
                 "ينتهي خلال 5 دقائق."
             ),
+
             "fa": (
                 f"کد تأیید شما: {code}\n"
                 "تا ۵ دقیقه معتبر است."
             ),
+
             "ps": (
                 f"ستاسو کوډ: {code}\n"
                 "په ۵ دقیقو کې پای ته رسیږي."
             ),
+
             "uz": (
                 f"Sizning tasdiqlash kodingiz: {code}\n"
                 "5 daqiqa ichida amal qiladi."

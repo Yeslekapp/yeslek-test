@@ -72,16 +72,28 @@ class EmailService:
     def _load_l10n(lang: str):
         import json
 
-        allowed = {"fr", "en", "ar", "fa", "ps", "uz", "tr"}
+        allowed = {
+            "fr",
+            "en",
+            "ar",
+            "fa",
+            "ps",
+            "uz",
+            "tr",
+            "de",
+        }
+
+        lang = str(lang or "en").lower().strip()
 
         if lang not in allowed:
-            lang = "fr"
+            lang = "en"
 
         try:
             with open(f"l10n/{lang}.json", encoding="utf-8") as f:
                 return json.load(f)
-        except:
-            with open("l10n/fr.json", encoding="utf-8") as f:
+
+        except Exception:
+            with open("l10n/en.json", encoding="utf-8") as f:
                 return json.load(f)
 
     # ---------------------------
@@ -103,7 +115,7 @@ class EmailService:
     def send_payment_success(
         email: str,
         payload: dict,
-        lang: str = "fr",  # ✅ AJOUT
+        lang: str = "en",  # ✅ AJOUT
         phone: str | None = None,
         country_name: str | None = None,
         operator_name: str | None = None,
@@ -111,8 +123,29 @@ class EmailService:
     ):
 
         # ---------------------------
-        # Traduction (NEW)
+        # Traduction / language
         # ---------------------------
+        allowed_langs = {
+            "fr",
+            "en",
+            "ar",
+            "fa",
+            "ps",
+            "uz",
+            "tr",
+            "de",
+        }
+
+        lang = str(
+            lang
+            or payload.get("lang")
+            or payload.get("locale")
+            or "en"
+        ).lower().strip()
+
+        if lang not in allowed_langs:
+            lang = "en"
+
         l10n = EmailService._load_l10n(lang)
 
         def t(key, default=""):
