@@ -755,8 +755,9 @@ def _resolve_payment_status() -> Dict[str, Any]:
     }
 
 
+
 # ---------------------------
-# Payment method
+# Card payment page
 # ---------------------------
 @payment_bp.get("/card")
 def card_get():
@@ -772,83 +773,115 @@ def card_get():
 
             session["recharge_amount"] = amount
             session["recharge_total_amount"] = amount
+            session["payment_selected_method"] = "card"
 
-            # reset old recharge flow
             session.pop("recharge_phone", None)
             session.pop("recharge_forfait", None)
             session.pop("recharge_operator", None)
             session.pop("received_display", None)
 
-            # optional UX flag
-            session["payment_selected_method"] = "card"
-
         except Exception:
             pass
 
-    # ---------------------------
-    # EXISTING LOGIC (UNCHANGED)
-    # ---------------------------
-    if session.get("payment_selected_method") != "card":
-        return redirect(url_for("payment.method_get"))
-
-    ctx = _get_payment_context()
-    amount = ctx.get("recharge_amount")
-    if not session.get("recharge_forfait") and not session.get("recharge_amount"):
-     return redirect(url_for("recharge.select_amount_get"))
-
-    if amount is None:
-        return redirect(url_for("recharge.select_amount_get"))
     # ---------------------------
     # Default payment method
     # ---------------------------
     if not session.get("payment_selected_method"):
         session["payment_selected_method"] = "card"
+
+    if session.get("payment_selected_method") != "card":
+        return redirect(
+            url_for("payment.method_get")
+        )
+
+    # ---------------------------
+    # Require amount
+    # ---------------------------
+    if (
+        not session.get("recharge_forfait")
+        and not session.get("recharge_amount")
+    ):
+        return redirect(
+            url_for("recharge.select_amount_get")
+        )
+
+    ctx = _get_payment_context()
+
+    if ctx["final_amount"] <= 0:
+        return redirect(
+            url_for("recharge.select_amount_get")
+        )
+
     _get_or_create_payment_idempotency_key()
 
     # ---------------------------
-    # FIX Reloadly quote
+    # Reloadly quote display
     # ---------------------------
     received_display = session.get("received_display")
 
     if not received_display:
 
-        from services.reloadly.data_service import get_reloadly_quote
-        from services.payment.currency_service import CurrencyService
+        try:
+            from services.reloadly.data_service import get_reloadly_quote
+            from services.payment.currency_service import CurrencyService
 
-        phone = session.get("recharge_phone")
-        operator = session.get("recharge_operator") or {}
-        country_iso = session.get("country_iso")
-        operator_id = operator.get("id")
+            phone = session.get("recharge_phone")
+            operator = session.get("recharge_operator") or {}
+            country_iso = session.get("country_iso")
+            operator_id = operator.get("id")
 
-        quote = None
-        if operator_id:
-            quote = get_reloadly_quote(
-                operator_id=operator_id,
-                amount=ctx.get("base_amount"),
+            quote = None
+
+            if operator_id:
+                quote = get_reloadly_quote(
+                    operator_id=operator_id,
+                    amount=ctx.get("base_amount"),
+                    phone=phone,
+                    country_iso=country_iso,
+                )
+
+            received_display = CurrencyService.received_display_value(
                 phone=phone,
-                country_iso=country_iso,
+                amount=ctx.get("base_amount"),
+                selected_forfait=session.get("recharge_forfait"),
+                quote=quote,
             )
 
-        received_display = CurrencyService.received_display_value(
-            phone=phone,
-            amount=ctx.get("base_amount"),
-            selected_forfait=session.get("recharge_forfait"),
-            quote=quote
-        )
+        except Exception:
+            logger.exception(
+                "Card page quote display error"
+            )
+            received_display = None
+
+    # ---------------------------
+    # Saved cards
+    # ---------------------------
+    cards = []
+
+    user_id = session.get("user_id")
+
+    if user_id:
+        try:
+            cards = CardService.get_user_cards(
+                str(user_id)
+            )
+        except Exception as exc:
+            logger.exception(
+                "Load saved cards error: %s",
+                exc,
+            )
+            cards = []
 
     return render_template(
-        "payment/method.html",
+        "payment/card.html",
         phone=ctx["phone"],
-        amount=amount,
+        amount=ctx["base_amount"],
         forfait_display=_get_forfait_display(),
         final_amount=ctx["final_amount"],
-        selected_method=session.get("payment_selected_method", "card"),
         save_card=session.get("payment_save_card", True),
-        is_forfait_minutes=False,
         received_display=received_display,
-        from_wallet=from_wallet,
         payment_form_nonce=_ensure_payment_form_nonce(),
-        cards=CardService.get_user_cards(session.get("user_id")),
+        cards=cards,
     )
 
 # ---------------------------
