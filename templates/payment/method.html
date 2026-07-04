@@ -4,6 +4,29 @@
 
 {% extends "base.html" %}
 {% block title %}{{ t("payment.method.title") }}{% endblock %}
+{% block extra_css %}
+<style>
+  .tz-wallet-method {
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 18px;
+    border: 1.5px solid #dddddd;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .tz-wallet-button {
+    width: 100%;
+    min-height: 56px;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .tz-wallet-button iframe {
+    border-radius: 999px !important;
+  }
+</style>
+{% endblock %}
 
 {% block extra_js %}
 <script src="https://js.stripe.com/v3/"></script>
@@ -188,12 +211,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ---------------------------
-  // Apple Pay / Google Pay web
+  // Google Pay / Apple Pay wallet
   // ---------------------------
   try {
-    const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
 
-    const paymentRequest = stripe.paymentRequest({
+    const stripeWallet = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+
+    const paymentRequest = stripeWallet.paymentRequest({
       country: "FR",
       currency: "eur",
       total: {
@@ -204,105 +228,162 @@ document.addEventListener("DOMContentLoaded", async () => {
       requestPayerEmail: true,
     });
 
-    const walletAvailability = await paymentRequest.canMakePayment();
+    const walletAvailability =
+      await paymentRequest.canMakePayment();
 
-    if (walletAvailability && walletSection && walletButtonBox) {
-      walletSection.style.display = "block";
+    console.log(
+      "Wallet availability:",
+      walletAvailability
+    );
 
-      if (walletTitle) {
-        if (walletAvailability.applePay) {
-          walletTitle.textContent = labels.applePay;
-        } else if (walletAvailability.googlePay) {
-          walletTitle.textContent = labels.googlePay;
-        } else {
-          walletTitle.textContent = labels.wallet;
-        }
+    if (!walletAvailability) {
+      if (walletSection) {
+        walletSection.style.display = "none";
       }
 
-      const elements = stripe.elements();
+      return;
+    }
 
-      const prButton = elements.create("paymentRequestButton", {
+    walletSection.style.display = "block";
+
+    const elements = stripeWallet.elements();
+
+    const prButton = elements.create(
+      "paymentRequestButton",
+      {
         paymentRequest,
         style: {
           paymentRequestButton: {
+            type: "buy",
             theme: "dark",
-            height: "44px",
-          }
-        }
-      });
+            height: "56px",
+          },
+        },
+      }
+    );
 
-      prButton.mount("#payment-request-button");
+    prButton.mount("#payment-request-button");
 
-      paymentRequest.on("paymentmethod", async (ev) => {
+    paymentRequest.on("paymentmethod", async (ev) => {
 
-        try {
-          setLoading(true);
+      try {
 
-          const channel = walletAvailability.applePay
+        setLoading(true);
+
+        const channel = walletAvailability.googlePay
+          ? "google_pay"
+          : walletAvailability.applePay
             ? "apple_pay"
-            : walletAvailability.googlePay
-              ? "google_pay"
-              : "wallet";
+            : "wallet";
 
-          const res = await fetch("/payment/card", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Requested-With": "XMLHttpRequest"
-            },
-            body: JSON.stringify({
-              payment_form_nonce: paymentNonce,
-              payment_channel: channel,
-              save_card: saveCardInput?.value === "1"
-            })
-          });
+        const res = await fetch("/payment/card", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify({
+            payment_form_nonce: paymentNonce,
+            payment_channel: channel,
+            save_card: saveCardInput?.value === "1",
+            wallet_email: ev.payerEmail || "",
+            wallet_name: ev.payerName || "",
+          }),
+        });
 
-          const data = await res.json().catch(() => ({}));
+        const data = await res.json().catch(() => ({}));
 
-          if (!res.ok) {
-            throw new Error(data.error || "server_error");
-          }
+        if (!res.ok) {
+          ev.complete("fail");
+          throw new Error(data.error || "server_error");
+        }
 
-          const confirmResult = await stripe.confirmCardPayment(
+        if (!data.client_secret) {
+          ev.complete("fail");
+          throw new Error("missing_client_secret");
+        }
+
+        const confirmResult =
+          await stripeWallet.confirmCardPayment(
             data.client_secret,
             {
               payment_method: ev.paymentMethod.id,
+            },
+            {
+              handleActions: false,
             }
           );
 
-          if (confirmResult.error) {
-            ev.complete("fail");
-            throw new Error(confirmResult.error.message || "stripe_error");
+        if (confirmResult.error) {
+          ev.complete("fail");
+
+          throw new Error(
+            confirmResult.error.message || "stripe_error"
+          );
+        }
+
+        ev.complete("success");
+
+        if (
+          confirmResult.paymentIntent &&
+          confirmResult.paymentIntent.status === "requires_action"
+        ) {
+          const actionResult =
+            await stripeWallet.confirmCardPayment(
+              data.client_secret
+            );
+
+          if (actionResult.error) {
+            throw new Error(
+              actionResult.error.message || "stripe_action_error"
+            );
           }
 
-          if (confirmResult.paymentIntent?.status === "succeeded") {
-            ev.complete("success");
-
+          if (
+            actionResult.paymentIntent &&
+            actionResult.paymentIntent.status === "succeeded"
+          ) {
             window.location.href =
-              "/payment/success?pi=" +
-              encodeURIComponent(confirmResult.paymentIntent.id);
+              "/payment/success?payment_intent=" +
+              encodeURIComponent(actionResult.paymentIntent.id);
 
             return;
           }
-
-          ev.complete("fail");
-          throw new Error("payment_not_succeeded");
-
-        } catch (err) {
-          console.error("Wallet payment error:", err);
-
-          try {
-            ev.complete("fail");
-          } catch (_) {}
-
-          showToast(labels.genericError);
-          setLoading(false);
         }
-      });
-    }
+
+        if (
+          confirmResult.paymentIntent &&
+          confirmResult.paymentIntent.status === "succeeded"
+        ) {
+          window.location.href =
+            "/payment/success?payment_intent=" +
+            encodeURIComponent(confirmResult.paymentIntent.id);
+
+          return;
+        }
+
+        throw new Error("payment_not_succeeded");
+
+      } catch (err) {
+
+        console.error("Wallet payment error:", err);
+
+        try {
+          ev.complete("fail");
+        } catch (_) {}
+
+        showToast(labels.genericError);
+        setLoading(false);
+      }
+
+    });
 
   } catch (err) {
     console.error("Stripe wallet init error:", err);
+
+    if (walletSection) {
+      walletSection.style.display = "none";
+    }
   }
 
 });
@@ -398,26 +479,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="tz-stack" style="gap:12px; margin-top:12px;">
 
         <!-- Wallet Apple Pay / Google Pay -->
-        <div id="walletSection"
-             class="tz-card-item tz-method-tile"
-             style="display:none;">
+        <div
+          id="walletSection"
+          class="tz-wallet-method"
+          style="display:none;"
+        >
 
-          <div class="tz-card-item-left"></div>
-
-          <div class="tz-card-item-center">
-
-            <div class="tz-card-item-title" id="walletTitle">
-              {{ t("payment.methods.wallet.title") }}
-            </div>
-
-            <div class="tz-card-item-sub">
-              {{ t("payment.methods.wallet.desc") }}
-            </div>
-
-            <div id="payment-request-button"
-                 style="margin-top:12px;"></div>
-
-          </div>
+          <div
+            id="payment-request-button"
+            class="tz-wallet-button"
+          ></div>
 
         </div>
 
