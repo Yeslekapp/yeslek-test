@@ -39,9 +39,12 @@ class CardService:
         row: dict,
     ) -> dict:
 
+        payment_method_id = row.get("payment_method_id")
+
         return {
-            "id": row.get("payment_method_id"),
-            "card_id": row.get("payment_method_id"),
+            "id": payment_method_id,
+            "card_id": payment_method_id,
+            "payment_method_id": payment_method_id,
             "db_id": row.get("id"),
             "user_id": str(row.get("user_id")),
             "stripe_customer_id": row.get("stripe_customer_id") or "",

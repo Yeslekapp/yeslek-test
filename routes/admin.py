@@ -3,10 +3,11 @@
 # ---------------------------
 
 from functools import wraps
-from flask import Blueprint, render_template, redirect, session, url_for, request, Response
+from flask import Blueprint, jsonify, render_template, redirect, session, url_for, request, Response
 
 import config
 from services.admin.admin_service import AdminService
+from services.account.card_service import CardService
 from services.order.history_service import HistoryService
 from services.core.utils import mask_phone
 
@@ -152,7 +153,96 @@ def user_detail_get(user_id):
         **_shared_context("users"),
     )
 
+# ---------------------------
+# Admin User Cards API
+# ---------------------------
+def _admin_card_payload(card: dict) -> dict:
 
+    payment_method_id = (
+        card.get("payment_method_id")
+        or card.get("card_id")
+        or card.get("id")
+    )
+
+    return {
+        "id": payment_method_id,
+        "card_id": payment_method_id,
+        "payment_method_id": payment_method_id,
+        "stripe_customer_id": card.get("stripe_customer_id") or "",
+        "brand": card.get("brand") or "card",
+        "last4": card.get("last4") or "",
+        "expiry": card.get("expiry") or "",
+        "is_default": bool(card.get("is_default")),
+    }
+
+
+@admin_bp.get("/api/users/<user_id>/cards")
+@admin_required
+def user_cards_api_get(user_id):
+
+    cards = CardService.get_user_cards(
+        str(user_id)
+    )
+
+    return jsonify(
+        {
+            "ok": True,
+            "user_id": str(user_id),
+            "cards": [
+                _admin_card_payload(card)
+                for card in cards
+            ],
+        }
+    )
+
+
+@admin_bp.post("/api/users/<user_id>/cards/<card_id>/default")
+@admin_required
+def user_card_default_api_post(user_id, card_id):
+
+    success = CardService.set_default_card(
+        user_id=str(user_id),
+        card_id=str(card_id),
+    )
+
+    if not success:
+        return jsonify(
+            {
+                "ok": False,
+                "error": "card_not_found",
+            }
+        ), 404
+
+    return jsonify(
+        {
+            "ok": True,
+        }
+    )
+
+
+@admin_bp.delete("/api/users/<user_id>/cards/<card_id>")
+@admin_bp.post("/api/users/<user_id>/cards/<card_id>/delete")
+@admin_required
+def user_card_delete_api_post(user_id, card_id):
+
+    success = CardService.delete_card(
+        card_id=str(card_id),
+        user_id=str(user_id),
+    )
+
+    if not success:
+        return jsonify(
+            {
+                "ok": False,
+                "error": "card_not_found",
+            }
+        ), 404
+
+    return jsonify(
+        {
+            "ok": True,
+        }
+    )
 # ---------------------------
 # Recharges
 # ---------------------------

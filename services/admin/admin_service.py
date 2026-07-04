@@ -150,14 +150,10 @@ class AdminService:
 
         for card in cards:
 
-            brand = (
-                AdminService._get_attr(card, "brand")
-                or "Card"
-            )
-
-            last4 = (
-                AdminService._get_attr(card, "last4")
-                or "••••"
+            payment_method_id = (
+                AdminService._get_attr(card, "payment_method_id")
+                or AdminService._get_attr(card, "card_id")
+                or AdminService._get_attr(card, "id")
             )
 
             expiry = AdminService._get_attr(
@@ -180,24 +176,26 @@ class AdminService:
 
             normalized_cards.append(
                 {
-                    "id": AdminService._get_attr(
-                        card,
-                        "id",
-                    ),
-
-                    "brand": brand,
-                    "last4": last4,
-                    "expiry": expiry or "—",
+                    "id": payment_method_id,
+                    "card_id": payment_method_id,
+                    "payment_method_id": payment_method_id,
 
                     "stripe_customer_id": AdminService._get_attr(
                         card,
                         "stripe_customer_id",
                     ),
 
-                    "payment_method_id": AdminService._get_attr(
-                        card,
-                        "payment_method_id",
+                    "brand": (
+                        AdminService._get_attr(card, "brand")
+                        or "Card"
                     ),
+
+                    "last4": (
+                        AdminService._get_attr(card, "last4")
+                        or "••••"
+                    ),
+
+                    "expiry": expiry or "—",
 
                     "is_default": bool(
                         AdminService._get_attr(
