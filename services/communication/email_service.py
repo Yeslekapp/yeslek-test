@@ -192,112 +192,232 @@ class EmailService:
         # ---------------------------
         # HTML (IDENTIQUE + t())
         # ---------------------------
+        labels = {
+            "fr": {
+                "country": "Pays",
+                "operator": "Opérateur",
+                "product": "Produit",
+                "fees": "Frais",
+                "total_paid": "Total payé",
+                "phone": "Téléphone",
+                "date": "Date",
+                "reference": "Référence",
+                "paid": "Montant",
+                "button": "Continuer",
+                "message": "Votre paiement a été confirmé.",
+                "mobile_topup": "Recharge mobile",
+            },
+            "en": {
+                "country": "Country",
+                "operator": "Operator",
+                "product": "Product",
+                "fees": "Fees",
+                "total_paid": "Total paid",
+                "phone": "Phone",
+                "date": "Date",
+                "reference": "Reference",
+                "paid": "Amount",
+                "button": "Continue",
+                "message": "Your payment has been confirmed.",
+                "mobile_topup": "Mobile top-up",
+            },
+            "ar": {
+                "country": "البلد",
+                "operator": "المشغل",
+                "product": "المنتج",
+                "fees": "الرسوم",
+                "total_paid": "إجمالي المدفوع",
+                "phone": "الهاتف",
+                "date": "التاريخ",
+                "reference": "المرجع",
+                "paid": "المبلغ",
+                "button": "متابعة",
+                "message": "تم تأكيد الدفع الخاص بك.",
+                "mobile_topup": "شحن الهاتف",
+            },
+            "fa": {
+                "country": "کشور",
+                "operator": "اپراتور",
+                "product": "محصول",
+                "fees": "هزینه",
+                "total_paid": "مجموع پرداختی",
+                "phone": "تلفن",
+                "date": "تاریخ",
+                "reference": "مرجع",
+                "paid": "مبلغ",
+                "button": "پرداخت",
+                "message": "پرداخت شما تأیید شد.",
+                "mobile_topup": "شارژ موبایل",
+            },
+            "ps": {
+                "country": "هېواد",
+                "operator": "آپریټر",
+                "product": "محصول",
+                "fees": "فیس",
+                "total_paid": "ټول تادیه شوي",
+                "phone": "تلیفون",
+                "date": "نېټه",
+                "reference": "مرجع",
+                "paid": "مبلغ",
+                "button": "ادامه",
+                "message": "ستاسو تادیه تایید شوه.",
+                "mobile_topup": "موبایل چارج",
+            },
+            "tr": {
+                "country": "Ülke",
+                "operator": "Operatör",
+                "product": "Ürün",
+                "fees": "Ücretler",
+                "total_paid": "Toplam ödenen",
+                "phone": "Telefon",
+                "date": "Tarih",
+                "reference": "Referans",
+                "paid": "Tutar",
+                "button": "Devam et",
+                "message": "Ödemeniz onaylandı.",
+                "mobile_topup": "Mobil yükleme",
+            },
+            "de": {
+                "country": "Land",
+                "operator": "Betreiber",
+                "product": "Produkt",
+                "fees": "Gebühren",
+                "total_paid": "Gesamt bezahlt",
+                "phone": "Telefon",
+                "date": "Datum",
+                "reference": "Referenz",
+                "paid": "Betrag",
+                "button": "Weiter",
+                "message": "Ihre Zahlung wurde bestätigt.",
+                "mobile_topup": "Handy-Aufladung",
+            },
+        }
+
+        L = labels.get(lang, labels["en"])
+
+        product_display = forfait if forfait else L["mobile_topup"]
+
         html = f"""<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body dir="{dir_attr}" style="margin:0;background:#0e1117;font-family:Arial,Helvetica,sans-serif;">
 
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:30px 0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0e1117;padding:16px 8px;">
 <tr>
 <td align="center">
 
 <table width="100%" cellpadding="0" cellspacing="0"
-style="max-width:520px;background:#111827;border-radius:14px;padding:30px;color:white;">
+style="max-width:560px;width:100%;background:#111827;border-radius:16px;padding:22px;color:white;box-sizing:border-box;">
 
 <tr>
-<td style="font-size:28px;font-weight:bold;color:#00d1c1;">
+<td style="font-size:30px;font-weight:bold;color:#00d1c1;text-align:left;" dir="ltr">
 Yeslek
 </td>
 
-<td style="text-align:right;font-size:13px;color:#9ca3af;">
-{t("payment.success.referenceLabel")} : {reference}
+<td style="font-size:13px;color:#9ca3af;text-align:right;white-space:nowrap;" dir="ltr">
+{L["reference"]}: {reference or "-"}
 </td>
 </tr>
 
-<tr><td colspan="2" style="height:25px"></td></tr>
+<tr><td colspan="2" style="height:28px"></td></tr>
 
 <tr>
-<td colspan="2" style="font-size:22px;font-weight:bold;text-align:center;">
-{t("payment.success.title")}
+<td colspan="2" style="font-size:24px;font-weight:bold;text-align:center;color:#ffffff;">
+{t("payment.success.title", "Payment successful")}
 </td>
 </tr>
 
 <tr>
-<td colspan="2" style="text-align:center;color:#9ca3af;padding-top:6px;">
-{t("payment.success.message")}
+<td colspan="2" style="text-align:center;color:#9ca3af;padding-top:8px;font-size:15px;">
+{L["message"]}
 </td>
 </tr>
 
-<tr><td colspan="2" style="height:30px"></td></tr>
+<tr><td colspan="2" style="height:28px"></td></tr>
 
 <tr>
 <td colspan="2">
 
-<table width="100%" style="background:#0f172a;border-radius:12px;padding:20px;">
+<table width="100%" cellpadding="0" cellspacing="0"
+style="background:#0f172a;border-radius:14px;padding:18px;width:100%;box-sizing:border-box;">
 
 <tr>
-<td style="color:#9ca3af;">{t("payment.success.dateLabel")} :</td>
-<td style="text-align:right;">{date or "-"}</td>
+<td style="color:#9ca3af;font-size:14px;padding:7px 0;width:42%;">
+{L["date"]}:
+</td>
+<td style="text-align:right;color:#ffffff;font-size:15px;padding:7px 0;width:58%;white-space:nowrap;" dir="ltr">
+{date or "-"}
+</td>
 </tr>
 
-<tr><td style="height:8px"></td></tr>
-
 <tr>
-<td style="color:#9ca3af;">{t("profile.phone")} :</td>
-<td style="text-align:right;">{phone or "-"}</td>
+<td style="color:#9ca3af;font-size:14px;padding:7px 0;">
+{L["phone"]}:
+</td>
+<td style="text-align:right;color:#ffffff;font-size:15px;padding:7px 0;white-space:nowrap;" dir="ltr">
+{phone or "-"}
+</td>
 </tr>
 
-<tr><td style="height:8px"></td></tr>
-
 <tr>
-<td style="color:#9ca3af;">Pays :</td>
-<td style="text-align:right;">{flag} {country_display}</td>
+<td style="color:#9ca3af;font-size:14px;padding:7px 0;">
+{L["country"]}:
+</td>
+<td style="text-align:right;color:#ffffff;font-size:15px;padding:7px 0;" dir="ltr">
+{flag} {country_display}
+</td>
 </tr>
 
-<tr><td style="height:8px"></td></tr>
-
 <tr>
-<td style="color:#9ca3af;">Opérateur :</td>
-<td style="text-align:right;">
+<td style="color:#9ca3af;font-size:14px;padding:7px 0;">
+{L["operator"]}:
+</td>
+<td style="text-align:right;color:#ffffff;font-size:15px;padding:7px 0;">
 {operator_display} {logo_html}
 </td>
 </tr>
 
-<tr><td style="height:8px"></td></tr>
-
 <tr>
-<td style="color:#9ca3af;">Produit :</td>
-<td style="text-align:right;">
-{forfait if forfait else "Recharge mobile"}
+<td style="color:#9ca3af;font-size:14px;padding:7px 0;">
+{L["product"]}:
+</td>
+<td style="text-align:right;color:#ffffff;font-size:15px;padding:7px 0;">
+{product_display}
 </td>
 </tr>
 
-<tr><td style="height:20px"></td></tr>
+<tr><td colspan="2" style="height:14px"></td></tr>
 
 <tr>
-<td style="color:#9ca3af;">{t("payment.success.amountLabel")} :</td>
-<td style="text-align:right;">{amount:.2f} €</td>
+<td style="color:#9ca3af;font-size:14px;padding:7px 0;">
+{L["paid"]}:
+</td>
+<td style="text-align:right;color:#ffffff;font-size:15px;padding:7px 0;white-space:nowrap;" dir="ltr">
+{amount:.2f} €
+</td>
 </tr>
 
-<tr><td style="height:6px"></td></tr>
-
 <tr>
-<td style="color:#9ca3af;">Frais :</td>
-<td style="text-align:right;">{fee:.2f} €</td>
+<td style="color:#9ca3af;font-size:14px;padding:7px 0;">
+{L["fees"]}:
+</td>
+<td style="text-align:right;color:#ffffff;font-size:15px;padding:7px 0;white-space:nowrap;" dir="ltr">
+{fee:.2f} €
+</td>
 </tr>
 
-<tr><td style="height:6px"></td></tr>
-
-
-
-<tr><td style="height:10px"></td></tr>
+<tr><td colspan="2" style="height:12px;border-bottom:1px solid #1f2937;"></td></tr>
+<tr><td colspan="2" style="height:12px;"></td></tr>
 
 <tr>
-<td style="font-weight:bold;">Total payé :</td>
-<td style="text-align:right;font-weight:bold;font-size:18px;color:#00d1c1;">
+<td style="font-weight:bold;color:#ffffff;font-size:16px;padding:7px 0;">
+{L["total_paid"]}:
+</td>
+<td style="text-align:right;font-weight:bold;font-size:20px;color:#00d1c1;padding:7px 0;white-space:nowrap;" dir="ltr">
 {total:.2f} €
 </td>
 </tr>
@@ -307,21 +427,20 @@ Yeslek
 </td>
 </tr>
 
-<tr><td colspan="2" style="height:30px"></td></tr>
+<tr><td colspan="2" style="height:28px"></td></tr>
 
 <tr>
 <td colspan="2" align="center">
 
 <a href="https://yeslek.com"
-style="background:#b4ff00;color:black;padding:14px 26px;
-text-decoration:none;border-radius:30px;font-weight:bold;display:inline-block;">
-{t("recharge.selectAmount.goToPay")}
+style="background:#b4ff00;color:black;padding:14px 34px;text-decoration:none;border-radius:30px;font-weight:bold;display:inline-block;">
+{L["button"]}
 </a>
 
 </td>
 </tr>
 
-<tr><td colspan="2" style="height:25px"></td></tr>
+<tr><td colspan="2" style="height:24px"></td></tr>
 
 <tr>
 <td colspan="2" style="text-align:center;color:#9ca3af;font-size:12px;">
@@ -331,7 +450,7 @@ support@yeslek.com
 
 <tr>
 <td colspan="2" style="text-align:center;color:#6b7280;font-size:11px;padding-top:10px;">
-© {year} yeslek
+© {year} Yeslek
 </td>
 </tr>
 
