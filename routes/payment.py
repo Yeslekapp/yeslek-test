@@ -837,15 +837,18 @@ def card_get():
         )
 
     return render_template(
-        "payment/card.html",
+        "payment/method.html",
         phone=ctx["phone"],
         amount=amount,
         forfait_display=_get_forfait_display(),
         final_amount=ctx["final_amount"],
+        selected_method=session.get("payment_selected_method", "card"),
         save_card=session.get("payment_save_card", True),
-        cards=CardService.get_user_cards(session.get("user_id")),
+        is_forfait_minutes=False,
         received_display=received_display,
+        from_wallet=from_wallet,
         payment_form_nonce=_ensure_payment_form_nonce(),
+        cards=CardService.get_user_cards(session.get("user_id")),
     )
 
 # ---------------------------
