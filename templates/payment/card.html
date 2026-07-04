@@ -204,8 +204,8 @@ changeCardBtn?.addEventListener("click", () => {
 });
 
 // ---------------------------
-// Submit (FINAL SAFE)
-// ---------------------------
+// Submit (FINAL SAFE + SAVED CARD)
+/// ---------------------------
 let lock = false;
 
 form.addEventListener("submit", async (e) => {
@@ -217,31 +217,38 @@ form.addEventListener("submit", async (e) => {
   // ---------------------------
   if (lock) return;
 
+  const savedCardId =
+    selectedSavedCard?.value || "";
+
   // ---------------------------
-  // Validation UX (FINAL SAFE)
+  // Validation UX new card only
   // ---------------------------
-  if (!nameEl?.value.trim()) {
-    tzToast?.(tr("payment.card.errors.emptyName", "Veuillez entrer le nom"));
-    nameEl.focus();
-    return;
-  }
+  if (!savedCardId) {
 
-  if (!cardComplete) {
-    tzToast?.(tr("payment.card.errors.invalidCardNumber", "Numéro de carte invalide"));
-    cardNumber.focus();
-    return;
-  }
+    if (!nameEl?.value.trim()) {
+      tzToast?.(tr("payment.card.errors.emptyName", "Veuillez entrer le nom"));
+      nameEl.focus();
+      return;
+    }
 
-  if (!expiryComplete) {
-    tzToast?.(tr("payment.card.errors.invalidExpiry", "Date invalide"));
-    cardExpiry.focus();
-    return;
-  }
+    if (!cardComplete) {
+      tzToast?.(tr("payment.card.errors.invalidCardNumber", "Numéro de carte invalide"));
+      cardNumber.focus();
+      return;
+    }
 
-  if (!cvcComplete) {
-    tzToast?.(tr("payment.card.errors.invalidCvc", "CVC invalide"));
-    cardCvc.focus();
-    return;
+    if (!expiryComplete) {
+      tzToast?.(tr("payment.card.errors.invalidExpiry", "Date invalide"));
+      cardExpiry.focus();
+      return;
+    }
+
+    if (!cvcComplete) {
+      tzToast?.(tr("payment.card.errors.invalidCvc", "CVC invalide"));
+      cardCvc.focus();
+      return;
+    }
+
   }
 
   // ---------------------------
@@ -260,9 +267,9 @@ form.addEventListener("submit", async (e) => {
       },
       body: JSON.stringify({
         payment_form_nonce: form.dataset.paymentNonce || "",
-        payment_channel: "card",
+        payment_channel: savedCardId ? "saved_card" : "card",
         save_card: saveInput?.value === "1",
-        saved_card_id: selectedSavedCard?.value || "",
+        saved_card_id: savedCardId,
         card_name: nameEl?.value || ""
       })
     });
@@ -273,8 +280,62 @@ form.addEventListener("submit", async (e) => {
       throw new Error(data.error || "server_error");
     }
 
-    if (!data.client_secret) throw new Error("no_client_secret");
+    if (!data.client_secret) {
+      throw new Error("no_client_secret");
+    }
 
+    // ---------------------------
+    // Saved card flow
+    // ---------------------------
+    if (savedCardId) {
+
+      if (data.status === "succeeded") {
+
+        setTimeout(() => {
+          window.location.href =
+            "/payment/success?payment_intent=" +
+            data.payment_intent_id;
+        }, 300);
+
+        return;
+      }
+
+      const savedResult = await stripe.confirmCardPayment(
+        data.client_secret
+      );
+
+      if (savedResult.error) {
+        tzToast?.(
+          savedResult.error.message ||
+          tr("payment.card.genericError", "Une erreur est survenue")
+        );
+
+        lock = false;
+        setLoading(false);
+        return;
+      }
+
+      if (savedResult.paymentIntent?.status === "succeeded") {
+
+        setTimeout(() => {
+          window.location.href =
+            "/payment/success?payment_intent=" +
+            savedResult.paymentIntent.id;
+        }, 300);
+
+        return;
+      }
+
+      tzToast?.(tr("payment.card.genericError", "Une erreur est survenue"));
+
+      lock = false;
+      setLoading(false);
+      return;
+    }
+
+    // ---------------------------
+    // New card flow
+    // ---------------------------
     const result = await stripe.confirmCardPayment(
       data.client_secret,
       {
@@ -292,41 +353,43 @@ form.addEventListener("submit", async (e) => {
         result.error.message ||
         tr("payment.card.genericError", "Une erreur est survenue")
       );
+
       lock = false;
       setLoading(false);
       return;
     }
 
-if (result.paymentIntent?.status === "succeeded") {
+    if (result.paymentIntent?.status === "succeeded") {
 
-  // ---------------------------
-  // Wallet link -> close page
-  // ---------------------------
-  if (window.location.search.includes("amount=")) {
+      // ---------------------------
+      // Wallet link -> close page
+      // ---------------------------
+      if (window.location.search.includes("amount=")) {
 
-    document.body.innerHTML =
-      "<div class='tz-page'><div class='tz-card tz-card--soft'>Paiement OK</div></div>";
+        document.body.innerHTML =
+          "<div class='tz-page'><div class='tz-card tz-card--soft'>Paiement OK</div></div>";
 
-    setTimeout(() => {
-      window.close();
-    }, 1200);
+        setTimeout(() => {
+          window.close();
+        }, 1200);
 
-    return;
-  }
+        return;
+      }
 
-  // ---------------------------
-  // Normal flow
-  // ---------------------------
-  setTimeout(() => {
-    window.location.href =
-      "/payment/success?payment_intent=" +
-      result.paymentIntent.id;
-  }, 300);
+      // ---------------------------
+      // Normal flow
+      // ---------------------------
+      setTimeout(() => {
+        window.location.href =
+          "/payment/success?payment_intent=" +
+          result.paymentIntent.id;
+      }, 300);
 
-  return;
-}
+      return;
+    }
 
     tzToast?.(tr("payment.card.genericError", "Une erreur est survenue"));
+
     lock = false;
     setLoading(false);
 

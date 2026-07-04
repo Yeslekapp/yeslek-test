@@ -1,19 +1,13 @@
 # ---------------------------
-# Card Service (FINAL SAFE)
+# Card Service (POSTGRESQL SAFE)
 # ---------------------------
 
 from __future__ import annotations
 
-import json
-import os
-import tempfile
 from typing import Any, Optional
 
+from services.core.db_service import db_cursor
 from services.stripe.stripe_service import StripeService
-
-
-CARDS_FILE = "data/saved_cards.json"
-CUSTOMERS_FILE = "data/stripe_customers.json"
 
 
 class CardService:
@@ -37,123 +31,27 @@ class CardService:
         return getattr(obj, key, default)
 
     # ---------------------------
-    # Read JSON
+    # Row mapper
     # ---------------------------
     @staticmethod
-    def _read_json(path: str) -> list[dict]:
+    def _card_from_row(
+        row: dict,
+    ) -> dict:
 
-        if not os.path.exists(path):
-            return []
-
-        try:
-            with open(
-                path,
-                "r",
-                encoding="utf-8",
-            ) as f:
-                data = json.load(f)
-
-            if isinstance(data, list):
-                return data
-
-            return []
-
-        except Exception:
-            return []
-
-    # ---------------------------
-    # Write JSON atomic
-    # ---------------------------
-    @staticmethod
-    def _write_json(
-        path: str,
-        data: list[dict],
-    ) -> None:
-
-        os.makedirs(
-            os.path.dirname(path),
-            exist_ok=True,
-        )
-
-        directory = os.path.dirname(path)
-
-        fd, temp_path = tempfile.mkstemp(
-            dir=directory,
-            prefix=".tmp_",
-            suffix=".json",
-        )
-
-        try:
-            with os.fdopen(
-                fd,
-                "w",
-                encoding="utf-8",
-            ) as f:
-                json.dump(
-                    data,
-                    f,
-                    indent=2,
-                    ensure_ascii=False,
-                )
-
-            os.replace(
-                temp_path,
-                path,
-            )
-
-        except Exception:
-            try:
-                os.remove(temp_path)
-            except Exception:
-                pass
-
-            raise
-
-    # ---------------------------
-    # Read cards
-    # ---------------------------
-    @staticmethod
-    def _read_cards() -> list[dict]:
-
-        return CardService._read_json(
-            CARDS_FILE
-        )
-
-    # ---------------------------
-    # Write cards
-    # ---------------------------
-    @staticmethod
-    def _write_cards(
-        cards: list[dict],
-    ) -> None:
-
-        CardService._write_json(
-            CARDS_FILE,
-            cards,
-        )
-
-    # ---------------------------
-    # Read customers
-    # ---------------------------
-    @staticmethod
-    def _read_customers() -> list[dict]:
-
-        return CardService._read_json(
-            CUSTOMERS_FILE
-        )
-
-    # ---------------------------
-    # Write customers
-    # ---------------------------
-    @staticmethod
-    def _write_customers(
-        customers: list[dict],
-    ) -> None:
-
-        CardService._write_json(
-            CUSTOMERS_FILE,
-            customers,
-        )
+        return {
+            "id": row.get("payment_method_id"),
+            "card_id": row.get("payment_method_id"),
+            "db_id": row.get("id"),
+            "user_id": str(row.get("user_id")),
+            "stripe_customer_id": row.get("stripe_customer_id") or "",
+            "brand": row.get("brand") or "card",
+            "last4": row.get("last4") or "",
+            "exp_month": row.get("exp_month"),
+            "exp_year": row.get("exp_year"),
+            "expiry": row.get("expiry") or "",
+            "fingerprint": row.get("fingerprint") or "",
+            "is_default": bool(row.get("is_default")),
+        }
 
     # ---------------------------
     # Get or create Stripe customer
@@ -168,52 +66,66 @@ class CardService:
         if not user_id:
             raise ValueError("missing_user_id")
 
-        customers = CardService._read_customers()
+        user_id = str(user_id)
 
-        existing = next(
-            (
-                customer
-                for customer in customers
-                if str(customer.get("user_id")) == str(user_id)
-                and customer.get("stripe_customer_id")
-            ),
-            None,
-        )
+        with db_cursor(commit=True) as cur:
 
-        if existing:
-            return str(
-                existing.get("stripe_customer_id")
+            cur.execute(
+                """
+                SELECT stripe_customer_id
+                FROM stripe_customers
+                WHERE user_id = %s
+                LIMIT 1
+                """,
+                (user_id,),
             )
 
-        customer = StripeService.create_customer(
-            email=email,
-            user_id=str(user_id),
-        )
+            existing = cur.fetchone()
 
-        stripe_customer_id = str(
-            CardService._get_value(
-                customer,
-                "id",
-                "",
+            if existing and existing.get("stripe_customer_id"):
+                return str(existing["stripe_customer_id"])
+
+            customer = StripeService.create_customer(
+                email=email,
+                user_id=user_id,
             )
-        )
 
-        if not stripe_customer_id:
-            raise ValueError("missing_stripe_customer_id")
+            stripe_customer_id = str(
+                CardService._get_value(
+                    customer,
+                    "id",
+                    "",
+                )
+            )
 
-        customers.append(
-            {
-                "user_id": str(user_id),
-                "email": email or "",
-                "stripe_customer_id": stripe_customer_id,
-            }
-        )
+            if not stripe_customer_id:
+                raise ValueError("missing_stripe_customer_id")
 
-        CardService._write_customers(
-            customers
-        )
+            cur.execute(
+                """
+                INSERT INTO stripe_customers (
+                    user_id,
+                    email,
+                    stripe_customer_id
+                )
+                VALUES (%s, %s, %s)
+                ON CONFLICT (user_id)
+                DO UPDATE SET
+                    email = EXCLUDED.email,
+                    stripe_customer_id = EXCLUDED.stripe_customer_id,
+                    updated_at = NOW()
+                RETURNING stripe_customer_id
+                """,
+                (
+                    user_id,
+                    email or "",
+                    stripe_customer_id,
+                ),
+            )
 
-        return stripe_customer_id
+            row = cur.fetchone()
+
+            return str(row["stripe_customer_id"])
 
     # ---------------------------
     # Save card
@@ -227,6 +139,8 @@ class CardService:
 
         if not user_id or not payment_method:
             return None
+
+        user_id = str(user_id)
 
         payment_method_id = str(
             CardService._get_value(
@@ -289,55 +203,115 @@ class CardService:
         if not last4 or not exp_month or not exp_year:
             return None
 
-        cards = CardService._read_cards()
+        expiry = f"{int(exp_month):02d}/{int(exp_year)}"
 
-        user_cards = [
-            card
-            for card in cards
-            if str(card.get("user_id")) == str(user_id)
-        ]
+        with db_cursor(commit=True) as cur:
 
-        # ---------------------------
-        # Prevent duplicates
-        # ---------------------------
-        existing = next(
-            (
-                card
-                for card in user_cards
-                if card.get("id") == payment_method_id
-                or (
-                    fingerprint
-                    and card.get("fingerprint") == fingerprint
+            cur.execute(
+                """
+                SELECT id
+                FROM saved_cards
+                WHERE user_id = %s
+                  AND deleted_at IS NULL
+                LIMIT 1
+                """,
+                (user_id,),
+            )
+
+            has_existing_card = cur.fetchone() is not None
+            is_default = not has_existing_card
+
+            cur.execute(
+                """
+                SELECT *
+                FROM saved_cards
+                WHERE user_id = %s
+                  AND deleted_at IS NULL
+                  AND (
+                    payment_method_id = %s
+                    OR (
+                        %s <> ''
+                        AND fingerprint = %s
+                    )
+                  )
+                LIMIT 1
+                """,
+                (
+                    user_id,
+                    payment_method_id,
+                    fingerprint,
+                    fingerprint,
+                ),
+            )
+
+            existing = cur.fetchone()
+
+            if existing:
+                cur.execute(
+                    """
+                    UPDATE saved_cards
+                    SET
+                        stripe_customer_id = COALESCE(NULLIF(%s, ''), stripe_customer_id),
+                        brand = %s,
+                        last4 = %s,
+                        exp_month = %s,
+                        exp_year = %s,
+                        expiry = %s,
+                        fingerprint = NULLIF(%s, ''),
+                        updated_at = NOW()
+                    WHERE id = %s
+                    RETURNING *
+                    """,
+                    (
+                        stripe_customer_id or "",
+                        brand,
+                        last4,
+                        int(exp_month),
+                        int(exp_year),
+                        expiry,
+                        fingerprint,
+                        existing["id"],
+                    ),
                 )
-            ),
-            None,
-        )
 
-        if existing:
-            return existing
+                row = cur.fetchone()
 
-        is_default = len(user_cards) == 0
+                return CardService._card_from_row(row)
 
-        card = {
-            "id": payment_method_id,
-            "user_id": str(user_id),
-            "stripe_customer_id": stripe_customer_id or "",
-            "brand": brand,
-            "last4": last4,
-            "exp_month": int(exp_month),
-            "exp_year": int(exp_year),
-            "expiry": f"{exp_month}/{exp_year}",
-            "fingerprint": fingerprint,
-            "is_default": is_default,
-        }
+            cur.execute(
+                """
+                INSERT INTO saved_cards (
+                    user_id,
+                    stripe_customer_id,
+                    payment_method_id,
+                    brand,
+                    last4,
+                    exp_month,
+                    exp_year,
+                    expiry,
+                    fingerprint,
+                    is_default
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULLIF(%s, ''), %s)
+                RETURNING *
+                """,
+                (
+                    user_id,
+                    stripe_customer_id or "",
+                    payment_method_id,
+                    brand,
+                    last4,
+                    int(exp_month),
+                    int(exp_year),
+                    expiry,
+                    fingerprint,
+                    is_default,
+                ),
+            )
 
-        cards.append(card)
+            row = cur.fetchone()
 
-        CardService._write_cards(
-            cards
-        )
-
-        return card
+            return CardService._card_from_row(row)
 
     # ---------------------------
     # Get user cards
@@ -350,13 +324,37 @@ class CardService:
         if not user_id:
             return []
 
-        cards = CardService._read_cards()
+        with db_cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT *
+                FROM saved_cards
+                WHERE user_id = %s
+                  AND deleted_at IS NULL
+                ORDER BY is_default DESC, created_at DESC
+                """,
+                (str(user_id),),
+            )
+
+            rows = cur.fetchall() or []
 
         return [
-            card
-            for card in cards
-            if str(card.get("user_id")) == str(user_id)
+            CardService._card_from_row(row)
+            for row in rows
         ]
+
+    # ---------------------------
+    # Compatibility: Flutter naming
+    # ---------------------------
+    @staticmethod
+    def get_saved_cards(
+        user_id: str,
+    ) -> list[dict]:
+
+        return CardService.get_user_cards(
+            user_id
+        )
 
     # ---------------------------
     # Get card
@@ -368,18 +366,32 @@ class CardService:
         card_id: str,
     ) -> Optional[dict]:
 
-        cards = CardService.get_user_cards(
-            user_id
-        )
+        if not user_id or not card_id:
+            return None
 
-        return next(
-            (
-                card
-                for card in cards
-                if card.get("id") == card_id
-            ),
-            None,
-        )
+        with db_cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT *
+                FROM saved_cards
+                WHERE user_id = %s
+                  AND payment_method_id = %s
+                  AND deleted_at IS NULL
+                LIMIT 1
+                """,
+                (
+                    str(user_id),
+                    str(card_id),
+                ),
+            )
+
+            row = cur.fetchone()
+
+        if not row:
+            return None
+
+        return CardService._card_from_row(row)
 
     # ---------------------------
     # Set default card
@@ -394,27 +406,53 @@ class CardService:
         if not user_id or not card_id:
             return False
 
-        cards = CardService._read_cards()
+        user_id = str(user_id)
+        card_id = str(card_id)
 
-        found = False
+        with db_cursor(commit=True) as cur:
 
-        for card in cards:
-            if str(card.get("user_id")) != str(user_id):
-                continue
+            cur.execute(
+                """
+                SELECT id
+                FROM saved_cards
+                WHERE user_id = %s
+                  AND payment_method_id = %s
+                  AND deleted_at IS NULL
+                LIMIT 1
+                """,
+                (
+                    user_id,
+                    card_id,
+                ),
+            )
 
-            is_target = card.get("id") == card_id
+            target = cur.fetchone()
 
-            card["is_default"] = is_target
+            if not target:
+                return False
 
-            if is_target:
-                found = True
+            cur.execute(
+                """
+                UPDATE saved_cards
+                SET
+                    is_default = FALSE,
+                    updated_at = NOW()
+                WHERE user_id = %s
+                  AND deleted_at IS NULL
+                """,
+                (user_id,),
+            )
 
-        if not found:
-            return False
-
-        CardService._write_cards(
-            cards
-        )
+            cur.execute(
+                """
+                UPDATE saved_cards
+                SET
+                    is_default = TRUE,
+                    updated_at = NOW()
+                WHERE id = %s
+                """,
+                (target["id"],),
+            )
 
         return True
 
@@ -430,27 +468,86 @@ class CardService:
         if not card_id:
             return False
 
-        cards = CardService._read_cards()
+        with db_cursor(commit=True) as cur:
 
-        old_count = len(cards)
+            cur.execute(
+                """
+                SELECT *
+                FROM saved_cards
+                WHERE payment_method_id = %s
+                  AND deleted_at IS NULL
+                  AND (
+                    %s IS NULL
+                    OR user_id = %s
+                  )
+                LIMIT 1
+                """,
+                (
+                    str(card_id),
+                    str(user_id) if user_id else None,
+                    str(user_id) if user_id else None,
+                ),
+            )
 
-        cards = [
-            card
-            for card in cards
-            if not (
-                card.get("id") == card_id
-                and (
-                    user_id is None
-                    or str(card.get("user_id")) == str(user_id)
+            card = cur.fetchone()
+
+            if not card:
+                return False
+
+            was_default = bool(card.get("is_default"))
+            card_user_id = str(card.get("user_id"))
+
+            cur.execute(
+                """
+                UPDATE saved_cards
+                SET
+                    deleted_at = NOW(),
+                    is_default = FALSE,
+                    updated_at = NOW()
+                WHERE id = %s
+                """,
+                (card["id"],),
+            )
+
+            if was_default:
+                cur.execute(
+                    """
+                    SELECT id
+                    FROM saved_cards
+                    WHERE user_id = %s
+                      AND deleted_at IS NULL
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                    """,
+                    (card_user_id,),
                 )
-            )
-        ]
 
-        deleted = len(cards) != old_count
+                next_card = cur.fetchone()
 
-        if deleted:
-            CardService._write_cards(
-                cards
-            )
+                if next_card:
+                    cur.execute(
+                        """
+                        UPDATE saved_cards
+                        SET
+                            is_default = TRUE,
+                            updated_at = NOW()
+                        WHERE id = %s
+                        """,
+                        (next_card["id"],),
+                    )
 
-        return deleted
+        return True
+
+    # ---------------------------
+    # Compatibility: Flutter naming
+    # ---------------------------
+    @staticmethod
+    def delete_saved_card(
+        user_id: str,
+        card_id: str,
+    ) -> bool:
+
+        return CardService.delete_card(
+            card_id=card_id,
+            user_id=str(user_id),
+        )

@@ -40,7 +40,45 @@ class StripeService:
         except Exception as e:
             print("❌ Stripe create_customer error:", e)
             raise
+    # ---------------------------
+    # Saved card payment intent
+    # ---------------------------
+    @staticmethod
+    def create_saved_card_payment_intent(
+        *,
+        amount: float,
+        currency: str,
+        payment_method_id: str,
+        metadata: dict | None = None,
+        customer_id: str,
+        idempotency_key: str | None = None,
+    ) -> dict:
 
+        if not amount or float(amount) <= 0:
+            raise ValueError("invalid_amount")
+
+        if not payment_method_id:
+            raise ValueError("missing_payment_method_id")
+
+        if not customer_id:
+            raise ValueError("missing_customer_id")
+
+        intent = stripe.PaymentIntent.create(
+            amount=int(round(float(amount) * 100)),
+            currency=currency.lower(),
+            customer=customer_id,
+            payment_method=payment_method_id,
+            confirm=True,
+            payment_method_types=["card"],
+            metadata=metadata or {},
+            idempotency_key=idempotency_key,
+        )
+
+        return {
+            "id": intent.id,
+            "client_secret": intent.client_secret,
+            "status": intent.status,
+        }
     # ---------------------------
     # Create Payment Intent
     # ---------------------------

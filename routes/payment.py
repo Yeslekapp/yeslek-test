@@ -47,7 +47,19 @@ def _safe_str(value: Any, default: str = "") -> str:
     if value is None:
         return default
     return str(value).strip()
+def _safe_get(
+    obj: Any,
+    key: str,
+    default: Any = None,
+) -> Any:
 
+    if obj is None:
+        return default
+
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+
+    return getattr(obj, key, default)
 # ---------------------------
 # Forfait display helper
 # ---------------------------
@@ -964,12 +976,16 @@ def card_post():
     # ---------------------------
     # Login required
     # ---------------------------
-    if not session.get("user_id"):
+    user_id = session.get("user_id")
+
+    if not user_id:
         return jsonify(
             {
                 "error": "login_required",
             }
         ), 401
+
+    user_id = str(user_id)
 
     # ---------------------------
     # Save card sync
@@ -1025,19 +1041,20 @@ def card_post():
     try:
         risk_context = PaymentGuardService.assert_allowed(
             phone=ctx["phone"],
-            user_id=session.get("user_id"),
+            user_id=user_id,
             user_email=(
                 session.get("user_email")
                 or session.get("pending_email")
             ),
             amount=ctx["final_amount"],
         )
+
     except PaymentGuardError as exc:
 
         logger.warning(
             "Payment guard blocked | code=%s | user_id=%s | phone=%s",
             exc.code,
-            session.get("user_id"),
+            user_id,
             ctx["phone"],
         )
 
@@ -1053,16 +1070,114 @@ def card_post():
     metadata = _build_checkout_metadata(
         idem_key
     )
+
     idem_key = metadata.get(
         "payment_idempotency_key"
     ) or idem_key
+
     metadata.update(
         risk_context.get("metadata") or {}
     )
 
+    selected_saved_card_id = _safe_str(
+        data.get("saved_card_id")
+    )
+
+    # ---------------------------
+    # Saved card payment
+    # ---------------------------
+    if selected_saved_card_id:
+
+        selected_card = CardService.get_card(
+            user_id=user_id,
+            card_id=selected_saved_card_id,
+        )
+
+        if not selected_card:
+            return jsonify(
+                {
+                    "error": "card_not_found",
+                }
+            ), 404
+
+        stripe_customer_id = _safe_str(
+            selected_card.get("stripe_customer_id")
+        )
+
+        if not stripe_customer_id:
+            return jsonify(
+                {
+                    "error": "missing_stripe_customer_id",
+                }
+            ), 400
+
+        metadata["payment_channel"] = "saved_card"
+        metadata["payment_method"] = "saved_card"
+        metadata["saved_card_id"] = selected_saved_card_id
+        metadata["saved_card_brand"] = _safe_str(
+            selected_card.get("brand")
+        )
+        metadata["saved_card_last4"] = _safe_str(
+            selected_card.get("last4")
+        )
+        metadata["stripe_customer_id"] = stripe_customer_id
+        metadata["save_card"] = "false"
+
+        try:
+            intent = StripeService.create_saved_card_payment_intent(
+                amount=ctx["final_amount"],
+                currency="eur",
+                payment_method_id=selected_saved_card_id,
+                metadata=metadata,
+                customer_id=stripe_customer_id,
+                idempotency_key=f"{idem_key}:saved:{selected_saved_card_id}",
+            )
+
+            session["last_payment_intent_id"] = _safe_get(
+                intent,
+                "id",
+                "",
+            )
+
+            return jsonify(
+                {
+                    "client_secret": _safe_get(
+                        intent,
+                        "client_secret",
+                    ),
+                    "payment_intent_id": _safe_get(
+                        intent,
+                        "id",
+                    ),
+                    "status": _safe_get(
+                        intent,
+                        "status",
+                    ),
+                    "saved_card": True,
+                }
+            ), 200
+
+        except Exception as exc:
+
+            logger.exception(
+                "Saved card payment intent error: %s",
+                exc,
+            )
+
+            return jsonify(
+                {
+                    "error": "saved_card_payment_error",
+                }
+            ), 400
+
+    # ---------------------------
+    # New card payment channel
+    # ---------------------------
     metadata["payment_channel"] = _safe_str(
         data.get("payment_channel") or "card"
     )
+
+    metadata["payment_method"] = "card"
 
     # ---------------------------
     # Save card customer
@@ -1076,7 +1191,7 @@ def card_post():
     if save_card:
         try:
             stripe_customer_id = CardService.get_or_create_stripe_customer_id(
-                user_id=str(session.get("user_id")),
+                user_id=user_id,
                 email=metadata.get("user_email"),
             )
 
@@ -1094,6 +1209,43 @@ def card_post():
                     "error": "payment_customer_error",
                 }
             ), 400
+
+    # ---------------------------
+    # Create Stripe intent
+    # ---------------------------
+    try:
+        intent = StripeService.create_payment_intent(
+            amount=ctx["final_amount"],
+            currency="eur",
+            metadata=metadata,
+            idempotency_key=idem_key,
+            customer_email=metadata.get("user_email"),
+            customer_id=stripe_customer_id,
+            save_card=save_card,
+        )
+
+        session["last_payment_intent_id"] = intent.id
+
+        return jsonify(
+            {
+                "client_secret": intent.client_secret,
+                "payment_intent_id": intent.id,
+                "saved_card": False,
+            }
+        )
+
+    except Exception as exc:
+
+        logger.exception(
+            "Stripe payment intent error: %s",
+            exc,
+        )
+
+        return jsonify(
+            {
+                "error": "payment_error",
+            }
+        ), 400
 
     # ---------------------------
     # Create Stripe intent
