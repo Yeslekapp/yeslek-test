@@ -213,6 +213,35 @@ def _get_or_create_payment_idempotency_key() -> str:
 
     return idem_key
 
+
+# ---------------------------
+# Customer order reference
+# ---------------------------
+def _get_or_create_order_reference() -> str:
+
+    order_ref = _safe_str(
+        session.get("payment_order_reference")
+    )
+
+    if order_ref:
+        return order_ref
+
+    try:
+        order_ref = OrderReferenceService.generate_order_reference()
+
+    except Exception:
+        logger.exception(
+            "Order reference generation error"
+        )
+
+        order_ref = uuid.uuid4().hex[:9].upper()
+
+    session["payment_order_reference"] = order_ref
+    session["last_order_reference"] = order_ref
+
+    return order_ref
+
+
 # ---------------------------
 # Payment form nonce
 # ---------------------------
@@ -299,10 +328,17 @@ def _build_checkout_metadata(idem_key: str) -> Dict[str, str]:
         operator = {}
 
     # ---------------------------
+    # Customer reference
+    # ---------------------------
+    order_ref = _get_or_create_order_reference()
+
+    # ---------------------------
     # Metadata
     # ---------------------------
     return {
         "payment_idempotency_key": idem_key,
+        "order_reference": order_ref,
+        "order_number": order_ref,
         "recharge_phone": _safe_str(ctx["phone"]),
         "base_amount": f"{ctx['base_amount']:.2f}",
         "recharge_amount": f"{ctx['recharge_amount']:.2f}",
@@ -353,6 +389,7 @@ def _build_success_payload(
     charged_amount: float,
     transaction_id: Optional[int],
     transaction_reference: str,
+    order_reference: Optional[str] = None,
 ) -> Dict[str, Any]:
 
     # ---------------------------
@@ -369,19 +406,29 @@ def _build_success_payload(
     # ---------------------------
     # Customer order reference
     # ---------------------------
-    try:
-        order_ref = OrderReferenceService.generate_order_reference()
+    order_ref = (
+        _safe_str(order_reference)
+        or _safe_str(session.get("payment_order_reference"))
+    )
 
-    except Exception:
-        logger.exception(
-            "Order reference generation error"
-        )
+    if not order_ref:
 
-        order_ref = (
-            f"{int(transaction_id):09d}"
-            if transaction_id
-            else uuid.uuid4().hex[:9].upper()
-        )
+        try:
+            order_ref = OrderReferenceService.generate_order_reference()
+
+        except Exception:
+            logger.exception(
+                "Order reference generation error"
+            )
+
+            order_ref = (
+                f"{int(transaction_id):09d}"
+                if transaction_id
+                else uuid.uuid4().hex[:9].upper()
+            )
+
+    session["payment_order_reference"] = order_ref
+    session["last_order_reference"] = order_ref
 
     # ---------------------------
     # Reloadly transaction reference
@@ -1631,6 +1678,10 @@ def stripe_webhook_post():
             charged_amount=charged_amount,
             transaction_id=result.transaction_id,
             transaction_reference=result.custom_identifier,
+            order_reference=(
+                metadata.get("order_reference")
+                or metadata.get("order_number")
+            ),
         )
 
         # ---------------------------
@@ -1798,18 +1849,33 @@ def payment_success():
     # ---------------------------
     if not payload:
 
-        import hashlib
-
-        raw = payment_intent_id.encode()
-
-        hash_val = int(
-            hashlib.sha256(raw).hexdigest(),
-            16
+        formatted_ref = _safe_str(
+            session.get("payment_order_reference")
         )
 
-        formatted_ref = str(
-            hash_val % 10**12
-        ).zfill(12)
+        if not formatted_ref and payment_intent_id:
+
+            try:
+                intent = StripeService.retrieve_payment(
+                    payment_intent_id
+                )
+
+                intent_metadata = dict(
+                    getattr(intent, "metadata", {}) or {}
+                )
+
+                formatted_ref = _safe_str(
+                    intent_metadata.get("order_reference")
+                    or intent_metadata.get("order_number")
+                )
+
+            except Exception:
+                logger.exception(
+                    "Payment success order reference metadata error"
+                )
+
+        if not formatted_ref:
+            formatted_ref = _get_or_create_order_reference()
 
         payload = {
             "status": "PROCESSING",
@@ -1824,7 +1890,9 @@ def payment_success():
 
             "order_number": formatted_ref,
             "reference": formatted_ref,
-            "transaction_reference": formatted_ref,
+
+            "transaction_reference": payment_intent_id,
+            "reloadly_reference": payment_intent_id,
 
             "transaction_id": None,
         }
@@ -2019,6 +2087,8 @@ def success_finish_post():
     session.pop("payment_selected_method", None)
     session.pop("payment_save_card", None)
     session.pop("last_payment_intent_id", None)
+    session.pop("payment_order_reference", None)
+    session.pop("last_order_reference", None)
 
     session.pop("recharge_phone", None)
     session.pop("recharge_amount", None)
