@@ -1247,41 +1247,6 @@ def card_post():
             }
         ), 400
 
-    # ---------------------------
-    # Create Stripe intent
-    # ---------------------------
-    try:
-        intent = StripeService.create_payment_intent(
-            amount=ctx["final_amount"],
-            currency="eur",
-            metadata=metadata,
-            idempotency_key=idem_key,
-            customer_email=metadata.get("user_email"),
-            customer_id=stripe_customer_id,
-            save_card=save_card,
-        )
-
-        session["last_payment_intent_id"] = intent.id
-
-        return jsonify(
-            {
-                "client_secret": intent.client_secret,
-                "payment_intent_id": intent.id,
-            }
-        )
-
-    except Exception as exc:
-
-        logger.exception(
-            "Stripe payment intent error: %s",
-            exc,
-        )
-
-        return jsonify(
-            {
-                "error": "payment_error",
-            }
-        ), 400
 
 # ---------------------------
 # Stripe webhook (FINAL PRODUCTION ULTRA SAFE)

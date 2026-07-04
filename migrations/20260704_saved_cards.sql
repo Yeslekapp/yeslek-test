@@ -1,5 +1,5 @@
 -- ---------------------------
--- Feature: Saved cards PostgreSQL
+-- Feature: Stripe customers
 -- ---------------------------
 
 CREATE TABLE IF NOT EXISTS stripe_customers (
@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS stripe_customers (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ---------------------------
+-- Feature: Saved cards
+-- ---------------------------
 
 CREATE TABLE IF NOT EXISTS saved_cards (
     id BIGSERIAL PRIMARY KEY,
