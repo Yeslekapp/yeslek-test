@@ -33,27 +33,37 @@
     justify-content: center;
   }
 
-  .tz-wallet-placeholder {
+  .tz-wallet-loading-placeholder {
     position: absolute;
     inset: 0 12px;
     height: 56px;
     border-radius: 999px;
-    background: #000000;
+    background: #111111;
     color: #ffffff;
-    font-size: 22px;
-    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
+    gap: 10px;
     pointer-events: none;
     z-index: 2;
+    font-size: 15px;
+    font-weight: 700;
   }
 
-  .tz-wallet-placeholder-g {
-    color: #4285f4;
-    font-size: 26px;
-    font-weight: 900;
+  .tz-wallet-loading-spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-top-color: #ffffff;
+    animation: tzWalletSpin 0.8s linear infinite;
+    flex: 0 0 auto;
+  }
+
+  @keyframes tzWalletSpin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .tz-wallet-button {
@@ -75,7 +85,7 @@
     pointer-events: auto;
   }
 
-  .tz-wallet-inner.is-ready .tz-wallet-placeholder {
+  .tz-wallet-inner.is-ready .tz-wallet-loading-placeholder {
     display: none;
   }
 
@@ -591,11 +601,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             <div
               id="walletPlaceholder"
-              class="tz-wallet-placeholder"
+              class="tz-wallet-loading-placeholder"
             >
-              <span>Buy with</span>
-              <span class="tz-wallet-placeholder-g">G</span>
-              <span>Pay</span>
+              <span class="tz-wallet-loading-spinner"></span>
+              <span>Chargement...</span>
             </div>
 
             <div
