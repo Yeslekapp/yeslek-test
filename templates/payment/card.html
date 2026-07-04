@@ -652,37 +652,39 @@ form.addEventListener("submit", async (e) => {
     <!-- ================= SUMMARY ================= -->
 
 <section class="tz-card tz-card--soft">
+
   <div class="tz-row">
 
-    {% if not phone %}
-    
-      <div class="tz-strong">
-        {{ t("wallet.addCredit") }}
-      </div>
-
-      <div class="tz-strong" style="color:#2196f3;">
-        {{ "%.2f"|format(amount|float) }} €
-      </div>
-
-    {% else %}
-
-      <div class="tz-strong">
+    <div class="tz-strong">
+      {% if phone %}
         {{ phone }}
-      </div>
+      {% else %}
+        {{ t("wallet.addCredit") }}
+      {% endif %}
+    </div>
 
-      <div class="tz-strong" style="color:#2196f3;">
-        {% if forfait_display %}
-          {{ forfait_display }}
-        {% elif received_display %}
-          {{ received_display }}
-        {% else %}
-          {{ "%.2f"|format(amount|float) }} €
-        {% endif %}
-      </div>
-
-    {% endif %}
+    <div class="tz-strong" style="color:#2196f3;">
+      {{ "%.2f"|format(final_amount|float) }} €
+    </div>
 
   </div>
+
+  {% if forfait_display or received_display %}
+  <div class="tz-help tz-help--muted" style="margin-top:8px;">
+    {% if forfait_display %}
+      {{ forfait_display }}
+    {% endif %}
+
+    {% if forfait_display and received_display %}
+      •
+    {% endif %}
+
+    {% if received_display %}
+      {{ received_display }}
+    {% endif %}
+  </div>
+  {% endif %}
+
 </section>
 <!-- ================= SAVED CARDS CAROUSEL ================= -->
 
@@ -776,7 +778,7 @@ form.addEventListener("submit", async (e) => {
           data-payment-nonce="{{ payment_form_nonce }}"
           novalidate>
 
-      <input type="hidden" name="amount" value="{{ amount }}">
+           <input type="hidden" name="amount" value="{{ final_amount }}">
 
       <!-- ================= SAVE CARD ================= -->
 
@@ -872,7 +874,7 @@ form.addEventListener("submit", async (e) => {
 
         <span id="payBtnText">
           {{ t("payment.card.payAmount",
-              {"amount": ("%.2f"|format((amount|default(0))|float))}
+              {"amount": ("%.2f"|format((final_amount|default(0))|float))}
           ) }}
         </span>
 

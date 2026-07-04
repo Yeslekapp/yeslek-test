@@ -371,7 +371,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           body: JSON.stringify({
             payment_form_nonce: paymentNonce,
             payment_channel: channel,
-            save_card: saveCardInput?.value === "1",
+            save_card: (saveCardInput?.value || "1") === "1",
           }),
         });
 
@@ -529,7 +529,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       {% endif %}
 
     </section>
-
+    <!-- ---------------------------
+         Save Card Hidden
+    --------------------------- -->
+    <input type="hidden"
+           name="save_card"
+           id="saveCardInput"
+           value="1">
     <!-- ---------------------------
          Methods
     --------------------------- -->
