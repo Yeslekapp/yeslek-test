@@ -10,6 +10,7 @@ Feature: Card Payment (FINAL SAFE - SAME DESIGN)
   .tz-saved-cards-carousel {
     overflow: hidden;
     padding: 0;
+    border-radius: 18px;
   }
 
   .tz-saved-cards-track {
@@ -24,19 +25,21 @@ Feature: Card Payment (FINAL SAFE - SAME DESIGN)
     min-width: 100%;
     width: 100%;
     box-sizing: border-box;
-    padding: 14px;
+    padding: 0;
   }
 
   .tz-saved-card-pay {
     width: 100%;
+    min-height: 96px;
     border: 0;
     border-radius: 18px;
     background: #f6f6f6;
-    padding: 18px;
+    padding: 14px 18px;
     font: inherit;
     color: inherit;
     text-align: left;
     cursor: pointer;
+    box-sizing: border-box;
   }
 
   .tz-saved-card-pay:active {
@@ -44,15 +47,16 @@ Feature: Card Payment (FINAL SAFE - SAME DESIGN)
   }
 
   .tz-saved-card-main {
+    min-height: 68px;
     display: flex;
     align-items: center;
     gap: 14px;
   }
 
   .tz-saved-card-icon {
-    width: 42px;
-    min-width: 42px;
-    font-size: 28px;
+    width: 34px;
+    min-width: 34px;
+    font-size: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -64,8 +68,9 @@ Feature: Card Payment (FINAL SAFE - SAME DESIGN)
   }
 
   .tz-saved-card-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 800;
+    line-height: 1.15;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -73,22 +78,24 @@ Feature: Card Payment (FINAL SAFE - SAME DESIGN)
 
   .tz-saved-card-expiry {
     margin-top: 4px;
-    font-size: 14px;
+    font-size: 13px;
     color: #777;
   }
 
   .tz-saved-card-default {
-    margin-top: 6px;
+    margin-top: 5px;
     font-size: 13px;
     font-weight: 800;
     color: #2196f3;
   }
 
   .tz-saved-card-dots {
+    height: 22px;
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 7px;
-    padding: 0 0 12px;
+    padding: 0 0 8px;
   }
 
   .tz-saved-card-dot {
