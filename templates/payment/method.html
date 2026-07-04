@@ -9,31 +9,88 @@
   .tz-wallet-method {
     width: 100%;
     margin-bottom: 14px;
-    padding: 14px 28px;
+    padding: 14px 16px;
     border-radius: 18px;
     border: 1.5px solid #dddddd;
     background: #ffffff;
+    box-sizing: border-box;
   }
 
   .tz-wallet-inner {
+    position: relative;
     width: 100%;
+    max-width: 100%;
     height: 56px;
+    margin: 0 auto;
     padding: 0 12px;
     border-radius: 999px;
     border: 1.4px solid rgba(0, 0, 0, 0.55);
     background: #ffffff;
+    box-sizing: border-box;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tz-wallet-placeholder {
+    position: absolute;
+    inset: 0 12px;
+    height: 56px;
+    border-radius: 999px;
+    background: #000000;
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .tz-wallet-placeholder-g {
+    color: #4285f4;
+    font-size: 26px;
+    font-weight: 900;
   }
 
   .tz-wallet-button {
     width: 100%;
+    max-width: 100%;
     height: 56px;
+    margin: 0 auto;
     border-radius: 999px;
     overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tz-wallet-inner.is-ready .tz-wallet-button {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .tz-wallet-inner.is-ready .tz-wallet-placeholder {
+    display: none;
+  }
+
+  .tz-wallet-button > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
   }
 
   .tz-wallet-button iframe {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block;
     border-radius: 999px !important;
+    margin: 0 auto !important;
   }
 </style>
 {% endblock %}
@@ -60,6 +117,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const walletSection = document.getElementById("walletSection");
   const walletTitle = document.getElementById("walletTitle");
   const walletButtonBox = document.getElementById("payment-request-button");
+    const walletPlaceholder = document.getElementById("walletPlaceholder");
 
   const methodTiles = document.querySelectorAll("[data-method]");
   const savedCardTiles = document.querySelectorAll("[data-saved-card-id]");
@@ -271,6 +329,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
 
     prButton.mount("#payment-request-button");
+
+    const walletInner = document.getElementById("walletInner");
+
+    if (walletInner) {
+      walletInner.classList.add("is-ready");
+    }
+
+    if (walletPlaceholder) {
+      walletPlaceholder.style.display = "none";
+    }
 
     paymentRequest.on("paymentmethod", async (ev) => {
 
@@ -484,22 +552,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       <div class="tz-stack" style="gap:12px; margin-top:12px;">
 
-        <!-- Wallet Apple Pay / Google Pay -->
-        <div
-          id="walletSection"
-          class="tz-wallet-method"
-          style="display:none;"
-        >
-
-          <div class="tz-wallet-inner">
-            <div
-              id="payment-request-button"
-              class="tz-wallet-button"
-            ></div>
-          </div>
-
-        </div>
-
         <!-- New card -->
         <button type="button"
                 class="tz-card-item tz-method-tile {% if selected_method == 'card' %}tz-card--highlight{% endif %}"
@@ -527,6 +579,33 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
 
         </button>
+
+        <!-- Wallet Apple Pay / Google Pay -->
+        <div
+          id="walletSection"
+          class="tz-wallet-method"
+          style="display:block;"
+        >
+
+          <div class="tz-wallet-inner" id="walletInner">
+
+            <div
+              id="walletPlaceholder"
+              class="tz-wallet-placeholder"
+            >
+              <span>Buy with</span>
+              <span class="tz-wallet-placeholder-g">G</span>
+              <span>Pay</span>
+            </div>
+
+            <div
+              id="payment-request-button"
+              class="tz-wallet-button"
+            ></div>
+
+          </div>
+
+        </div>
 
         <!-- Saved cards -->
         {% if cards %}
