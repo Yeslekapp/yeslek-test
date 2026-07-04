@@ -234,8 +234,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         label: "Yeslek",
         amount: Math.round(amount * 100),
       },
-      requestPayerName: true,
-      requestPayerEmail: true,
     });
 
     const walletAvailability =
@@ -296,8 +294,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             payment_form_nonce: paymentNonce,
             payment_channel: channel,
             save_card: saveCardInput?.value === "1",
-            wallet_email: ev.payerEmail || "",
-            wallet_name: ev.payerName || "",
           }),
         });
 
