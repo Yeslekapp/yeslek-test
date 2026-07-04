@@ -8,6 +8,7 @@ from typing import Any, Optional
 
 from services.core.db_service import db_cursor
 from services.stripe.stripe_service import StripeService
+from psycopg2.errors import UndefinedTable
 
 
 class CardService:
@@ -324,20 +325,24 @@ class CardService:
         if not user_id:
             return []
 
-        with db_cursor() as cur:
+        try:
+            with db_cursor() as cur:
 
-            cur.execute(
-                """
-                SELECT *
-                FROM saved_cards
-                WHERE user_id = %s
-                  AND deleted_at IS NULL
-                ORDER BY is_default DESC, created_at DESC
-                """,
-                (str(user_id),),
-            )
+                cur.execute(
+                    """
+                    SELECT *
+                    FROM saved_cards
+                    WHERE user_id = %s
+                      AND deleted_at IS NULL
+                    ORDER BY is_default DESC, created_at DESC
+                    """,
+                    (str(user_id),),
+                )
 
-            rows = cur.fetchall() or []
+                rows = cur.fetchall() or []
+
+        except UndefinedTable:
+            return []
 
         return [
             CardService._card_from_row(row)
