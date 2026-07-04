@@ -918,6 +918,7 @@ def method_get():
         received_display=received_display,
         from_wallet=from_wallet,
         payment_form_nonce=_ensure_payment_form_nonce(),
+        cards=CardService.get_user_cards(session.get("user_id")),
     )
 
 @payment_bp.post("/method")

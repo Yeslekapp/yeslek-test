@@ -16,7 +16,8 @@
     "copied": "Copié",
     "copyFailed": "Échec de la copie",
     "removed": "Supprimé",
-    "close": "Fermer"
+    "close": "Fermer",
+    "retry": "Réessayer"
   },
 
   "account": {
@@ -120,7 +121,6 @@
 "payment": {
   "method": {
     "title": "Méthode de paiement",
-    "points": "Points",
     "saveCard": "Enregistrer la carte",
     "chooseMethod": "Choisir une méthode",
     "cardPayment": "Carte bancaire",
@@ -140,8 +140,6 @@
     "pointsAvailable": "Points disponibles : {points}",
     "setDefault": "Définir comme moyen de paiement",
     "payment.method.title": "Méthode de paiement",
-    "payment.points.title": "Points",
-    "payment.points.available": "Points disponibles : {points}",
     "payment.saveCard": "Enregistrer la carte",
     "payment.chooseMethod": "Choisir une méthode de paiement",
     "payment.methods.card.title": "Carte bancaire",
@@ -165,17 +163,30 @@
     }
   },
 
-  "methods": {
-    "card": {
-      "title": "Carte bancaire",
-      "desc": "Payer avec votre carte Visa ou Mastercard"
-    }
+"methods": {
+  "card": {
+    "title": "Carte bancaire",
+    "desc": "Payer avec votre carte Visa ou Mastercard"
   },
+  "wallet": {
+    "title": "Apple Pay / Google Pay",
+    "desc": "Paiement rapide et sécurisé"
+  },
+  "applePay": {
+    "title": "Apple Pay"
+  },
+  "googlePay": {
+    "title": "Google Pay"
+  }
+},
 
   "saveCard": "Enregistrer la carte",
   "chooseMethod": "Choisir une méthode de paiement",
-  "methodSelected": "Méthode sélectionnée",
-  "pay": "Payer {amount} €",
+"methodSelected": "Méthode sélectionnée",
+"default": "Par défaut",
+"processing": "Paiement...",
+"errorRetry": "Erreur - Réessayer",
+"pay": "Payer {amount} €",
 
   "card": {
     "title": "Paiement carte",

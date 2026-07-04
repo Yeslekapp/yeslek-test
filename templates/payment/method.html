@@ -1,6 +1,7 @@
 {# ---------------------------
-   Feature: Payment Method (FINAL SAFE - SAME DESIGN)
+   Feature: Payment Method (WEB LIKE FLUTTER)
 --------------------------- #}
+
 {% extends "base.html" %}
 {% block title %}{{ t("payment.method.title") }}{% endblock %}
 
@@ -15,26 +16,80 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!form) return;
 
   const amount = parseFloat(form.dataset.amount || "0");
+  const paymentNonce = form.dataset.paymentNonce || "";
 
   const saveCardToggle = document.getElementById("saveCardToggle");
   const saveCardInput = document.getElementById("saveCardInput");
+  const selectedMethodInput = document.getElementById("selectedMethodInput");
   const finalAmountText = document.getElementById("finalAmountText");
   const payBtn = document.getElementById("payBtn");
 
-  function format(v){
-    return (Math.round(v * 100)/100).toFixed(2);
+  const walletSection = document.getElementById("walletSection");
+  const walletTitle = document.getElementById("walletTitle");
+  const walletButtonBox = document.getElementById("payment-request-button");
+
+  const methodTiles = document.querySelectorAll("[data-method]");
+  const savedCardTiles = document.querySelectorAll("[data-saved-card-id]");
+
+  const labels = {
+    processing: form.dataset.labelProcessing || "payment.processing",
+    retry: form.dataset.labelRetry || "common.retry",
+    errorRetry: form.dataset.labelErrorRetry || "payment.errorRetry",
+    genericError: form.dataset.labelGenericError || "payment.card.genericError",
+    applePay: form.dataset.labelApplePay || "payment.methods.applePay.title",
+    googlePay: form.dataset.labelGooglePay || "payment.methods.googlePay.title",
+    wallet: form.dataset.labelWallet || "payment.methods.wallet.title"
+  };
+
+  function format(v) {
+    return (Math.round(v * 100) / 100).toFixed(2);
   }
 
-  function compute(){
-    let finalAmount = amount;
+  function setLoading(state) {
+    if (!payBtn) return;
 
-    if(finalAmountText){
-      finalAmountText.textContent = `${format(finalAmount)} €`;
+    payBtn.disabled = state;
+    payBtn.classList.toggle("tz-wallet-loading", state);
+
+    if (state) {
+      payBtn.textContent = labels.processing;
+    } else {
+      payBtn.textContent = form.dataset.labelPay.replace("{amount}", format(amount));
+    }
+  }
+
+  function compute() {
+    if (finalAmountText) {
+      finalAmountText.textContent = `${format(amount)} €`;
     }
 
-    if(payBtn){
-      payBtn.textContent = `Payer ${format(finalAmount)} €`;
+    if (payBtn) {
+      payBtn.textContent = form.dataset.labelPay.replace("{amount}", format(amount));
     }
+  }
+
+  function selectTile(value) {
+    selectedMethodInput.value = value;
+
+    methodTiles.forEach((tile) => {
+      tile.classList.toggle("tz-card--highlight", tile.dataset.method === value);
+    });
+
+    savedCardTiles.forEach((tile) => {
+      tile.classList.toggle(
+        "tz-card--highlight",
+        `saved_card:${tile.dataset.savedCardId}` === value
+      );
+    });
+  }
+
+  function showToast(message) {
+    if (window.tzToast) {
+      window.tzToast(message);
+      return;
+    }
+
+    alert(message);
   }
 
   saveCardToggle?.addEventListener("change", () => {
@@ -44,131 +99,223 @@ document.addEventListener("DOMContentLoaded", async () => {
   compute();
 
   // ---------------------------
-  // STRIPE WALLET
+  // Card tile
+  // ---------------------------
+  methodTiles.forEach((tile) => {
+    tile.addEventListener("click", () => {
+      const method = tile.dataset.method || "card";
+
+      selectTile(method);
+
+      if (method === "card") {
+        form.submit();
+      }
+    });
+  });
+
+  // ---------------------------
+  // Saved cards payment
+  // ---------------------------
+  savedCardTiles.forEach((tile) => {
+    tile.addEventListener("click", async () => {
+      const cardId = tile.dataset.savedCardId || "";
+
+      if (!cardId) return;
+
+      selectTile(`saved_card:${cardId}`);
+
+      if (payBtn?.disabled) return;
+
+      setLoading(true);
+
+      try {
+        const res = await fetch("/payment/card", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest"
+          },
+          body: JSON.stringify({
+            payment_form_nonce: paymentNonce,
+            payment_channel: "saved_card",
+            saved_card_id: cardId,
+            save_card: false
+          })
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.error || "server_error");
+        }
+
+        if (data.status === "succeeded") {
+          window.location.href =
+            "/payment/success?payment_intent=" +
+            encodeURIComponent(data.payment_intent_id);
+          return;
+        }
+
+        if (!data.client_secret) {
+          throw new Error("missing_client_secret");
+        }
+
+        const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+
+        const result = await stripe.confirmCardPayment(
+          data.client_secret
+        );
+
+        if (result.error) {
+          throw new Error(result.error.message || "stripe_error");
+        }
+
+        if (result.paymentIntent?.status === "succeeded") {
+          window.location.href =
+            "/payment/success?payment_intent=" +
+            encodeURIComponent(result.paymentIntent.id);
+          return;
+        }
+
+        throw new Error("payment_not_succeeded");
+
+      } catch (err) {
+        console.error("Saved card payment error:", err);
+        showToast(labels.genericError);
+        setLoading(false);
+      }
+    });
+  });
+
+  // ---------------------------
+  // Apple Pay / Google Pay web
   // ---------------------------
   try {
-
     const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
 
     const paymentRequest = stripe.paymentRequest({
-      country: 'FR',
-      currency: 'eur',
+      country: "FR",
+      currency: "eur",
       total: {
-        label: 'Yeslek',
+        label: "Yeslek",
         amount: Math.round(amount * 100),
       },
       requestPayerName: true,
       requestPayerEmail: true,
     });
 
-    const result = await paymentRequest.canMakePayment();
+    const walletAvailability = await paymentRequest.canMakePayment();
 
-    console.log("WALLET CHECK:", result);
+    if (walletAvailability && walletSection && walletButtonBox) {
+      walletSection.style.display = "block";
 
-    if (result) {
+      if (walletTitle) {
+        if (walletAvailability.applePay) {
+          walletTitle.textContent = labels.applePay;
+        } else if (walletAvailability.googlePay) {
+          walletTitle.textContent = labels.googlePay;
+        } else {
+          walletTitle.textContent = labels.wallet;
+        }
+      }
 
       const elements = stripe.elements();
 
-      const prButton = elements.create('paymentRequestButton', {
-        paymentRequest: paymentRequest,
+      const prButton = elements.create("paymentRequestButton", {
+        paymentRequest,
         style: {
           paymentRequestButton: {
-            theme: 'dark',
-            height: '44px',
+            theme: "dark",
+            height: "44px",
           }
         }
       });
 
-      const container = document.getElementById('walletContainer');
+      prButton.mount("#payment-request-button");
 
-      if (container) {
-        container.style.display = 'block';
-        prButton.mount('#payment-request-button');
-      }
+      paymentRequest.on("paymentmethod", async (ev) => {
 
-paymentRequest.on('paymentmethod', async (ev) => {
+        try {
+          setLoading(true);
 
-  try {
+          const channel = walletAvailability.applePay
+            ? "apple_pay"
+            : walletAvailability.googlePay
+              ? "google_pay"
+              : "wallet";
 
-    // 🔒 LOCK UI
-    payBtn.disabled = true;
-    payBtn.classList.add("tz-wallet-loading");
-    payBtn.textContent = "Paiement...";
+          const res = await fetch("/payment/card", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({
+              payment_form_nonce: paymentNonce,
+              payment_channel: channel,
+              save_card: saveCardInput?.value === "1"
+            })
+          });
 
-    const res = await fetch("/payment/card", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Requested-With": "XMLHttpRequest"
-      },
-      body: JSON.stringify({
-        payment_form_nonce: form.dataset.paymentNonce || "",
-        payment_channel: "wallet",
-        save_card: saveCardInput?.value === "1"
-      })
-    });
+          const data = await res.json().catch(() => ({}));
 
-    const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(data.error || "server_error");
+          }
 
-    if (!res.ok) {
-      throw new Error(data.error || "server_error");
+          const confirmResult = await stripe.confirmCardPayment(
+            data.client_secret,
+            {
+              payment_method: ev.paymentMethod.id,
+            }
+          );
+
+          if (confirmResult.error) {
+            ev.complete("fail");
+            throw new Error(confirmResult.error.message || "stripe_error");
+          }
+
+          if (confirmResult.paymentIntent?.status === "succeeded") {
+            ev.complete("success");
+
+            window.location.href =
+              "/payment/success?pi=" +
+              encodeURIComponent(confirmResult.paymentIntent.id);
+
+            return;
+          }
+
+          ev.complete("fail");
+          throw new Error("payment_not_succeeded");
+
+        } catch (err) {
+          console.error("Wallet payment error:", err);
+
+          try {
+            ev.complete("fail");
+          } catch (_) {}
+
+          showToast(labels.genericError);
+          setLoading(false);
+        }
+      });
     }
 
-    const confirmResult = await stripe.confirmCardPayment(
-      data.client_secret,
-      {
-        payment_method: ev.paymentMethod.id,
-      }
-    );
-
-    if (confirmResult.error) {
-      console.error(confirmResult.error);
-      ev.complete('fail');
-
-      // 🔁 UNLOCK
-      payBtn.disabled = false;
-      payBtn.textContent = "Réessayer";
-      return;
-    }
-
-    if (confirmResult.paymentIntent.status === "succeeded") {
-      ev.complete('success');
-
-      // 🚀 transition smooth
-      window.location.href = "/payment/success?pi=" + confirmResult.paymentIntent.id;
-    } else {
-      ev.complete('fail');
-
-      payBtn.disabled = false;
-      payBtn.textContent = "Réessayer";
-    }
-
-  } catch (e) {
-    console.error(e);
-    ev.complete('fail');
-
-    payBtn.disabled = false;
-    payBtn.textContent = "Erreur - Réessayer";
-  }
-
-});
-
-    } else {
-      console.log("❌ Wallet non disponible sur cet appareil");
-    }
-
-  } catch (e) {
-    console.error("Stripe init error:", e);
+  } catch (err) {
+    console.error("Stripe wallet init error:", err);
   }
 
 });
 </script>
-
 {% endblock %}
 
 {% block content %}
+
 <div class="tz-page tz-container">
-  <h1 class="tz-title">{{ t("payment.method.title") }}</h1>
+
+  <h1 class="tz-title">
+    {{ t("payment.method.title") }}
+  </h1>
 
   <form method="post"
         action="{{ url_for('payment.method_post') }}"
@@ -176,54 +323,105 @@ paymentRequest.on('paymentmethod', async (ev) => {
         id="paymentMethodForm"
         data-amount="{{ "%.2f"|format(final_amount) }}"
         data-payment-nonce="{{ payment_form_nonce }}"
-        data-toast-key="{{ session.get('payment_toast','') }}">
+        data-toast-key="{{ session.get('payment_toast','') }}"
+        data-label-pay="{{ t("payment.pay", {"amount": "{amount}"}) }}"
+        data-label-processing="{{ t("payment.processing") }}"
+        data-label-retry="{{ t("common.retry") }}"
+        data-label-error-retry="{{ t("payment.errorRetry") }}"
+        data-label-generic-error="{{ t("payment.card.genericError") }}"
+        data-label-apple-pay="{{ t("payment.methods.applePay.title") }}"
+        data-label-google-pay="{{ t("payment.methods.googlePay.title") }}"
+        data-label-wallet="{{ t("payment.methods.wallet.title") }}">
 
+    <!-- ---------------------------
+         Summary
+    --------------------------- -->
+    <section class="tz-card tz-card--soft">
 
+      <div class="tz-row">
 
-<section class="tz-card tz-card--soft">
+        {% if not is_forfait_minutes %}
+        <div class="tz-grow tz-strong"
+             style="font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          {{ phone }}
+        </div>
+        {% endif %}
 
-  <div class="tz-row">
-    {% if not is_forfait_minutes %}
-    <div class="tz-grow tz-strong"
-         style="font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-      {{ phone }}
-    </div>
-    {% endif %}
+        <div class="tz-amount-sm" id="finalAmountText">
+          {% if forfait_display %}
+            {{ forfait_display }} • {{ "%.2f"|format(final_amount) }} €
+          {% else %}
+            {{ "%.2f"|format(final_amount) }} €
+          {% endif %}
+        </div>
 
-<div class="tz-amount-sm" id="finalAmountText">
-  {% if forfait_display %}
-    {{ forfait_display }} • {{ "%.2f"|format(final_amount) }} €
-  {% else %}
-    {{ "%.2f"|format(final_amount) }} €
-  {% endif %}
-</div>
-  </div>
-
-
-
-</section>
-{# ---------------------------
-   Save Card
---------------------------- #}
-<section class="tz-card">
-  <div class="tz-row">
-    <label class="tz-check">
-      <input type="checkbox" id="saveCardToggle" {% if save_card %}checked{% endif %}>
-      <span>{{ t("payment.saveCard") }}</span>
-    </label>
-  </div>
-</section>
-
-    {# ---------------------------
-       Methods
-    --------------------------- #}
-    <section class="tz-card">
-      <div class="tz-card__title">{{ t("payment.chooseMethod") }}</div>
-     <div id="walletContainer" style="display:none; margin-bottom:12px;">
-      <div id="payment-request-button"></div>
       </div>
-      <div class="tz-stack" style="gap:12px;">
 
+      {% if received_display %}
+      <div class="tz-help tz-help--muted" style="margin-top:8px;">
+        {{ received_display }}
+      </div>
+      {% endif %}
+
+    </section>
+
+    <!-- ---------------------------
+         Save Card
+    --------------------------- -->
+    <section class="tz-card">
+
+      <div class="tz-row">
+        <label class="tz-check">
+          <input type="checkbox"
+                 id="saveCardToggle"
+                 {% if save_card %}checked{% endif %}>
+          <span>{{ t("payment.saveCard") }}</span>
+        </label>
+      </div>
+
+      <input type="hidden"
+             name="save_card"
+             id="saveCardInput"
+             value="{% if save_card %}1{% else %}0{% endif %}">
+
+    </section>
+
+    <!-- ---------------------------
+         Methods
+    --------------------------- -->
+    <section class="tz-card">
+
+      <div class="tz-card__title">
+        {{ t("payment.chooseMethod") }}
+      </div>
+
+      <div class="tz-stack" style="gap:12px; margin-top:12px;">
+
+        <!-- Wallet Apple Pay / Google Pay -->
+        <div id="walletSection"
+             class="tz-card-item tz-method-tile"
+             style="display:none;">
+
+          <div class="tz-card-item-left"></div>
+
+          <div class="tz-card-item-center">
+
+            <div class="tz-card-item-title" id="walletTitle">
+              {{ t("payment.methods.wallet.title") }}
+            </div>
+
+            <div class="tz-card-item-sub">
+              {{ t("payment.methods.wallet.desc") }}
+            </div>
+
+            <div id="payment-request-button"
+                 style="margin-top:12px;"></div>
+
+          </div>
+
+        </div>
+
+        <!-- New card -->
         <button type="button"
                 class="tz-card-item tz-method-tile {% if selected_method == 'card' %}tz-card--highlight{% endif %}"
                 data-method="card">
@@ -231,6 +429,7 @@ paymentRequest.on('paymentmethod', async (ev) => {
           <div class="tz-card-item-left">💳</div>
 
           <div class="tz-card-item-center">
+
             <div class="tz-card-item-title">
               {{ t("payment.methods.card.title") }}
             </div>
@@ -245,22 +444,63 @@ paymentRequest.on('paymentmethod', async (ev) => {
               {{ t("payment.methodSelected") }}
             </div>
             {% endif %}
+
           </div>
 
         </button>
 
+        <!-- Saved cards -->
+        {% if cards %}
+          {% for card in cards %}
+          <button type="button"
+                  class="tz-card-item tz-method-tile {% if card.is_default %}tz-card--highlight{% endif %}"
+                  data-saved-card-id="{{ card.id }}">
+
+            <div class="tz-card-item-left">💳</div>
+
+            <div class="tz-card-item-center">
+
+              <div class="tz-card-item-title">
+                {{ card.brand|default("Card", true)|upper }} •••• {{ card.last4 }}
+              </div>
+
+              <div class="tz-card-item-sub">
+                {{ t("payment.card.expiry") }} {{ card.expiry }}
+              </div>
+
+              {% if card.is_default %}
+              <div class="tz-small"
+                   style="font-weight:800; color:#2196f3; margin-top:6px;">
+                {{ t("payment.default") }}
+              </div>
+              {% endif %}
+
+            </div>
+
+          </button>
+          {% endfor %}
+        {% endif %}
+
       </div>
+
     </section>
 
-<input type="hidden" name="selected_method" id="selectedMethodInput" value="{{ selected_method }}">
-<input type="hidden" name="save_card" id="saveCardInput" value="{% if save_card %}1{% else %}0{% endif %}">
-    {# ---------------------------
-       Pay Button
-    --------------------------- #}
-    <button type="submit" class="tz-primary-btn" id="payBtn">
+    <input type="hidden"
+           name="selected_method"
+           id="selectedMethodInput"
+           value="{{ selected_method }}">
+
+    <!-- ---------------------------
+         Pay Button
+    --------------------------- -->
+    <button type="submit"
+            class="tz-primary-btn"
+            id="payBtn">
       {{ t("payment.pay", {"amount": ("%.2f"|format(final_amount))}) }}
     </button>
 
   </form>
+
 </div>
+
 {% endblock %}
