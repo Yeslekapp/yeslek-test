@@ -531,27 +531,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     </section>
 
     <!-- ---------------------------
-         Save Card
-    --------------------------- -->
-    <section class="tz-card">
-
-      <div class="tz-row">
-        <label class="tz-check">
-          <input type="checkbox"
-                 id="saveCardToggle"
-                 {% if save_card %}checked{% endif %}>
-          <span>{{ t("payment.saveCard") }}</span>
-        </label>
-      </div>
-
-      <input type="hidden"
-             name="save_card"
-             id="saveCardInput"
-             value="{% if save_card %}1{% else %}0{% endif %}">
-
-    </section>
-
-    <!-- ---------------------------
          Methods
     --------------------------- -->
     <section class="tz-card">

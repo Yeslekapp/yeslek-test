@@ -9,6 +9,15 @@
 
   if (!toggle || !menu || !overlay) return;
 
+  // ---------------------------
+  // Disable swipe only on Select Amount page
+  // ---------------------------
+  const disableSwipeMenu =
+    window.location.pathname.includes("/recharge/select-amount") ||
+    window.location.pathname.includes("/recharge/select_amount") ||
+    window.location.pathname.includes("/select-amount") ||
+    window.location.pathname.includes("/select_amount");
+
   let isOpen = false;
 
   // =========================
@@ -55,6 +64,7 @@
   const THRESHOLD_RATIO = 0.25; // 25% largeur pour valider
 
   document.addEventListener("touchstart", (e) => {
+    if (disableSwipeMenu) return;
     startX = e.touches[0].clientX;
     currentX = startX;
     dragging = true;
