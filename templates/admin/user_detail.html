@@ -40,20 +40,59 @@
     </section>
 
     <section class="tz-admin-card">
-      <div class="tz-admin-section-title">💳 {{ t("admin.user.payments") }}</div>
+      <div class="tz-admin-section-title">
+        💳 {{ t("admin.user.payments") }}
+      </div>
 
       {% if cards %}
         <div class="tz-admin-list">
+
           {% for card in cards %}
           <div class="tz-admin-list-card">
+
             <div class="tz-admin-list-left">
-              <div class="tz-admin-list-title">{{ card.brand or "Card" }} •••• {{ card.last4 or "••••" }}</div>
+
+              <div class="tz-admin-list-title">
+                {{ (card.brand or "Card")|upper }} •••• {{ card.last4 or "••••" }}
+
+                {% if card.is_default %}
+                  <span class="tz-admin-chip tz-admin-chip--success">
+                    Default
+                  </span>
+                {% endif %}
+              </div>
+
+              <div class="tz-admin-list-sub">
+                Expiration :
+                {{ card.expiry or "—" }}
+              </div>
+
+              <div
+                class="tz-admin-list-sub"
+                style="word-break:break-all;"
+              >
+                Stripe customer :
+                {{ card.stripe_customer_id or "—" }}
+              </div>
+
+              <div
+                class="tz-admin-list-sub"
+                style="word-break:break-all;"
+              >
+                Payment method :
+                {{ card.payment_method_id or "—" }}
+              </div>
+
             </div>
+
           </div>
           {% endfor %}
+
         </div>
       {% else %}
-        <div class="tz-admin-section-sub">{{ t("admin.user.noCards") }}</div>
+        <div class="tz-admin-section-sub">
+          {{ t("admin.user.noCards") }}
+        </div>
       {% endif %}
     </section>
   </div>

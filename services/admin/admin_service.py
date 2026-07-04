@@ -14,7 +14,7 @@ from flask import session
 
 from services.order.history_service import HistoryService
 from services.user.user_service import UserService
-from services.order.order_service import OrderService
+from services.account.card_service import CardService
 from services.core.utils import mask_phone
 
 
@@ -132,15 +132,84 @@ class AdminService:
 
     @staticmethod
     def _user_saved_cards(user_id):
-        cards = OrderService.get_saved_cards() or []
 
-        filtered = []
+        user_id = AdminService._safe_str(user_id)
+
+        if not user_id:
+            return []
+
+        try:
+            cards = CardService.get_user_cards(
+                str(user_id)
+            ) or []
+
+        except Exception:
+            return []
+
+        normalized_cards = []
+
         for card in cards:
-            card_user_id = AdminService._get_attr(card, "user_id")
-            if not card_user_id or card_user_id == user_id:
-                filtered.append(card)
 
-        return filtered
+            brand = (
+                AdminService._get_attr(card, "brand")
+                or "Card"
+            )
+
+            last4 = (
+                AdminService._get_attr(card, "last4")
+                or "••••"
+            )
+
+            expiry = AdminService._get_attr(
+                card,
+                "expiry",
+            )
+
+            exp_month = AdminService._get_attr(
+                card,
+                "exp_month",
+            )
+
+            exp_year = AdminService._get_attr(
+                card,
+                "exp_year",
+            )
+
+            if not expiry and exp_month and exp_year:
+                expiry = f"{int(exp_month):02d}/{int(exp_year)}"
+
+            normalized_cards.append(
+                {
+                    "id": AdminService._get_attr(
+                        card,
+                        "id",
+                    ),
+
+                    "brand": brand,
+                    "last4": last4,
+                    "expiry": expiry or "—",
+
+                    "stripe_customer_id": AdminService._get_attr(
+                        card,
+                        "stripe_customer_id",
+                    ),
+
+                    "payment_method_id": AdminService._get_attr(
+                        card,
+                        "payment_method_id",
+                    ),
+
+                    "is_default": bool(
+                        AdminService._get_attr(
+                            card,
+                            "is_default",
+                            False,
+                        )
+                    ),
+                }
+            )
+
+        return normalized_cards
 
     # ---------------------------
     # Dashboard
