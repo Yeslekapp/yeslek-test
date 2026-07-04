@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 
 from services.order.order_service import OrderService
 from services.user.user_service import UserService
+from services.account.card_service import CardService
 
 account_bp = Blueprint("account", __name__, url_prefix="/account")
 
@@ -24,17 +25,23 @@ def about():
 # Payment methods page
 # ---------------------------
 @account_bp.route("/payment-methods")
-def payment_methods():
+def card_storage_get():
 
     user_id = session.get("user_id")
 
-    cards = OrderService.get_saved_cards(user_id)
+    if not user_id:
+        return redirect(
+            url_for("auth.login_get")
+        )
+
+    cards = CardService.get_user_cards(
+        str(user_id)
+    )
 
     return render_template(
         "account/card_storage.html",
-        cards=cards
+        cards=cards,
     )
-
 
 # ---------------------------
 # Profile page
