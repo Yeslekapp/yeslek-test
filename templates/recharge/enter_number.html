@@ -260,23 +260,27 @@
               aria-label="{{ item.phone }}"
             >
 
+              {% set recent_phone = item.get("phone", "") if item is mapping else item.phone|default("") %}
+              {% set recent_received = item.get("received_display", "") if item is mapping else item.received_display|default("") %}
+              {% set recent_amount = item.get("amount", none) if item is mapping else item.amount|default(none) %}
+
               <div class="tz-recent-number-left">
 
                 <div class="tz-recent-number-phone">
-                  {{ item.phone }}
+                  {{ recent_phone }}
                 </div>
 
-                {% if item.received_display %}
+                {% if recent_received %}
                 <div class="tz-recent-number-received">
-                  {{ item.received_display }}
+                  {{ recent_received }}
                 </div>
                 {% endif %}
 
               </div>
 
-              {% if item.amount is not none and item.amount != "" %}
+              {% if recent_amount is not none and recent_amount|string != "" %}
               <div class="tz-recent-number-amount">
-                {{ "%.2f"|format(item.amount|float) }} €
+                {{ "%.2f"|format(recent_amount|float) }} €
               </div>
               {% endif %}
 
