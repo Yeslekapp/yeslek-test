@@ -12,6 +12,7 @@ from flask import Blueprint, jsonify, redirect, render_template, request, sessio
 
 from services.payment.currency_service import CurrencyService
 from services.payment.fees_service import FeesService
+from services.order.history_service import HistoryService
 from services.recharge.recharge_service import (
     detect_country_iso_from_phone,
     is_phone_length_valid,
@@ -64,6 +65,172 @@ def _session_operator():
     operator = session.get("recharge_operator") or {}
     return operator if isinstance(operator, dict) else {}
 
+# ---------------------------
+# Recent recharge numbers from history
+# ---------------------------
+
+def _history_value(item, key, default=None):
+
+    if isinstance(item, dict):
+        return item.get(key, default)
+
+    return getattr(item, key, default)
+
+
+def _country_flag_from_iso(country_iso: str) -> str:
+
+    iso = str(country_iso or "").strip().upper()
+
+    if len(iso) != 2:
+        return "🌍"
+
+    try:
+        return "".join(
+            chr(127397 + ord(char))
+            for char in iso
+        )
+    except Exception:
+        return "🌍"
+
+
+def _get_recent_numbers_from_session(
+    limit: int = 10,
+) -> list[dict]:
+
+    numbers = session.get("recent_recharge_numbers") or []
+
+    if not isinstance(numbers, list):
+        return []
+
+    clean_numbers = []
+
+    for item in numbers:
+
+        if not isinstance(item, dict):
+            continue
+
+        phone = str(item.get("phone") or "").strip()
+        country_iso = str(item.get("country_iso") or "AF").strip().upper()
+
+        if not phone:
+            continue
+
+        clean_numbers.append({
+            "phone": phone,
+            "country_iso": country_iso,
+            "country_flag": item.get("country_flag") or _country_flag_from_iso(country_iso),
+        })
+
+    return clean_numbers[:limit]
+
+
+def _get_recent_recharge_numbers(
+    user_id=None,
+    limit: int = 10,
+) -> list[dict]:
+
+    # ---------------------------
+    # First source: real history
+    # ---------------------------
+    if user_id:
+
+        try:
+            items = HistoryService.get_by_user(
+                user_id
+            ) or []
+
+        except Exception as exc:
+            logger.exception(
+                "Recent numbers history load failed: %s",
+                exc,
+            )
+            items = []
+
+        recent_numbers = []
+        seen = set()
+
+        for item in items:
+
+            phone = str(
+                _history_value(item, "phone", "")
+                or ""
+            ).strip()
+
+            if not phone or phone in seen:
+                continue
+
+            country_iso = str(
+                _history_value(item, "country_iso", "")
+                or detect_country_iso_from_phone(phone)
+                or "AF"
+            ).strip().upper()
+
+            amount = _history_value(
+                item,
+                "amount",
+                None,
+            )
+
+            received_display = (
+                _history_value(item, "received_display", "")
+                or _history_value(item, "received", "")
+                or _history_value(item, "destination_display", "")
+                or ""
+            )
+
+            recent_numbers.append({
+                "phone": phone,
+                "country_iso": country_iso,
+                "country_flag": _country_flag_from_iso(country_iso),
+                "amount": amount,
+                "received_display": received_display,
+            })
+
+            seen.add(phone)
+
+            if len(recent_numbers) >= limit:
+                break
+
+        if recent_numbers:
+            return recent_numbers
+
+    # ---------------------------
+    # Fallback: browser session
+    # ---------------------------
+    return _get_recent_numbers_from_session(
+        limit=limit
+    )
+
+
+def _store_recent_recharge_number(
+    phone: str,
+    country_iso: str,
+) -> None:
+
+    phone = str(phone or "").strip()
+    country_iso = str(country_iso or "AF").strip().upper()
+
+    if not phone:
+        return
+
+    current = _get_recent_numbers_from_session()
+
+    filtered = [
+        item for item in current
+        if str(item.get("phone")) != phone
+    ]
+
+    filtered.insert(
+        0,
+        {
+            "phone": phone,
+            "country_iso": country_iso,
+            "country_flag": _country_flag_from_iso(country_iso),
+        },
+    )
+
+    session["recent_recharge_numbers"] = filtered[:10]
+    session.modified = True
 
 def _get_payment_reference() -> str:
     """
@@ -424,7 +591,6 @@ def lookup_number():
 # ---------------------------
 # Enter number (GET)
 # ---------------------------
-
 @recharge_bp.get("/enter-number")
 def enter_number_get():
 
@@ -445,20 +611,29 @@ def enter_number_get():
 
     print("SESSION ENTER NUMBER:", dict(session))
 
-    initial_phone = "+93"
-
-    country_iso = (
-        detect_country_iso_from_phone(initial_phone)
-        or "AF"
+    recent_numbers = _get_recent_recharge_numbers(
+        session.get("user_id")
     )
 
-    city = get_city_for_country(country_iso)
+    initial_phone = "+93"
+
+    if recent_numbers:
+        initial_country_iso = recent_numbers[0].get("country_iso") or "AF"
+    else:
+        initial_country_iso = (
+            detect_country_iso_from_phone(initial_phone)
+            or "AF"
+        )
+
+    city = get_city_for_country(initial_country_iso)
 
     return render_template(
         "recharge/enter_number.html",
         initial_phone=initial_phone,
-        country_iso=country_iso,
+        country_iso=initial_country_iso,
+        country_flag=_country_flag_from_iso(initial_country_iso),
         city=city,
+        recent_numbers=recent_numbers,
 
         # ---------------------------
         # SEO
@@ -496,12 +671,24 @@ def enter_number_post():
             "recharge/enter_number.html",
             initial_phone=phone or "+93",
             country_iso=country_iso,
+            country_flag=_country_flag_from_iso(country_iso),
             city=city,
             phone_error=True,
+            recent_numbers=_get_recent_recharge_numbers(
+                session.get("user_id")
+            ),
+
         ), 400
 
     session["recharge_phone"] = phone
     session["country_iso"] = country_iso.upper()
+    # ---------------------------
+    # Save recent number history
+    # ---------------------------
+    _store_recent_recharge_number(
+        phone=phone,
+        country_iso=country_iso,
+    )
 
     # ---------------------------
     # 🔥 FIX: PRELOAD OPERATOR + DATA + AMOUNTS

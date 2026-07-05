@@ -2,6 +2,118 @@
 {% set meta_robots = "index, follow" %}
 {% extends "base.html" %}
 {% block title %}{{ t("recharge.enterNumber.title") }}{% endblock %}
+{% block extra_css %}
+<style>
+  .tz-recent-numbers {
+    margin-top: 42px;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .tz-recent-numbers-carousel {
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .tz-recent-numbers-track {
+    display: flex;
+    width: 100%;
+    transition: transform 0.28s ease;
+    will-change: transform;
+    touch-action: pan-y;
+  }
+
+  .tz-recent-number-slide {
+    min-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    padding: 0 8px;
+  }
+
+  .tz-recent-number-btn {
+    position: relative;
+    width: 92%;
+    max-width: 430px;
+    min-height: 76px;
+    border: 0;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.10);
+    font: inherit;
+    color: #111111;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    cursor: pointer;
+    box-sizing: border-box;
+    padding: 12px 22px;
+  }
+
+  .tz-recent-number-btn:active {
+    transform: scale(0.98);
+  }
+  .tz-recent-number-left {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .tz-recent-number-phone {
+    font-size: 17px;
+    font-weight: 900;
+    direction: ltr;
+    unicode-bidi: isolate;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+
+  .tz-recent-number-received {
+    margin-top: 7px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #777777;
+    direction: ltr;
+    unicode-bidi: isolate;
+    white-space: nowrap;
+  }
+
+  .tz-recent-number-amount {
+    font-size: 20px;
+    font-weight: 900;
+    color: #2196f3;
+    direction: ltr;
+    unicode-bidi: isolate;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .tz-recent-number-dots {
+    height: 16px;
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .tz-recent-number-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  .tz-recent-number-dot.is-active {
+    width: 18px;
+    background: #2196f3;
+  }
+</style>
+{% endblock %}
 
 {% block extra_js %}
 <script defer src="{{ url_for('static', filename='js/phone_rules.js') }}"></script>
@@ -126,6 +238,70 @@
 
     </section>
 
+    {% if recent_numbers %}
+    <div class="tz-recent-numbers">
+
+      <div class="tz-recent-numbers-carousel">
+
+        <div
+          class="tz-recent-numbers-track"
+          id="recentNumbersTrack"
+        >
+
+          {% for item in recent_numbers %}
+          <div class="tz-recent-number-slide">
+
+            <button
+              type="button"
+              class="tz-recent-number-btn"
+              data-recent-phone="{{ item.phone }}"
+              data-recent-country-iso="{{ item.country_iso }}"
+              data-recent-country-flag="{{ item.country_flag }}"
+              aria-label="{{ item.phone }}"
+            >
+
+              <div class="tz-recent-number-left">
+
+                <div class="tz-recent-number-phone">
+                  {{ item.phone }}
+                </div>
+
+                {% if item.received_display %}
+                <div class="tz-recent-number-received">
+                  {{ item.received_display }}
+                </div>
+                {% endif %}
+
+              </div>
+
+              {% if item.amount is not none and item.amount != "" %}
+              <div class="tz-recent-number-amount">
+                {{ "%.2f"|format(item.amount|float) }} €
+              </div>
+              {% endif %}
+
+            </button>
+
+          </div>
+          {% endfor %}
+
+        </div>
+
+      </div>
+
+      {% if recent_numbers|length > 1 %}
+      <div class="tz-recent-number-dots">
+        {% for item in recent_numbers %}
+        <span
+          class="tz-recent-number-dot {% if loop.index0 == 0 %}is-active{% endif %}"
+        ></span>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+    {% endif %}
+
 <button
 type="submit"
 class="tz-primary-btn tz-btn-dynamic"
@@ -134,7 +310,6 @@ disabled
 aria-disabled="true"
 >
 
-<span class="tz-btn-loader" id="continueLoader" style="display:none"></span>
 <span id="continueText">{{ t("common.continue") }}</span>
 </button>
   </form>

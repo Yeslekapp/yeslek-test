@@ -10,11 +10,11 @@ history_bp = Blueprint("history", __name__, url_prefix="/history")
 
 
 # ---------------------------
-# History index
+# History history
 # ---------------------------
 @history_bp.get("/")
 @login_required
-def index_get():
+def history_get():
 
     user_id = session.get("user_id")
 
@@ -26,7 +26,7 @@ def index_get():
     history_count = len(history_items)
 
     return render_template(
-        "history/index.html",
+        "history/history.html",
         items=history_items,
         history_count=history_count,
     )

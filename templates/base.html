@@ -89,17 +89,24 @@ href="{{ url_for('static', filename='images/logo.png') }}">
 </a>
 
       <!-- HISTORY -->
-      <a href="{{ url_for('history.index_get') }}" class="tz-menu-item">
+      <a href="{{ url_for('history.history_get') }}" class="tz-menu-item">
+
         <div class="tz-menu-left">🕘</div>
+
         <div class="tz-menu-center">
-          <div class="tz-menu-title">{{ t("menu.history") }}</div>
+          <div class="tz-menu-title">
+            {{ t("menu.history") }}
+          </div>
         </div>
 
         {% if history_count %}
-          <div class="tz-menu-badge">{{ history_count }}</div>
+          <div class="tz-menu-badge">
+            {{ history_count }}
+          </div>
         {% endif %}
 
         <div class="tz-menu-arrow">›</div>
+
       </a>
 
       <!-- LANGUAGE -->
@@ -167,7 +174,8 @@ href="{{ url_for('static', filename='images/logo.png') }}">
   {% endif %}
 
 </div>
-
+</div>
+</aside>
   <!-- ========================= Scripts ========================= -->
 
   <!-- Cropper -->

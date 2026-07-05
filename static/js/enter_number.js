@@ -594,7 +594,240 @@ if (phoneInput.value !== text) {
       // cancelled
     }
   }
+// ---------------------------
+// Recent numbers carousel
+// ---------------------------
+function bindRecentNumbers() {
 
+  const track =
+    document.getElementById("recentNumbersTrack");
+
+  const buttons =
+    Array.from(
+      document.querySelectorAll("[data-recent-phone]")
+    );
+
+  const dots =
+    Array.from(
+      document.querySelectorAll(".tz-recent-number-dot")
+    );
+
+  if (!track || !buttons.length) {
+    return;
+  }
+
+  let index = 0;
+  let startX = 0;
+  let currentX = 0;
+  let isSwiping = false;
+  let moved = false;
+
+  function updateCarousel(nextIndex) {
+
+    index = Math.max(
+      0,
+      Math.min(nextIndex, buttons.length - 1)
+    );
+
+    track.style.transform =
+      `translateX(-${index * 100}%)`;
+
+    dots.forEach((dot, i) => {
+      dot.classList.toggle(
+        "is-active",
+        i === index
+      );
+    });
+  }
+
+  async function useRecentNumber(button) {
+
+    const phone =
+      button.dataset.recentPhone || "";
+
+    const iso =
+      sanitizeIso(
+        button.dataset.recentCountryIso ||
+        getSelectedIso()
+      );
+
+    if (!phone) {
+      return;
+    }
+
+    try {
+
+      const country =
+        findCountryByIso(iso) ||
+        getSelectedCountry();
+
+      if (country) {
+        applyCountry(
+          country,
+          {
+            setPrefixIfEmpty: false,
+          }
+        );
+      } else {
+        syncCountryIso(iso);
+      }
+
+      const cleaned =
+        sanitizeToPhoneInput(phone);
+
+      setPhoneValue(
+        formatForDisplay(cleaned)
+      );
+
+      syncHiddenE164(
+        sanitizeToE164(cleaned) || cleaned
+      );
+
+      lastLookupKey = "";
+      lastLookupValid = false;
+
+      validateAndSync();
+
+      await tzLookupNumber();
+
+      if (lastLookupValid && form) {
+
+        sessionStorage.removeItem(
+          "forfaits_loaded"
+        );
+
+        HTMLFormElement.prototype.submit.call(form);
+      }
+
+    } catch (err) {
+
+      console.error(
+        "Recent number auto continue error:",
+        err
+      );
+    }
+  }
+
+  buttons.forEach((button, buttonIndex) => {
+
+    button.addEventListener("click", async () => {
+
+      if (moved) {
+        return;
+      }
+
+      updateCarousel(buttonIndex);
+
+      await useRecentNumber(button);
+    });
+
+  });
+
+  track.addEventListener(
+    "touchstart",
+    (e) => {
+
+      if (!e.touches || e.touches.length !== 1) {
+        return;
+      }
+
+      startX = e.touches[0].clientX;
+      currentX = startX;
+      isSwiping = true;
+      moved = false;
+
+      track.style.transition = "none";
+
+      e.stopPropagation();
+
+    },
+    {
+      passive: false,
+    }
+  );
+
+  track.addEventListener(
+    "touchmove",
+    (e) => {
+
+      if (
+        !isSwiping ||
+        !e.touches ||
+        e.touches.length !== 1
+      ) {
+        return;
+      }
+
+      currentX = e.touches[0].clientX;
+
+      const deltaX =
+        currentX - startX;
+
+      if (Math.abs(deltaX) < 6) {
+        return;
+      }
+
+      moved =
+        Math.abs(deltaX) > 18;
+
+      const trackWidth =
+        track.offsetWidth || 1;
+
+      const movePercent =
+        (deltaX / trackWidth) * 100;
+
+      track.style.transform =
+        `translateX(${(-index * 100) + movePercent}%)`;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+    },
+    {
+      passive: false,
+    }
+  );
+
+  track.addEventListener(
+    "touchend",
+    (e) => {
+
+      if (!isSwiping) {
+        return;
+      }
+
+      const deltaX =
+        currentX - startX;
+
+      const threshold = 45;
+
+      track.style.transition =
+        "transform 0.28s ease";
+
+      if (deltaX < -threshold) {
+        updateCarousel(index + 1);
+      } else if (deltaX > threshold) {
+        updateCarousel(index - 1);
+      } else {
+        updateCarousel(index);
+      }
+
+      isSwiping = false;
+
+      setTimeout(() => {
+        moved = false;
+      }, 180);
+
+      e.stopPropagation();
+
+    },
+    {
+      passive: false,
+    }
+  );
+
+  updateCarousel(0);
+}
 // ---------------------------
 // Events (FINAL SAFE)
 // ---------------------------
@@ -827,6 +1060,7 @@ function bindKeyboardFollow() {
     }
 
     validateAndSync();
+    bindRecentNumbers();
     bindEvents();
     bindKeyboardFollow();
     requestAnimationFrame(() => {
