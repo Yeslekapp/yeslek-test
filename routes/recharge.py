@@ -181,20 +181,29 @@ def _get_recent_recharge_numbers(
                 or "AF"
             ).strip().upper()
 
-            amount = (
-                _safe_recent_amount(
-                    _history_value(item, "charged_amount", None)
+            amount = None
+
+            for amount_key in [
+                "charged_amount",
+                "final_amount",
+                "total_amount",
+                "total",
+                "amount",
+                "recharge_total_amount",
+                "recharge_amount",
+                "price",
+            ]:
+
+                amount = _safe_recent_amount(
+                    _history_value(
+                        item,
+                        amount_key,
+                        None,
+                    )
                 )
-                or _safe_recent_amount(
-                    _history_value(item, "final_amount", None)
-                )
-                or _safe_recent_amount(
-                    _history_value(item, "total", None)
-                )
-                or _safe_recent_amount(
-                    _history_value(item, "amount", None)
-                )
-            )
+
+                if amount is not None:
+                    break
 
             received_display = (
                 _history_value(item, "received_display", "")
