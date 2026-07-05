@@ -261,9 +261,33 @@
             >
 
               {% set recent_phone = item.get("phone", "") if item is mapping else item.phone|default("") %}
-              {% set recent_received = item.get("received_display", "") if item is mapping else item.received_display|default("") %}
-              {% set recent_amount = item.get("amount", none) if item is mapping else item.amount|default(none) %}
 
+              {% set recent_received =
+                item.get("received_display", "") if item is mapping
+                else item.received_display|default("")
+              %}
+
+              {% if item is mapping %}
+                {% set recent_amount =
+                  item.get("amount")
+                  or item.get("total")
+                  or item.get("final_amount")
+                  or item.get("charged_amount")
+                  or item.get("recharge_total_amount")
+                  or item.get("recharge_amount")
+                  or item.get("price")
+                %}
+              {% else %}
+                {% set recent_amount =
+                  item.amount|default(none)
+                  or item.total|default(none)
+                  or item.final_amount|default(none)
+                  or item.charged_amount|default(none)
+                  or item.recharge_total_amount|default(none)
+                  or item.recharge_amount|default(none)
+                  or item.price|default(none)
+                %}
+              {% endif %}
               <div class="tz-recent-number-left">
 
                 <div class="tz-recent-number-phone">
@@ -278,9 +302,13 @@
 
               </div>
 
-              {% if recent_amount is not none and recent_amount|string != "" %}
+              {% if recent_amount is not none and recent_amount|string|trim != "" %}
               <div class="tz-recent-number-amount">
                 {{ "%.2f"|format(recent_amount|float) }} €
+              </div>
+              {% else %}
+              <div class="tz-recent-number-amount" style="visibility:hidden;">
+                0.00 €
               </div>
               {% endif %}
 
