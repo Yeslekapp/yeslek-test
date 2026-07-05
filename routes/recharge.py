@@ -75,7 +75,23 @@ def _history_value(item, key, default=None):
         return item.get(key, default)
 
     return getattr(item, key, default)
+def _safe_recent_amount(value):
 
+    if value is None or value == "":
+        return None
+
+    try:
+        clean_value = (
+            str(value)
+            .replace("€", "")
+            .replace(",", ".")
+            .strip()
+        )
+
+        return round(float(clean_value), 2)
+
+    except Exception:
+        return None
 
 def _country_flag_from_iso(country_iso: str) -> str:
 
@@ -165,10 +181,19 @@ def _get_recent_recharge_numbers(
                 or "AF"
             ).strip().upper()
 
-            amount = _history_value(
-                item,
-                "amount",
-                None,
+            amount = (
+                _safe_recent_amount(
+                    _history_value(item, "charged_amount", None)
+                )
+                or _safe_recent_amount(
+                    _history_value(item, "final_amount", None)
+                )
+                or _safe_recent_amount(
+                    _history_value(item, "total", None)
+                )
+                or _safe_recent_amount(
+                    _history_value(item, "amount", None)
+                )
             )
 
             received_display = (
