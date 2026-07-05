@@ -33,32 +33,33 @@
     justify-content: center;
   }
 
-  .tz-wallet-loading-placeholder {
-    position: absolute;
-    inset: 0 12px;
-    height: 56px;
-    border-radius: 999px;
-    background: #111111;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    pointer-events: none;
-    z-index: 2;
-    font-size: 15px;
-    font-weight: 700;
-  }
+.tz-wallet-loading-placeholder {
+  position: absolute;
+  inset: 0 12px;
+  height: 48px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #111111;
+  border: 1.4px solid rgba(0, 0, 0, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: none;
+  z-index: 2;
+  font-size: 15px;
+  font-weight: 800;
+}
 
-  .tz-wallet-loading-spinner {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.25);
-    border-top-color: #ffffff;
-    animation: tzWalletSpin 0.8s linear infinite;
-    flex: 0 0 auto;
-  }
+.tz-wallet-loading-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.16);
+  border-top-color: #111111;
+  animation: tzWalletSpin 0.8s linear infinite;
+  flex: 0 0 auto;
+}
 
   @keyframes tzWalletSpin {
     to {
