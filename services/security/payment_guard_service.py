@@ -459,8 +459,8 @@ class PaymentGuardService:
                 cls._register_and_check(
                     event_key=event_key,
                     event_type="stripe_failed",
-                    limit=10,
-                    window_seconds=600,
+                    limit=5,
+                    window_seconds=300,
                     block_seconds=86400,
                     now=now,
                 )

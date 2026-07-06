@@ -210,10 +210,10 @@
         {% if session.get("recharge_forfait") %}
           {{ session.get("recharge_forfait").gb }}
         {% elif received_display and received_display != "—" %}
-          {{ received_display }} {{ destination_currency }}
+        {{ received_display }}
         {% else %}
-          —
-        {% endif %}
+         —
+       {% endif %}
       </div>
     </div>
 
@@ -230,7 +230,7 @@
   id="continueBtn"
   data-pay-text="{{ t('payment.method.pay') }}"
 >
-  {{ t("payment.method.pay") }} {{ "%.2f"|format(amount + (amount * tax_rate)) }} €
+  {{ t("payment.method.pay") }} {{ "%.2f"|format(total) }} €
  </button>
   </form>
 

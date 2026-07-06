@@ -4,18 +4,61 @@
 
 from __future__ import annotations
 
+import logging
+
 import stripe
+
 import config
 
 
 stripe.api_key = config.STRIPE_SECRET_KEY
 
+logger = logging.getLogger(__name__)
+
 
 class StripeService:
 
     # ---------------------------
+    # Helpers
+    # ---------------------------
+
+    @staticmethod
+    def _safe_str(value) -> str:
+
+        if value is None:
+            return ""
+
+        return str(value).strip()
+
+
+    @staticmethod
+    def _is_no_such_customer_error(exc: Exception) -> bool:
+
+        message = str(exc or "").lower()
+
+        return (
+            "no such customer" in message
+            or "resource_missing" in message
+        )
+
+
+    @staticmethod
+    def _payment_intent_payload(intent) -> dict:
+
+        return {
+            "id": getattr(intent, "id", ""),
+            "client_secret": getattr(intent, "client_secret", ""),
+            "status": getattr(intent, "status", ""),
+            "customer": StripeService._safe_str(
+                getattr(intent, "customer", "")
+            ),
+        }
+
+
+    # ---------------------------
     # Create Customer
     # ---------------------------
+
     @staticmethod
     def create_customer(
         *,
@@ -26,6 +69,7 @@ class StripeService:
         params = {
             "metadata": {
                 "user_id": str(user_id or ""),
+                "source": "yeslek",
             }
         }
 
@@ -37,12 +81,90 @@ class StripeService:
                 **params
             )
 
-        except Exception as e:
-            print("❌ Stripe create_customer error:", e)
+        except Exception as exc:
+            logger.exception(
+                "Stripe create_customer error: %s",
+                exc,
+            )
             raise
+
+
+    # ---------------------------
+    # Retrieve Customer
+    # ---------------------------
+
+    @staticmethod
+    def retrieve_customer(
+        customer_id: str,
+    ):
+
+        customer_id = StripeService._safe_str(
+            customer_id
+        )
+
+        if not customer_id:
+            return None
+
+        try:
+            customer = stripe.Customer.retrieve(
+                customer_id
+            )
+
+            if getattr(customer, "deleted", False):
+                return None
+
+            return customer
+
+        except Exception as exc:
+
+            if StripeService._is_no_such_customer_error(exc):
+                return None
+
+            raise
+
+
+    # ---------------------------
+    # Ensure Customer
+    # ---------------------------
+
+    @staticmethod
+    def ensure_customer(
+        *,
+        customer_id: str | None = None,
+        email: str | None = None,
+        user_id: str | None = None,
+    ) -> str:
+
+        customer_id = StripeService._safe_str(
+            customer_id
+        )
+
+        if customer_id:
+            customer = StripeService.retrieve_customer(
+                customer_id
+            )
+
+            if customer:
+                return customer.id
+
+            logger.warning(
+                "Stripe customer missing in current mode | customer_id=%s | user_id=%s",
+                customer_id,
+                user_id,
+            )
+
+        customer = StripeService.create_customer(
+            email=email,
+            user_id=user_id,
+        )
+
+        return customer.id
+
+
     # ---------------------------
     # Saved card payment intent
     # ---------------------------
+
     @staticmethod
     def create_saved_card_payment_intent(
         *,
@@ -63,25 +185,47 @@ class StripeService:
         if not customer_id:
             raise ValueError("missing_customer_id")
 
-        intent = stripe.PaymentIntent.create(
-            amount=int(round(float(amount) * 100)),
-            currency=currency.lower(),
-            customer=customer_id,
-            payment_method=payment_method_id,
-            confirm=True,
-            payment_method_types=["card"],
-            metadata=metadata or {},
-            idempotency_key=idempotency_key,
+        valid_customer = StripeService.retrieve_customer(
+            customer_id
         )
 
-        return {
-            "id": intent.id,
-            "client_secret": intent.client_secret,
-            "status": intent.status,
-        }
+        if not valid_customer:
+            raise ValueError("invalid_saved_card_customer")
+
+        clean_metadata = dict(
+            metadata or {}
+        )
+
+        clean_metadata["stripe_customer_id"] = valid_customer.id
+
+        try:
+            intent = stripe.PaymentIntent.create(
+                amount=int(round(float(amount) * 100)),
+                currency=currency.lower(),
+                customer=valid_customer.id,
+                payment_method=payment_method_id,
+                confirm=True,
+                payment_method_types=["card"],
+                metadata=clean_metadata,
+                idempotency_key=idempotency_key,
+            )
+
+            return StripeService._payment_intent_payload(
+                intent
+            )
+
+        except Exception as exc:
+            logger.exception(
+                "Stripe saved card payment intent error: %s",
+                exc,
+            )
+            raise
+
+
     # ---------------------------
     # Create Payment Intent
     # ---------------------------
+
     @staticmethod
     def create_payment_intent(
         amount: float,
@@ -93,7 +237,9 @@ class StripeService:
         save_card: bool = False,
     ):
 
-        safe_amount = float(amount)
+        safe_amount = float(
+            amount
+        )
 
         if safe_amount < 0.50:
             raise ValueError("invalid_amount")
@@ -105,10 +251,38 @@ class StripeService:
             round(safe_amount * 100)
         )
 
+        clean_metadata = dict(
+            metadata or {}
+        )
+
+        user_id = StripeService._safe_str(
+            clean_metadata.get("user_id")
+        )
+
+        valid_customer_id = None
+
+        if save_card:
+            valid_customer_id = StripeService.ensure_customer(
+                customer_id=customer_id,
+                email=customer_email,
+                user_id=user_id,
+            )
+
+            clean_metadata["stripe_customer_id"] = valid_customer_id
+
+        elif customer_id:
+            customer = StripeService.retrieve_customer(
+                customer_id
+            )
+
+            if customer:
+                valid_customer_id = customer.id
+                clean_metadata["stripe_customer_id"] = valid_customer_id
+
         params = {
             "amount": unit_amount,
-            "currency": currency,
-            "metadata": metadata or {},
+            "currency": currency.lower(),
+            "metadata": clean_metadata,
 
             # ---------------------------
             # Customer display / bank label
@@ -133,16 +307,10 @@ class StripeService:
             },
         }
 
-        if customer_email:
-            params["receipt_email"] = customer_email
+        if valid_customer_id:
+            params["customer"] = valid_customer_id
 
-        # ---------------------------
-        # Save card support
-        # ---------------------------
-        if customer_id:
-            params["customer"] = customer_id
-
-        if save_card and customer_id:
+        if save_card and valid_customer_id:
             params["setup_future_usage"] = "off_session"
 
         try:
@@ -151,45 +319,96 @@ class StripeService:
                 idempotency_key=idempotency_key,
             )
 
-        except Exception as e:
-            print("❌ Stripe create_payment_intent error:", e)
+        except Exception as exc:
+
+            if (
+                save_card
+                and customer_id
+                and StripeService._is_no_such_customer_error(exc)
+            ):
+
+                logger.warning(
+                    "Stripe customer disappeared before PaymentIntent create | customer_id=%s | user_id=%s",
+                    customer_id,
+                    user_id,
+                )
+
+                fresh_customer = StripeService.create_customer(
+                    email=customer_email,
+                    user_id=user_id,
+                )
+
+                clean_metadata["stripe_customer_id"] = fresh_customer.id
+
+                params["customer"] = fresh_customer.id
+                params["metadata"] = clean_metadata
+                params["setup_future_usage"] = "off_session"
+
+                return stripe.PaymentIntent.create(
+                    **params,
+                    idempotency_key=idempotency_key,
+                )
+
+            logger.exception(
+                "Stripe create_payment_intent error: %s",
+                exc,
+            )
             raise
+
 
     # ---------------------------
     # Retrieve Payment Intent
     # ---------------------------
+
     @staticmethod
-    def retrieve_payment(payment_id: str):
+    def retrieve_payment(
+        payment_id: str,
+    ):
 
         try:
             return stripe.PaymentIntent.retrieve(
                 payment_id
             )
 
-        except Exception as e:
-            print("❌ Stripe retrieve error:", e)
+        except Exception as exc:
+            logger.exception(
+                "Stripe retrieve error: %s",
+                exc,
+            )
             raise
+
 
     # ---------------------------
     # Retrieve Payment Method
     # ---------------------------
+
     @staticmethod
-    def retrieve_payment_method(payment_method_id: str):
+    def retrieve_payment_method(
+        payment_method_id: str,
+    ):
 
         try:
             return stripe.PaymentMethod.retrieve(
                 payment_method_id
             )
 
-        except Exception as e:
-            print("❌ Stripe retrieve payment method error:", e)
+        except Exception as exc:
+            logger.exception(
+                "Stripe retrieve payment method error: %s",
+                exc,
+            )
             raise
+
 
     # ---------------------------
     # Construct Webhook Event
     # ---------------------------
+
     @staticmethod
-    def construct_webhook_event(payload: bytes, sig_header: str):
+    def construct_webhook_event(
+        payload: bytes,
+        sig_header: str,
+    ):
 
         try:
             return stripe.Webhook.construct_event(
@@ -198,14 +417,9 @@ class StripeService:
                 secret=config.STRIPE_WEBHOOK_SECRET,
             )
 
-        except stripe.error.SignatureVerificationError as e:
-            print("❌ Stripe signature verification failed:", e)
-            raise
-
-        except ValueError as e:
-            print("❌ Stripe invalid payload:", e)
-            raise
-
-        except Exception as e:
-            print("❌ Stripe webhook unknown error:", e)
+        except Exception as exc:
+            logger.exception(
+                "Stripe webhook error: %s",
+                exc,
+            )
             raise

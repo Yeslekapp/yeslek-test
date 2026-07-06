@@ -181,29 +181,20 @@ def _get_recent_recharge_numbers(
                 or "AF"
             ).strip().upper()
 
-            amount = None
-
-            for amount_key in [
-                "charged_amount",
-                "final_amount",
-                "total_amount",
-                "total",
-                "amount",
-                "recharge_total_amount",
-                "recharge_amount",
-                "price",
-            ]:
-
-                amount = _safe_recent_amount(
-                    _history_value(
-                        item,
-                        amount_key,
-                        None,
-                    )
+            amount = (
+                _safe_recent_amount(
+                    _history_value(item, "charged_amount", None)
                 )
-
-                if amount is not None:
-                    break
+                or _safe_recent_amount(
+                    _history_value(item, "final_amount", None)
+                )
+                or _safe_recent_amount(
+                    _history_value(item, "total", None)
+                )
+                or _safe_recent_amount(
+                    _history_value(item, "amount", None)
+                )
+            )
 
             received_display = (
                 _history_value(item, "received_display", "")
@@ -479,6 +470,14 @@ def select_forfait_post():
         currency
     )
 
+    session["tax_rate"] = float(
+        breakdown["tax_rate"]
+    )
+
+    session["recharge_fee"] = float(
+        breakdown["tax"]
+    )
+
     session["recharge_total_amount"] = float(
         breakdown["total"]
     )
@@ -642,6 +641,8 @@ def enter_number_get():
     session.pop("received_display", None)
     session.pop("payment_idempotency_key", None)
     session.pop("last_payment_amount", None)
+    session.pop("tax_rate", None)
+    session.pop("recharge_fee", None)
 
     print("SESSION ENTER NUMBER:", dict(session))
 
@@ -878,7 +879,22 @@ def select_amount_get():
         amount = 5.00
 
     breakdown = FeesService.breakdown(amount, currency)
+    # ---------------------------
+    # Sync fees session
+    # ---------------------------
+    session["tax_rate"] = float(
+        breakdown["tax_rate"]
+    )
 
+    session["recharge_fee"] = float(
+        breakdown["tax"]
+    )
+
+    session["recharge_total_amount"] = float(
+        breakdown["total"]
+    )
+
+    session.modified = True
     # ---------------------------
     # Quote
     # ---------------------------
@@ -1040,8 +1056,21 @@ def select_amount_post():
     else:
      session["recharge_type"] = "AIRTIME"
 
-    session["recharge_amount"] = float(amount)
-    session["recharge_total_amount"] = float(breakdown["total"])
+    session["recharge_amount"] = float(
+        breakdown["amount"]
+    )
+
+    session["tax_rate"] = float(
+        breakdown["tax_rate"]
+    )
+
+    session["recharge_fee"] = float(
+        breakdown["tax"]
+    )
+
+    session["recharge_total_amount"] = float(
+        breakdown["total"]
+    )
 
     # ---------------------------
     # RESET STRIPE IDEMPOTENCY
@@ -1058,7 +1087,11 @@ def select_amount_post():
     if is_ajax:
         return jsonify({
             "ok": True,
-            "amount": amount
+            "amount": breakdown["amount"],
+            "tax_rate": breakdown["tax_rate"],
+            "tax": breakdown["tax"],
+            "total": breakdown["total"],
+            "currency": currency,
         })
 
     # ---------------------------
@@ -1263,7 +1296,8 @@ def api_fees():
     return jsonify({
         "ok": True,
         "amount": breakdown["amount"],
+        "tax_rate": breakdown["tax_rate"],
         "tax": breakdown["tax"],
         "total": breakdown["total"],
-        "currency": currency
+        "currency": currency,
     })

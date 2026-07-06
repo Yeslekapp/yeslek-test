@@ -7,12 +7,14 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
-from config import RELOADLY_BASE_URL
-from services.reloadly.auth_service import clear_reloadly_token, get_reloadly_token, _safe_request
+from config import RELOADLY_BASE_URL, RELOADLY_ENV
+from services.reloadly.auth_service import (
+    clear_reloadly_token,
+    get_reloadly_token,
+    _safe_request,
+)
 
 logger = logging.getLogger(__name__)
-
-RELOADLY_V1_URL = f"{RELOADLY_BASE_URL}/v1"
 
 
 # ---------------------------

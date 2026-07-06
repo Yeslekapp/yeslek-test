@@ -17,6 +17,8 @@ from services.core.idempotency_service import IdempotencyService
 from services.order.order_service import OrderService
 from services.order.order_reference_service import OrderReferenceService
 from services.stripe.stripe_service import StripeService
+from services.payment.currency_service import CurrencyService
+from services.payment.fees_service import FeesService
 from services.reloadly.transaction_service import (
     TransactionServiceError,
     InvalidTransactionInputError,
@@ -72,7 +74,7 @@ def _get_forfait_display():
 
 
 # ---------------------------
-# Payment context (FINAL FIX FORFAIT + TAX)
+# Payment context (SOURCE UNIQUE FEES)
 # ---------------------------
 def _get_payment_context() -> Dict[str, Any]:
 
@@ -86,13 +88,10 @@ def _get_payment_context() -> Dict[str, Any]:
     ) or {}
 
     # ---------------------------
-    # BASE AMOUNT
+    # Base amount
     # ---------------------------
     base_amount = 0.0
 
-    # ---------------------------
-    # DATA / FORFAIT
-    # ---------------------------
     if (
         isinstance(forfait, dict)
         and forfait
@@ -106,75 +105,70 @@ def _get_payment_context() -> Dict[str, Any]:
 
         base_amount = _safe_float(
             raw_amount,
-            0.0
+            0.0,
         )
 
-    # ---------------------------
-    # AIRTIME FALLBACK
-    # ---------------------------
     if base_amount <= 0:
 
         base_amount = _safe_float(
             session.get("recharge_amount"),
-            0.0
+            0.0,
         )
 
-    # ---------------------------
-    # EXTRA SAFETY
-    # ---------------------------
     if base_amount < 0:
         base_amount = 0.0
 
     # ---------------------------
-    # TAX (SYNC FRONT / BACK)
+    # Invalid amount protection
     # ---------------------------
-    tax_rate = _safe_float(
-        session.get("tax_rate"),
-        0.33
-    )
-
-    if tax_rate < 0:
-        tax_rate = 0.0
-
-    tax = round(
-        base_amount * tax_rate,
-        2
-    )
-
-    # ---------------------------
-    # FINAL TOTAL
-    # ---------------------------
-    final_amount = round(
-        base_amount + tax,
-        2
-    )
-
-    # ---------------------------
-    # Protection invalid amount
-    # ---------------------------
-    if final_amount <= 0:
+    if base_amount <= 0:
 
         logger.warning(
             "Invalid payment amount | session=%s",
-            dict(session)
+            dict(session),
         )
 
         return {
             "phone": phone,
-
             "base_amount": 0.0,
             "recharge_amount": 0.0,
             "final_amount": 0.0,
-
+            "tax_rate": 0.0,
             "tax": 0.0,
         }
 
     # ---------------------------
+    # Fees source unique
+    # ---------------------------
+    currency = CurrencyService.currency_from_phone(
+        phone
+    )
+
+    breakdown = FeesService.breakdown(
+        base_amount,
+        currency,
+    )
+
+    # ---------------------------
     # Sync session
     # ---------------------------
-    session["recharge_total_amount"] = (
-        final_amount
+    session["recharge_amount"] = float(
+        breakdown["amount"]
     )
+
+    session["tax_rate"] = float(
+        breakdown["tax_rate"]
+    )
+
+    session["recharge_fee"] = float(
+        breakdown["tax"]
+    )
+
+    session["recharge_total_amount"] = float(
+        breakdown["total"]
+    )
+
+    session.modified = True
 
     # ---------------------------
     # Final payload
@@ -182,24 +176,24 @@ def _get_payment_context() -> Dict[str, Any]:
     return {
         "phone": phone,
 
-        "base_amount": round(
-            base_amount,
-            2
+        "base_amount": float(
+            breakdown["amount"]
         ),
 
-        "recharge_amount": round(
-            final_amount,
-            2
+        "recharge_amount": float(
+            breakdown["total"]
         ),
 
-        "final_amount": round(
-            final_amount,
-            2
+        "final_amount": float(
+            breakdown["total"]
         ),
 
-        "tax": round(
-            tax,
-            2
+        "tax_rate": float(
+            breakdown["tax_rate"]
+        ),
+
+        "tax": float(
+            breakdown["tax"]
         ),
     }
 
@@ -1236,10 +1230,24 @@ def card_post():
             selected_card.get("stripe_customer_id")
         )
 
+        stripe_payment_method_id = _safe_str(
+            selected_card.get("stripe_payment_method_id")
+            or selected_card.get("payment_method_id")
+            or selected_card.get("stripe_card_id")
+            or selected_saved_card_id
+        )
+
         if not stripe_customer_id:
             return jsonify(
                 {
                     "error": "missing_stripe_customer_id",
+                }
+            ), 400
+
+        if not stripe_payment_method_id:
+            return jsonify(
+                {
+                    "error": "missing_payment_method_id",
                 }
             ), 400
 
@@ -1259,7 +1267,7 @@ def card_post():
             intent = StripeService.create_saved_card_payment_intent(
                 amount=ctx["final_amount"],
                 currency="eur",
-                payment_method_id=selected_saved_card_id,
+                payment_method_id=stripe_payment_method_id,
                 metadata=metadata,
                 customer_id=stripe_customer_id,
                 idempotency_key=f"{idem_key}:saved:{selected_saved_card_id}",
@@ -1288,6 +1296,25 @@ def card_post():
                     "saved_card": True,
                 }
             ), 200
+
+        except ValueError as exc:
+
+            error_code = _safe_str(
+                exc
+            )
+
+            logger.warning(
+                "Saved card rejected | user_id=%s | card_id=%s | error=%s",
+                user_id,
+                selected_saved_card_id,
+                error_code,
+            )
+
+            return jsonify(
+                {
+                    "error": error_code,
+                }
+            ), 400
 
         except Exception as exc:
 
@@ -1355,6 +1382,17 @@ def card_post():
             customer_id=stripe_customer_id,
             save_card=save_card,
         )
+
+        intent_customer_id = _safe_str(
+            getattr(
+                intent,
+                "customer",
+                "",
+            )
+        )
+
+        if intent_customer_id:
+            metadata["stripe_customer_id"] = intent_customer_id
 
         session["last_payment_intent_id"] = intent.id
 
