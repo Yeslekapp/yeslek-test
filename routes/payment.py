@@ -1609,7 +1609,90 @@ def stripe_webhook_post():
         metadata.get("charged_amount"),
         0.0
     )
+    # ---------------------------
+    # Payment admin details
+    # ---------------------------
+    payment_method_id = _safe_str(
+        event_data.get("payment_method")
+    )
 
+    stripe_customer_id = _safe_str(
+        event_data.get("customer")
+        or metadata.get("stripe_customer_id")
+    )
+
+    payment_channel = _safe_str(
+        metadata.get("payment_channel")
+        or metadata.get("payment_method")
+        or "card"
+    )
+
+    payment_method = _safe_str(
+        metadata.get("payment_method")
+        or payment_channel
+        or "card"
+    )
+
+    card_brand = _safe_str(
+        metadata.get("saved_card_brand")
+    )
+
+    card_last4 = _safe_str(
+        metadata.get("saved_card_last4")
+    )
+
+    card_expiry = ""
+
+    if payment_method_id and not card_last4:
+
+        try:
+            pm = StripeService.retrieve_payment_method(
+                payment_method_id
+            )
+
+            card_data = getattr(
+                pm,
+                "card",
+                None,
+            )
+
+            if card_data:
+                card_brand = _safe_str(
+                    getattr(card_data, "brand", "")
+                )
+
+                card_last4 = _safe_str(
+                    getattr(card_data, "last4", "")
+                )
+
+                exp_month = getattr(
+                    card_data,
+                    "exp_month",
+                    None,
+                )
+
+                exp_year = getattr(
+                    card_data,
+                    "exp_year",
+                    None,
+                )
+
+                if exp_month and exp_year:
+                    card_expiry = f"{int(exp_month):02d}/{int(exp_year)}"
+
+        except Exception:
+            logger.exception(
+                "Payment method admin details error"
+            )
+
+    payment_fee = round(
+        charged_amount - base_amount,
+        2,
+    )
+
+    admin_received = bool(
+        charged_amount > 0
+    )
     # ---------------------------
     # DEBUG IMPORTANT
     # ---------------------------
@@ -1750,6 +1833,24 @@ def stripe_webhook_post():
                 "flow": "stripe_webhook",
                 "payment_intent_id": payment_reference,
                 "payment_idempotency_key": idem_key,
+
+                "stripe_id": payment_reference,
+                "stripe_customer_id": stripe_customer_id,
+                "payment_method_id": payment_method_id,
+                "payment_method": payment_method,
+                "payment_channel": payment_channel,
+
+                "base_amount": f"{base_amount:.2f}",
+                "charged_amount": f"{charged_amount:.2f}",
+                "fee": f"{payment_fee:.2f}",
+                "tax": f"{payment_fee:.2f}",
+                "total": f"{charged_amount:.2f}",
+
+                "card_brand": card_brand,
+                "card_last4": card_last4,
+                "card_expiry": card_expiry,
+
+                "admin_received": str(admin_received).lower(),
             },
         )
 
@@ -1765,6 +1866,27 @@ def stripe_webhook_post():
         )
         payload_obj["lang"] = payment_lang
         payload_obj["locale"] = payment_lang
+        # ---------------------------
+        # Admin payment details
+        # ---------------------------
+        payload_obj.update({
+            "stripe_id": payment_reference,
+            "payment_intent_id": payment_reference,
+            "stripe_customer_id": stripe_customer_id,
+            "payment_method_id": payment_method_id,
+            "payment_method": payment_method,
+            "payment_channel": payment_channel,
+
+            "fee": payment_fee,
+            "tax": payment_fee,
+            "total": round(charged_amount, 2),
+
+            "card_brand": card_brand,
+            "card_last4": card_last4,
+            "card_expiry": card_expiry,
+
+            "admin_received": admin_received,
+        })
         # ---------------------------
         # Gestion erreurs recharge
         # ---------------------------

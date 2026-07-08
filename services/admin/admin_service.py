@@ -38,7 +38,41 @@ class AdminService:
         if isinstance(obj, dict):
             return obj.get(name, default)
         return getattr(obj, name, default)
+    @staticmethod
+    def _get_metadata(obj: Any) -> dict:
 
+        metadata = AdminService._get_attr(
+            obj,
+            "metadata",
+            {},
+        )
+
+        return metadata if isinstance(metadata, dict) else {}
+
+    @staticmethod
+    def _history_value(
+        obj: Any,
+        name: str,
+        default=None,
+    ):
+
+        direct_value = AdminService._get_attr(
+            obj,
+            name,
+            None,
+        )
+
+        if direct_value not in {None, ""}:
+            return direct_value
+
+        metadata = AdminService._get_metadata(
+            obj
+        )
+
+        return metadata.get(
+            name,
+            default,
+        )
     @staticmethod
     def _parse_date(value: Any):
         if not value:
@@ -65,17 +99,17 @@ class AdminService:
     @staticmethod
     def _country_from_history(item: Any):
         return (
-            AdminService._get_attr(item, "country_iso")
-            or AdminService._get_attr(item, "country")
-            or AdminService._get_attr(item, "country_name")
+            AdminService._history_value(item, "country_iso")
+            or AdminService._history_value(item, "country")
+            or AdminService._history_value(item, "country_name")
             or "—"
         )
 
     @staticmethod
     def _operator_from_history(item: Any):
         return (
-            AdminService._get_attr(item, "operator_name")
-            or AdminService._get_attr(item, "operator")
+            AdminService._history_value(item, "operator_name")
+            or AdminService._history_value(item, "operator")
             or "Mobile Top-up"
         )
 
@@ -88,17 +122,104 @@ class AdminService:
         items = []
 
         for record in records:
-            created_at = AdminService._get_attr(record, "created_at")
-            amount = AdminService._safe_float(AdminService._get_attr(record, "amount"))
+            created_at = AdminService._history_value(
+                record,
+                "created_at",
+            )
+
+            amount = AdminService._safe_float(
+                AdminService._history_value(record, "amount")
+                or AdminService._history_value(record, "base_amount")
+            )
+
+            fee = AdminService._safe_float(
+                AdminService._history_value(record, "fee")
+                or AdminService._history_value(record, "tax")
+                or AdminService._history_value(record, "recharge_fee")
+            )
+
+            total = AdminService._safe_float(
+                AdminService._history_value(record, "total")
+                or AdminService._history_value(record, "charged_amount")
+                or AdminService._history_value(record, "final_amount")
+                or amount
+            )
+
+            admin_received_raw = AdminService._history_value(
+                record,
+                "admin_received",
+                False,
+            )
+
+            admin_received = str(
+                admin_received_raw
+            ).lower() in {
+                "1",
+                "true",
+                "yes",
+                "oui",
+            }
 
             item = {
-                "user_id": AdminService._get_attr(record, "user_id"),
-                "phone": AdminService._get_attr(record, "phone"),
+                "user_id": AdminService._history_value(record, "user_id"),
+                "phone": AdminService._history_value(record, "phone"),
+
                 "amount": round(amount, 2),
+                "fee": round(fee, 2),
+                "total": round(total, 2),
+
                 "date": created_at.strftime("%d/%m/%Y • %H:%M") if created_at else None,
                 "country": AdminService._country_from_history(record),
                 "operator": AdminService._operator_from_history(record),
-                "status": AdminService._get_attr(record, "status", "success") or "success",
+                "status": AdminService._history_value(record, "status", "success") or "success",
+
+                "stripe_id": (
+                    AdminService._history_value(record, "stripe_id")
+                    or AdminService._history_value(record, "payment_intent_id")
+                    or AdminService._history_value(record, "stripe_payment_intent_id")
+                    or "—"
+                ),
+
+                "payment_method_id": (
+                    AdminService._history_value(record, "payment_method_id")
+                    or "—"
+                ),
+
+                "payment_method": (
+                    AdminService._history_value(record, "payment_method")
+                    or AdminService._history_value(record, "payment_channel")
+                    or "card"
+                ),
+
+                "payment_channel": (
+                    AdminService._history_value(record, "payment_channel")
+                    or AdminService._history_value(record, "payment_method")
+                    or "card"
+                ),
+
+                "stripe_customer_id": (
+                    AdminService._history_value(record, "stripe_customer_id")
+                    or "—"
+                ),
+
+                "card_brand": (
+                    AdminService._history_value(record, "card_brand")
+                    or "card"
+                ),
+
+                "card_last4": (
+                    AdminService._history_value(record, "card_last4")
+                    or AdminService._history_value(record, "last4")
+                    or "—"
+                ),
+
+                "card_expiry": (
+                    AdminService._history_value(record, "card_expiry")
+                    or AdminService._history_value(record, "expiry")
+                    or "—"
+                ),
+
+                "admin_received": admin_received,
                 "_sort_date": created_at if isinstance(created_at, datetime) else None,
             }
 
@@ -504,6 +625,20 @@ class AdminService:
                     amount,
                     item.get("date"),
                 ),
+                "fee": item.get("fee", 0),
+                "total": item.get("total", amount),
+
+                "stripe_id": item.get("stripe_id") or "—",
+                "payment_method_id": item.get("payment_method_id") or "—",
+                "payment_method": item.get("payment_method") or "card",
+                "payment_channel": item.get("payment_channel") or "card",
+
+                "stripe_customer_id": item.get("stripe_customer_id") or "—",
+                "card_brand": item.get("card_brand") or "card",
+                "card_last4": item.get("card_last4") or "—",
+                "card_expiry": item.get("card_expiry") or "—",
+
+                "admin_received": bool(item.get("admin_received")),
             }
 
             result.append(row)
@@ -538,9 +673,30 @@ class AdminService:
         return [
             {
                 **tx,
-                "stripe_id": f"pi_{tx['reference'].replace('YS-', '').lower()}",
-                "method": "card",
-                "captured": True,
+                "stripe_id": tx.get("stripe_id") or "—",
+                "method": (
+                    tx.get("payment_channel")
+                    or tx.get("payment_method")
+                    or "card"
+                ),
+                "fee": round(
+                    AdminService._safe_float(tx.get("fee")),
+                    2,
+                ),
+                "total": round(
+                    AdminService._safe_float(
+                        tx.get("total")
+                        or tx.get("amount")
+                    ),
+                    2,
+                ),
+                "stripe_customer_id": tx.get("stripe_customer_id") or "—",
+                "payment_method_id": tx.get("payment_method_id") or "—",
+                "card_brand": tx.get("card_brand") or "card",
+                "card_last4": tx.get("card_last4") or "—",
+                "card_expiry": tx.get("card_expiry") or "—",
+                "admin_received": bool(tx.get("admin_received")),
+                "captured": bool(tx.get("admin_received")),
                 "refunded": False,
             }
             for tx in transactions

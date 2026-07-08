@@ -20,7 +20,9 @@
     "phone": "Téléphone",
     "email": "Email",
     "name": "Nom",
-    "actions": "Actions"
+    "actions": "Actions",
+    "yes": "Oui",
+    "no": "Non"
   },
   "admin": {
     "brand": {
@@ -100,15 +102,23 @@
       "searchPlaceholder": "Rechercher une transaction...",
       "empty": "Aucune transaction disponible."
     },
-    "payments": {
-      "title": "Paiements",
-      "subtitle": "Suivi des paiements Stripe, remboursements et statuts.",
-      "stripeId": "ID Stripe",
-      "method": "Méthode",
-      "captured": "Capturé",
-      "refunded": "Remboursé",
-      "empty": "Aucun paiement disponible."
-    },
+"payments": {
+  "title": "Paiements",
+  "subtitle": "Suivi des paiements Stripe, remboursements et statuts.",
+  "stripeId": "ID Stripe",
+  "method": "Méthode",
+  "captured": "Capturé",
+  "refunded": "Remboursé",
+  "empty": "Aucun paiement disponible.",
+
+  "fee": "Frais",
+  "total": "Total",
+  "customerId": "Customer ID",
+  "paymentId": "Payment ID",
+  "last4": "4 derniers chiffres",
+  "expiry": "Expiration",
+  "adminReceived": "Admin reçu"
+},
     "reloadly": {
       "title": "Reloadly",
       "subtitle": "Suivi des opérateurs, pays, recharges et solde Reloadly.",
