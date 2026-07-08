@@ -120,7 +120,188 @@ def normalize_reloadly_status(status: str | None) -> str:
 
 def _timestamp() -> int:
     return int(time.time())
+# ---------------------------
+# Payment metadata sync helpers
+# ---------------------------
+def _safe_meta_str(
+    metadata: Optional[Dict[str, Any]],
+    key: str,
+    default: str = "",
+) -> str:
 
+    if not isinstance(metadata, dict):
+        return default
+
+    value = metadata.get(key)
+
+    if value is None:
+        return default
+
+    return str(value).strip()
+
+
+def _safe_meta_float(
+    metadata: Optional[Dict[str, Any]],
+    key: str,
+    default: float = 0.0,
+) -> float:
+
+    if not isinstance(metadata, dict):
+        return default
+
+    try:
+        return float(metadata.get(key) or default)
+    except Exception:
+        return default
+
+
+def _safe_meta_bool(
+    metadata: Optional[Dict[str, Any]],
+    key: str,
+    default: bool = False,
+) -> bool:
+
+    if not isinstance(metadata, dict):
+        return default
+
+    value = metadata.get(key)
+
+    if isinstance(value, bool):
+        return value
+
+    return str(value or "").lower() in {
+        "1",
+        "true",
+        "yes",
+        "oui",
+    }
+
+
+def _set_if_exists(
+    obj: Any,
+    field: str,
+    value: Any,
+) -> None:
+
+    if hasattr(obj, field):
+        setattr(obj, field, value)
+
+
+def _apply_payment_metadata_to_transaction(
+    tx: Any,
+    metadata: Optional[Dict[str, Any]],
+) -> None:
+
+    if not isinstance(metadata, dict):
+        metadata = {}
+
+    # ---------------------------
+    # Stripe / payment refs
+    # ---------------------------
+    _set_if_exists(
+        tx,
+        "stripe_id",
+        _safe_meta_str(metadata, "stripe_id")
+        or _safe_meta_str(metadata, "payment_intent_id"),
+    )
+
+    _set_if_exists(
+        tx,
+        "payment_intent_id",
+        _safe_meta_str(metadata, "payment_intent_id")
+        or _safe_meta_str(metadata, "stripe_id"),
+    )
+
+    _set_if_exists(
+        tx,
+        "stripe_customer_id",
+        _safe_meta_str(metadata, "stripe_customer_id"),
+    )
+
+    _set_if_exists(
+        tx,
+        "payment_method_id",
+        _safe_meta_str(metadata, "payment_method_id"),
+    )
+
+    _set_if_exists(
+        tx,
+        "payment_method",
+        _safe_meta_str(metadata, "payment_method")
+        or _safe_meta_str(metadata, "payment_channel")
+        or "card",
+    )
+
+    _set_if_exists(
+        tx,
+        "payment_channel",
+        _safe_meta_str(metadata, "payment_channel")
+        or _safe_meta_str(metadata, "payment_method")
+        or "card",
+    )
+
+    # ---------------------------
+    # Amounts / fees
+    # ---------------------------
+    _set_if_exists(
+        tx,
+        "base_amount",
+        _safe_meta_float(metadata, "base_amount"),
+    )
+
+    _set_if_exists(
+        tx,
+        "charged_amount",
+        _safe_meta_float(metadata, "charged_amount"),
+    )
+
+    _set_if_exists(
+        tx,
+        "fee",
+        _safe_meta_float(metadata, "fee")
+        or _safe_meta_float(metadata, "tax"),
+    )
+
+    _set_if_exists(
+        tx,
+        "tax",
+        _safe_meta_float(metadata, "tax")
+        or _safe_meta_float(metadata, "fee"),
+    )
+
+    _set_if_exists(
+        tx,
+        "total",
+        _safe_meta_float(metadata, "total")
+        or _safe_meta_float(metadata, "charged_amount"),
+    )
+
+    _set_if_exists(
+        tx,
+        "admin_received",
+        _safe_meta_bool(metadata, "admin_received"),
+    )
+
+    # ---------------------------
+    # Saved card display
+    # ---------------------------
+    _set_if_exists(
+        tx,
+        "card_brand",
+        _safe_meta_str(metadata, "card_brand"),
+    )
+
+    _set_if_exists(
+        tx,
+        "card_last4",
+        _safe_meta_str(metadata, "card_last4"),
+    )
+
+    _set_if_exists(
+        tx,
+        "card_expiry",
+        _safe_meta_str(metadata, "card_expiry"),
+    )
 
 def _mem_find(reference: str) -> Optional[Dict[str, Any]]:
     item = _MEM_STORE.get(reference)
@@ -265,6 +446,7 @@ def _db_create_or_get_processing(
     amount: float | None,
     plan_id: int | None,
     operator_id: int | None,
+    metadata: Optional[Dict[str, Any]] = None,
 ):
     from db.database import SessionLocal
     from db.models.transaction import Transaction
@@ -290,7 +472,10 @@ def _db_create_or_get_processing(
             operator_id=int(operator_id) if operator_id is not None else None,
             status="PROCESSING",
         )
-
+        _apply_payment_metadata_to_transaction(
+            tx,
+            metadata,
+        )
         db.add(tx)
         db.commit()
         db.refresh(tx)
@@ -402,6 +587,7 @@ def process_recharge(
             amount=amount,
             plan_id=plan_id,
             operator_id=operator_id,
+            metadata=metadata,
         )
 
         if not db_result["created"]:

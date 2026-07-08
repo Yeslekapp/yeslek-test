@@ -108,6 +108,59 @@ def _ensure_payment_tables() -> None:
             """
         )
 
+        # ---------------------------
+        # Ensure transaction payment columns
+        # ---------------------------
+        cur.execute(
+            """
+            ALTER TABLE transactions
+            ADD COLUMN IF NOT EXISTS reloadly_transaction_id INTEGER,
+            ADD COLUMN IF NOT EXISTS stripe_id TEXT,
+            ADD COLUMN IF NOT EXISTS payment_intent_id TEXT,
+            ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT,
+            ADD COLUMN IF NOT EXISTS payment_method_id TEXT,
+            ADD COLUMN IF NOT EXISTS payment_method TEXT,
+            ADD COLUMN IF NOT EXISTS payment_channel TEXT,
+            ADD COLUMN IF NOT EXISTS base_amount NUMERIC(10, 2) DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS charged_amount NUMERIC(10, 2) DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS fee NUMERIC(10, 2) DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS tax NUMERIC(10, 2) DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS total NUMERIC(10, 2) DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS card_brand TEXT,
+            ADD COLUMN IF NOT EXISTS card_last4 TEXT,
+            ADD COLUMN IF NOT EXISTS card_expiry TEXT,
+            ADD COLUMN IF NOT EXISTS admin_received BOOLEAN DEFAULT FALSE;
+            """
+        )
+
+        cur.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_transactions_stripe_id
+            ON transactions(stripe_id);
+            """
+        )
+
+        cur.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_transactions_payment_intent_id
+            ON transactions(payment_intent_id);
+            """
+        )
+
+        cur.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_transactions_stripe_customer_id
+            ON transactions(stripe_customer_id);
+            """
+        )
+
+        cur.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_transactions_reloadly_transaction_id
+            ON transactions(reloadly_transaction_id);
+            """
+        )
+
 _ensure_payment_tables()
 # ---------------------------
 # Helpers

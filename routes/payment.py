@@ -1707,7 +1707,7 @@ def stripe_webhook_post():
             )
 
     payment_fee = round(
-        charged_amount - base_amount,
+        max(charged_amount - base_amount, 0),
         2,
     )
 
