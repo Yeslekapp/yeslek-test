@@ -85,7 +85,26 @@ def _ensure_payment_tables() -> None:
             );
             """
         )
-
+        # ---------------------------
+        # Ensure saved cards columns
+        # ---------------------------
+        cur.execute(
+            """
+            ALTER TABLE saved_cards
+            ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT,
+            ADD COLUMN IF NOT EXISTS payment_method_id TEXT,
+            ADD COLUMN IF NOT EXISTS brand TEXT DEFAULT 'card',
+            ADD COLUMN IF NOT EXISTS last4 TEXT,
+            ADD COLUMN IF NOT EXISTS exp_month INTEGER,
+            ADD COLUMN IF NOT EXISTS exp_year INTEGER,
+            ADD COLUMN IF NOT EXISTS expiry TEXT,
+            ADD COLUMN IF NOT EXISTS fingerprint TEXT,
+            ADD COLUMN IF NOT EXISTS is_default BOOLEAN DEFAULT FALSE,
+            ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
+            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(),
+            ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+            """
+        )
         cur.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_saved_cards_user_id
@@ -107,7 +126,13 @@ def _ensure_payment_tables() -> None:
             WHERE fingerprint IS NOT NULL AND deleted_at IS NULL;
             """
         )
-
+        cur.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_saved_cards_payment_method_id
+            ON saved_cards(payment_method_id)
+            WHERE payment_method_id IS NOT NULL;
+            """
+        )
         # ---------------------------
         # Ensure transaction payment columns
         # ---------------------------
