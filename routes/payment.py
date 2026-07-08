@@ -1073,16 +1073,37 @@ def card_post():
     data = request.get_json(
         silent=True
     ) or {}
-
+    logger.info(
+        "PAYMENT CARD POST | channel=%s | saved_card_id=%s | user_id=%s | amount=%s | nonce=%s",
+        data.get("payment_channel"),
+        data.get("saved_card_id"),
+        session.get("user_id"),
+        session.get("recharge_total_amount"),
+        bool(data.get("payment_form_nonce")),
+    )
     # ---------------------------
     # Method guard
     # ---------------------------
-    if session.get("payment_selected_method", "card") != "card":
+    payment_channel = _safe_str(
+        data.get("payment_channel") or "card"
+    )
+
+    allowed_channels = {
+        "card",
+        "saved_card",
+        "apple_pay",
+        "google_pay",
+        "wallet",
+    }
+
+    if payment_channel not in allowed_channels:
         return jsonify(
             {
-                "error": "invalid_payment_method",
+                "error": "invalid_payment_channel",
             }
         ), 400
+
+    session["payment_selected_method"] = "card"
 
     # ---------------------------
     # Nonce anti-bot
