@@ -65,54 +65,85 @@
     <!-- =========================
          LIST
     ========================== -->
-    {% for item in items %}
+{% for item in items %}
 
-      <div class="tz-history-card pro" data-status="{{ item.status }}">
+  {% set raw_status = (item.status or '')|lower %}
+  {% set ui_status = 'success' if raw_status in ['success', 'successful'] else ('pending' if raw_status in ['processing', 'pending'] else 'failed') %}
+  {% set stripe_ref = item.stripe_id or item.payment_intent_id or item.stripe_payment_intent_id or "—" %}
+  {% set payment_method = item.payment_channel or item.payment_method or "card" %}
+  {% set display_total = item.total or item.charged_amount or item.amount %}
 
-        <!-- LEFT -->
-        <div class="tz-history-left">
+  <div class="tz-history-card pro" data-status="{{ ui_status }}">
 
-          <div class="tz-history-phone">
-            {{ item.phone }}
-          </div>
+    <!-- LEFT -->
+    <div class="tz-history-left">
 
-          <div class="tz-history-meta">
+      <div class="tz-history-phone">
+        {{ item.phone }}
+      </div>
 
-            <span class="tz-history-date">
-              {{ item.created_at.strftime("%d %b %Y · %H:%M") }}
-            </span>
+      <div class="tz-history-meta">
 
-            {% if item.country_iso %}
-              <span class="tz-history-country">
-                {{ item.country_iso }}
-              </span>
-            {% endif %}
+        <span class="tz-history-date">
+          {{ item.created_at.strftime("%d %b %Y · %H:%M") }}
+        </span>
 
-          </div>
-
-        </div>
-
-        <!-- RIGHT -->
-        <div class="tz-history-right">
-
-          <div class="tz-history-amount">
-            + {{ "%.2f"|format(item.amount|float) }} €
-          </div>
-
-          <div class="tz-status 
-            {% if item.status == 'success' %}success
-            {% elif item.status == 'pending' %}pending
-            {% else %}failed
-            {% endif %}
-          ">
-            {{ t("history.status." + item.status|lower) }}
-          </div>
-
-        </div>
+        {% if item.country_iso %}
+          <span class="tz-history-country">
+            {{ item.country_iso }}
+          </span>
+        {% endif %}
 
       </div>
 
-    {% endfor %}
+      <div class="tz-history-meta" style="margin-top:6px;">
+        <span>Stripe:</span>
+
+        <span style="word-break:break-all;">
+          {{ stripe_ref }}
+        </span>
+      </div>
+
+      <div class="tz-history-meta" style="margin-top:4px;">
+        <span>Méthode:</span>
+
+        <span>
+          {{ payment_method }}
+
+          {% if item.card_last4 %}
+            • {{ item.card_brand|default("card", true)|upper }} •••• {{ item.card_last4 }}
+          {% endif %}
+        </span>
+      </div>
+
+      {% if item.fee %}
+      <div class="tz-history-meta" style="margin-top:4px;">
+        <span>Frais:</span>
+
+        <span>
+          {{ "%.2f"|format(item.fee|float) }} €
+        </span>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="tz-history-right">
+
+      <div class="tz-history-amount">
+        {{ "%.2f"|format(display_total|float) }} €
+      </div>
+
+      <div class="tz-status {{ ui_status }}">
+        {{ t("history.status." + ui_status) }}
+      </div>
+
+    </div>
+
+  </div>
+
+{% endfor %}
 
   {% endif %}
 

@@ -29,7 +29,63 @@ class StripeService:
             return ""
 
         return str(value).strip()
+    @staticmethod
+    def _payment_description(
+        metadata: dict | None,
+    ) -> str:
 
+        metadata = metadata or {}
+
+        payment_channel = (
+            StripeService._safe_str(metadata.get("payment_channel"))
+            or StripeService._safe_str(metadata.get("payment_method"))
+            or "card"
+        )
+
+        paid_amount = (
+            StripeService._safe_str(metadata.get("charged_amount"))
+            or StripeService._safe_str(metadata.get("total"))
+            or StripeService._safe_str(metadata.get("recharge_amount"))
+        )
+
+        user_email = (
+            StripeService._safe_str(metadata.get("user_email"))
+            or StripeService._safe_str(metadata.get("email"))
+        )
+
+        phone = StripeService._safe_str(
+            metadata.get("recharge_phone")
+        )
+
+        country_iso = StripeService._safe_str(
+            metadata.get("country_iso")
+        )
+
+        parts = [
+            f"Mode: {payment_channel}",
+        ]
+
+        if paid_amount:
+            parts.append(
+                f"Payé: {paid_amount} EUR"
+            )
+
+        if user_email:
+            parts.append(
+                f"Client: {user_email}"
+            )
+
+        elif phone:
+            client_label = phone
+
+            if country_iso:
+                client_label = f"{phone} {country_iso}"
+
+            parts.append(
+                f"Client: {client_label}"
+            )
+
+        return " • ".join(parts)
 
     @staticmethod
     def _is_no_such_customer_error(exc: Exception) -> bool:
@@ -207,6 +263,12 @@ class StripeService:
                 confirm=True,
                 payment_method_types=["card"],
                 metadata=clean_metadata,
+                description=StripeService._payment_description(
+                    clean_metadata
+                ),
+                receipt_email=StripeService._safe_str(
+                    clean_metadata.get("user_email")
+                ) or None,
                 idempotency_key=idempotency_key,
             )
 
@@ -287,7 +349,9 @@ class StripeService:
             # ---------------------------
             # Customer display / bank label
             # ---------------------------
-            "description": "Yeslek recharge mobile",
+            "description": StripeService._payment_description(
+                clean_metadata
+            ),
             "statement_descriptor_suffix": "RECHARGE",
 
             # ---------------------------
@@ -309,7 +373,13 @@ class StripeService:
 
         if valid_customer_id:
             params["customer"] = valid_customer_id
+        receipt_email = StripeService._safe_str(
+            clean_metadata.get("user_email")
+            or customer_email
+        )
 
+        if receipt_email:
+            params["receipt_email"] = receipt_email
         if save_card and valid_customer_id:
             params["setup_future_usage"] = "off_session"
 
