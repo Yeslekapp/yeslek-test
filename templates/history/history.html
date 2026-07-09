@@ -69,7 +69,7 @@
 
   {% set raw_status = (item.status or '')|lower %}
   {% set ui_status = 'success' if raw_status in ['success', 'successful'] else ('pending' if raw_status in ['processing', 'pending'] else 'failed') %}
-  {% set stripe_ref = item.stripe_id or item.payment_intent_id or item.stripe_payment_intent_id or "—" %}
+
   {% set payment_method = item.payment_channel or item.payment_method or "card" %}
   {% set display_total = item.total or item.charged_amount or item.amount %}
 
@@ -96,13 +96,6 @@
 
       </div>
 
-      <div class="tz-history-meta" style="margin-top:6px;">
-        <span>Stripe:</span>
-
-        <span style="word-break:break-all;">
-          {{ stripe_ref }}
-        </span>
-      </div>
 
       <div class="tz-history-meta" style="margin-top:4px;">
         <span>Méthode:</span>
