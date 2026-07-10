@@ -56,54 +56,29 @@ class CardService:
             "fingerprint": row.get("fingerprint") or "",
             "is_default": bool(row.get("is_default")),
         }
-
     # ---------------------------
-    # Get or create Stripe customer
+    # Stripe customer persistence
     # ---------------------------
     @staticmethod
-    def get_or_create_stripe_customer_id(
+    def _store_stripe_customer_id(
         *,
         user_id: str,
-        email: Optional[str] = None,
+        email: Optional[str],
+        stripe_customer_id: str,
     ) -> str:
+
+        user_id = str(user_id or "").strip()
+        stripe_customer_id = str(
+            stripe_customer_id or ""
+        ).strip()
 
         if not user_id:
             raise ValueError("missing_user_id")
 
-        user_id = str(user_id)
+        if not stripe_customer_id:
+            raise ValueError("missing_stripe_customer_id")
 
         with db_cursor(commit=True) as cur:
-
-            cur.execute(
-                """
-                SELECT stripe_customer_id
-                FROM stripe_customers
-                WHERE user_id = %s
-                LIMIT 1
-                """,
-                (user_id,),
-            )
-
-            existing = cur.fetchone()
-
-            if existing and existing.get("stripe_customer_id"):
-                return str(existing["stripe_customer_id"])
-
-            customer = StripeService.create_customer(
-                email=email,
-                user_id=user_id,
-            )
-
-            stripe_customer_id = str(
-                CardService._get_value(
-                    customer,
-                    "id",
-                    "",
-                )
-            )
-
-            if not stripe_customer_id:
-                raise ValueError("missing_stripe_customer_id")
 
             cur.execute(
                 """
@@ -129,7 +104,89 @@ class CardService:
 
             row = cur.fetchone()
 
-            return str(row["stripe_customer_id"])
+        if not row or not row.get("stripe_customer_id"):
+            raise ValueError("stripe_customer_sync_failed")
+
+        return str(
+            row["stripe_customer_id"]
+        )
+
+
+    # ---------------------------
+    # Stripe customer validation
+    # ---------------------------
+    @staticmethod
+    def _ensure_valid_stripe_customer_id(
+        *,
+        user_id: str,
+        email: Optional[str],
+        stripe_customer_id: Optional[str],
+    ) -> str:
+
+        valid_customer_id = StripeService.ensure_customer(
+            customer_id=stripe_customer_id,
+            email=email,
+            user_id=str(user_id),
+        )
+
+        if not valid_customer_id:
+            raise ValueError("missing_stripe_customer_id")
+
+        return CardService._store_stripe_customer_id(
+            user_id=str(user_id),
+            email=email,
+            stripe_customer_id=valid_customer_id,
+        )
+    # ---------------------------
+    # Get or create Stripe customer
+    # ---------------------------
+    @staticmethod
+    def get_or_create_stripe_customer_id(
+        *,
+        user_id: str,
+        email: Optional[str] = None,
+    ) -> str:
+
+        user_id = str(
+            user_id or ""
+        ).strip()
+
+        email = str(
+            email or ""
+        ).strip().lower()
+
+        if not user_id:
+            raise ValueError("missing_user_id")
+
+        stored_customer_id = ""
+
+        with db_cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT stripe_customer_id
+                FROM stripe_customers
+                WHERE user_id = %s
+                LIMIT 1
+                """,
+                (user_id,),
+            )
+
+            existing = cur.fetchone()
+
+            if existing:
+                stored_customer_id = str(
+                    existing.get(
+                        "stripe_customer_id"
+                    )
+                    or ""
+                ).strip()
+
+        return CardService._ensure_valid_stripe_customer_id(
+            user_id=user_id,
+            email=email,
+            stripe_customer_id=stored_customer_id,
+        )
 
     # ---------------------------
     # Save card
@@ -141,8 +198,18 @@ class CardService:
         stripe_customer_id: Optional[str] = None,
     ) -> Optional[dict]:
 
-        if not user_id or not payment_method:
-            return None
+        if not user_id:
+            raise ValueError("missing_user_id")
+
+        if not payment_method:
+            raise ValueError("missing_payment_method")
+
+        stripe_customer_id = str(
+            stripe_customer_id or ""
+        ).strip()
+
+        if not stripe_customer_id:
+            raise ValueError("missing_stripe_customer_id")
 
         user_id = str(user_id)
 
@@ -155,7 +222,7 @@ class CardService:
         )
 
         if not payment_method_id:
-            return None
+            raise ValueError("missing_payment_method_id")
 
         card_data = CardService._get_value(
             payment_method,
@@ -163,7 +230,7 @@ class CardService:
         )
 
         if not card_data:
-            return None
+            raise ValueError("missing_card_data")
 
         brand = str(
             CardService._get_value(
@@ -204,10 +271,32 @@ class CardService:
             or ""
         )
 
-        if not last4 or not exp_month or not exp_year:
-            return None
+        if not last4:
+            raise ValueError("missing_card_last4")
+
+        if not exp_month or not exp_year:
+            raise ValueError("missing_card_expiry")
 
         expiry = f"{int(exp_month):02d}/{int(exp_year)}"
+        # ---------------------------
+        # PaymentMethod ownership
+        # ---------------------------
+        payment_method_customer_id = str(
+            CardService._get_value(
+                payment_method,
+                "customer",
+                "",
+            )
+            or ""
+        ).strip()
+
+        if (
+            payment_method_customer_id
+            and payment_method_customer_id != stripe_customer_id
+        ):
+            raise ValueError(
+                "payment_method_customer_mismatch"
+            )
 
         with db_cursor(commit=True) as cur:
 
@@ -267,7 +356,7 @@ class CardService:
                     RETURNING *
                     """,
                     (
-                        stripe_customer_id or "",
+                        stripe_customer_id,
                         brand,
                         last4,
                         int(exp_month),
@@ -301,7 +390,7 @@ class CardService:
                 """,
                 (
                     user_id,
-                    stripe_customer_id or "",
+                    stripe_customer_id,
                     payment_method_id,
                     brand,
                     last4,

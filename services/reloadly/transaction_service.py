@@ -453,13 +453,42 @@ def _db_create_or_get_processing(
 
     db = SessionLocal()
     try:
-        existing = db.query(Transaction).filter(Transaction.reference == reference).first()
+        existing = (
+            db.query(Transaction)
+            .filter(
+                Transaction.reference == reference
+            )
+            .first()
+        )
+
         if existing:
+
+            # ---------------------------
+            # Sync latest Stripe metadata
+            # ---------------------------
+            _apply_payment_metadata_to_transaction(
+                existing,
+                metadata,
+            )
+
+            db.commit()
+            db.refresh(existing)
+
             return {
                 "created": False,
                 "row_id": existing.id,
-                "status": normalize_reloadly_status(getattr(existing, "status", None)),
-                "reloadly_transaction_id": getattr(existing, "reloadly_transaction_id", None),
+                "status": normalize_reloadly_status(
+                    getattr(
+                        existing,
+                        "status",
+                        None,
+                    )
+                ),
+                "reloadly_transaction_id": getattr(
+                    existing,
+                    "reloadly_transaction_id",
+                    None,
+                ),
             }
 
         tx = Transaction(
@@ -563,20 +592,45 @@ def process_recharge(
 
         if existing:
 
+            # ---------------------------
+            # Sync latest payment metadata
+            # ---------------------------
+            db_result = _db_create_or_get_processing(
+                reference=reference,
+                user_id=user_id,
+                phone=phone,
+                country_iso=country_iso,
+                amount=amount,
+                plan_id=plan_id,
+                operator_id=operator_id,
+                metadata=metadata,
+            )
+
             status = normalize_reloadly_status(
-                existing.get("status")
+                db_result.get("status")
+                or existing.get("status")
+            )
+
+            transaction_id = (
+                db_result.get(
+                    "reloadly_transaction_id"
+                )
+                or existing.get(
+                    "reloadly_transaction_id"
+                )
             )
 
             return TransactionResult(
                 ok=(status == "SUCCESS"),
                 status=status,
-                transaction_id=existing.get(
-                    "reloadly_transaction_id"
-                ),
+                transaction_id=transaction_id,
                 custom_identifier=reference,
                 is_duplicate=True,
                 message="Transaction déjà traitée",
-                raw=existing,
+                raw={
+                    **existing,
+                    "metadata_synced": True,
+                },
             )
 
         db_result = _db_create_or_get_processing(
