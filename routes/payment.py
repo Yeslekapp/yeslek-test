@@ -1548,7 +1548,12 @@ def stripe_webhook_post():
     payment_reference = _safe_str(
         event_data.get("id")
     )
-
+    logger.info(
+        "WEBHOOK STRIPE | intent=%s | customer=%s | payment_method=%s",
+        payment_reference,
+        event_data.get("customer"),
+        event_data.get("payment_method"),
+    )
     session["last_payment_intent_id"] = (
         payment_reference
     )
