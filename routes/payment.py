@@ -31,6 +31,7 @@ from services.security.payment_guard_service import (
     PaymentGuardError,
     PaymentGuardService,
 )
+from services.security.recharge_limit_service import RechargeLimitService
 payment_bp = Blueprint("payment", __name__, url_prefix="/payment")
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,94 @@ def _safe_get(
         return obj.get(key, default)
 
     return getattr(obj, key, default)
+
+# ---------------------------
+# Recharge limit helpers
+# ---------------------------
+
+def _reserve_recharge_limit_slot(
+    *,
+    phone: str,
+    reservation_key: str,
+) -> Optional[Dict[str, Any]]:
+
+    try:
+
+        return RechargeLimitService.reserve(
+            phone=phone,
+            reservation_key=reservation_key,
+        )
+
+    except Exception as exc:
+
+        logger.exception(
+            "Recharge limit reservation error: %s",
+            exc,
+        )
+
+        return None
+
+
+def _release_recharge_limit_slot(
+    reservation_key: str,
+) -> None:
+
+    try:
+
+        RechargeLimitService.release(
+            reservation_key=reservation_key
+        )
+
+    except Exception as exc:
+
+        logger.exception(
+            "Recharge limit release error: %s",
+            exc,
+        )
+
+
+def _bind_recharge_limit_slot(
+    *,
+    reservation_key: str,
+    payment_intent_id: str,
+) -> None:
+
+    try:
+
+        RechargeLimitService.bind_payment_intent(
+            reservation_key=reservation_key,
+            payment_intent_id=payment_intent_id,
+        )
+
+    except Exception as exc:
+
+        logger.exception(
+            "Recharge limit PaymentIntent bind error: %s",
+            exc,
+        )
+
+
+def _confirm_recharge_limit_slot(
+    *,
+    phone: str,
+    reservation_key: str,
+    payment_intent_id: str,
+) -> None:
+
+    try:
+
+        RechargeLimitService.mark_success(
+            phone=phone,
+            reservation_key=reservation_key,
+            payment_intent_id=payment_intent_id,
+        )
+
+    except Exception as exc:
+
+        logger.exception(
+            "Recharge limit success sync error: %s",
+            exc,
+        )
 # ---------------------------
 # Forfait display helper
 # ---------------------------
@@ -1284,6 +1373,34 @@ def card_post():
         metadata["stripe_customer_id"] = stripe_customer_id
         metadata["save_card"] = "false"
 
+        # ---------------------------
+        # Global phone reservation
+        # ---------------------------
+
+        limit_state = _reserve_recharge_limit_slot(
+            phone=ctx["phone"],
+            reservation_key=idem_key,
+        )
+
+        if limit_state is None:
+
+            return jsonify(
+                {
+                    "error": "payment_temporarily_unavailable",
+                }
+            ), 503
+
+        if not limit_state.get(
+            "allowed",
+            False,
+        ):
+
+            return jsonify(
+                {
+                    "error": "invalid_phone",
+                }
+            ), 400
+
         try:
             intent = StripeService.create_saved_card_payment_intent(
                 amount=ctx["final_amount"],
@@ -1299,7 +1416,14 @@ def card_post():
                 "id",
                 "",
             )
-
+            _bind_recharge_limit_slot(
+                reservation_key=idem_key,
+                payment_intent_id=_safe_get(
+                    intent,
+                    "id",
+                    "",
+                ),
+            )
             return jsonify(
                 {
                     "client_secret": _safe_get(
@@ -1324,6 +1448,10 @@ def card_post():
                 exc
             )
 
+            _release_recharge_limit_slot(
+                idem_key
+            )
+
             logger.warning(
                 "Saved card rejected | user_id=%s | card_id=%s | error=%s",
                 user_id,
@@ -1343,7 +1471,9 @@ def card_post():
                 "Saved card payment intent error: %s",
                 exc,
             )
-
+            _release_recharge_limit_slot(
+                idem_key
+            )
             return jsonify(
                 {
                     "error": "saved_card_payment_error",
@@ -1391,8 +1521,37 @@ def card_post():
             ), 400
 
     # ---------------------------
+    # Global phone reservation
+    # ---------------------------
+
+    limit_state = _reserve_recharge_limit_slot(
+        phone=ctx["phone"],
+        reservation_key=idem_key,
+    )
+
+    if limit_state is None:
+
+        return jsonify(
+            {
+                "error": "payment_temporarily_unavailable",
+            }
+        ), 503
+
+    if not limit_state.get(
+        "allowed",
+        False,
+    ):
+
+        return jsonify(
+            {
+                "error": "invalid_phone",
+            }
+        ), 400
+
+    # ---------------------------
     # Create Stripe intent
     # ---------------------------
+
     try:
         intent = StripeService.create_payment_intent(
             amount=ctx["final_amount"],
@@ -1417,6 +1576,10 @@ def card_post():
 
         session["last_payment_intent_id"] = intent.id
 
+        _bind_recharge_limit_slot(
+            reservation_key=idem_key,
+            payment_intent_id=intent.id,
+        )
         return jsonify(
             {
                 "client_secret": intent.client_secret,
@@ -1430,6 +1593,10 @@ def card_post():
         logger.exception(
             "Stripe payment intent error: %s",
             exc,
+        )
+
+        _release_recharge_limit_slot(
+            idem_key
         )
 
         return jsonify(
@@ -1486,12 +1653,26 @@ def stripe_webhook_post():
         "payment_intent.canceled",
     }:
 
+        failed_idem_key = _safe_str(
+            metadata.get(
+                "payment_idempotency_key"
+            )
+        )
+
+        if failed_idem_key:
+
+            _release_recharge_limit_slot(
+                failed_idem_key
+            )
+
         try:
+
             PaymentGuardService.record_failed_payment(
                 metadata=metadata,
             )
 
         except Exception:
+
             logger.exception(
                 "Payment guard failed-event tracking error"
             )
@@ -1732,7 +1913,9 @@ def stripe_webhook_post():
     # Validation sécurité
     # ---------------------------
     if not phone or base_amount <= 0:
-
+        _release_recharge_limit_slot(
+            idem_key
+        )
         IdempotencyService.store_result(
             idem_key,
             {
@@ -1755,7 +1938,9 @@ def stripe_webhook_post():
     ).lower()
 
     if stripe_currency != "eur":
-
+        _release_recharge_limit_slot(
+            idem_key
+        )
         IdempotencyService.store_result(
             idem_key,
             {
@@ -1770,6 +1955,10 @@ def stripe_webhook_post():
         stripe_amount - charged_amount
     ) > 0.01:
 
+        _release_recharge_limit_slot(
+            idem_key
+        )
+
         IdempotencyService.store_result(
             idem_key,
             {
@@ -1778,7 +1967,11 @@ def stripe_webhook_post():
             },
         )
 
-        return jsonify({"ok": True}), 200
+        return jsonify(
+            {
+                "ok": True,
+            }
+        ), 200
 
     # ---------------------------
     # 🔒 FORFAIT / DATA LOGIC
@@ -1829,7 +2022,11 @@ def stripe_webhook_post():
     if forfait_id_raw and not operator_id:
 
         logger.error(
-            "❌ Missing operator_id for DATA recharge"
+            "Missing operator_id for DATA recharge"
+        )
+
+        _release_recharge_limit_slot(
+            idem_key
         )
 
         IdempotencyService.store_result(
@@ -1840,7 +2037,11 @@ def stripe_webhook_post():
             },
         )
 
-        return jsonify({"ok": True}), 200
+        return jsonify(
+            {
+                "ok": True,
+            }
+        ), 200
 
     # ---------------------------
     # PROCESS RECHARGE
@@ -1898,6 +2099,8 @@ def stripe_webhook_post():
         payload_obj.update({
             "stripe_id": payment_reference,
             "payment_intent_id": payment_reference,
+            "payment_idempotency_key": idem_key,
+            "phone": phone,
             "stripe_customer_id": stripe_customer_id,
             "payment_method_id": payment_method_id,
             "payment_method": payment_method,
@@ -1914,16 +2117,52 @@ def stripe_webhook_post():
             "admin_received": admin_received,
         })
         # ---------------------------
-        # Gestion erreurs recharge
+        # Recharge result status
         # ---------------------------
-        if result.status in {"FAILED", "REFUNDED"}:
 
-         payload_obj["status"] = "FAILED"
-         payload_obj["reason"] = "recharge_failed"
+        result_status = _safe_str(
+            result.status
+        ).upper()
+
+        if result_status in {
+            "FAILED",
+            "REFUNDED",
+        }:
+
+            payload_obj["status"] = "FAILED"
+
+            payload_obj["reason"] = (
+                "recharge_failed"
+            )
+
+            _release_recharge_limit_slot(
+                idem_key
+            )
+
+        elif result_status == "SUCCESS":
+
+            payload_obj["status"] = "SUCCESS"
+
+            _confirm_recharge_limit_slot(
+                phone=phone,
+                reservation_key=idem_key,
+                payment_intent_id=payment_reference,
+            )
 
         else:
 
-         payload_obj["status"] = "SUCCESS"
+            payload_obj["status"] = "PROCESSING"
+
+            # ---------------------------
+            # Count accepted recharge
+            # during the 12-hour window
+            # ---------------------------
+
+            _confirm_recharge_limit_slot(
+                phone=phone,
+                reservation_key=idem_key,
+                payment_intent_id=payment_reference,
+            )
 
 
 
@@ -2008,25 +2247,55 @@ def stripe_webhook_post():
             except Exception:
                 logger.exception("Email error")
 
-    except TransactionServiceError as e:
-        logger.exception("Recharge error: %s", e)
+    except TransactionServiceError as exc:
+
+        logger.exception(
+            "Recharge error: %s",
+            exc,
+        )
+
+        _release_recharge_limit_slot(
+            idem_key
+        )
 
         IdempotencyService.store_result(
             idem_key,
-            {"status": "FAILED", "reason": "recharge_error"},
+            {
+                "status": "FAILED",
+                "reason": "recharge_error",
+            },
         )
 
-        return jsonify({"ok": True}), 200
+        return jsonify(
+            {
+                "ok": True,
+            }
+        ), 200
 
-    except Exception as e:
-        logger.exception("Webhook unexpected error: %s", e)
+    except Exception as exc:
+
+        logger.exception(
+            "Webhook unexpected error: %s",
+            exc,
+        )
+
+        _release_recharge_limit_slot(
+            idem_key
+        )
 
         IdempotencyService.store_result(
             idem_key,
-            {"status": "FAILED", "reason": "unexpected_error"},
+            {
+                "status": "FAILED",
+                "reason": "unexpected_error",
+            },
         )
 
-        return jsonify({"ok": True}), 200
+        return jsonify(
+            {
+                "ok": True,
+            }
+        ), 200
 
     return jsonify({"ok": True}), 200
 
