@@ -246,11 +246,17 @@ def _save_card_from_stripe_event(
 
             return
 
-        CardService.save_card(
+        saved_card = CardService.save_card(
             user_id=user_id,
             payment_method=payment_method,
             stripe_customer_id=stripe_customer_id,
         )
+
+        if not saved_card:
+
+            raise RuntimeError(
+                "card_service_returned_empty_result"
+            )
 
         logger.info(
             "CARD SAVED | user_id=%s | payment_method=%s | customer=%s",
@@ -265,6 +271,8 @@ def _save_card_from_stripe_event(
             "CARD SAVE ERROR: %s",
             exc,
         )
+
+        raise
 # ---------------------------
 # Forfait display helper
 # ---------------------------
@@ -1827,10 +1835,26 @@ def stripe_webhook_post():
     # Save card before deduplication
     # ---------------------------
 
-    _save_card_from_stripe_event(
-        event_data=event_data,
-        metadata=dict(metadata),
-    )
+    try:
+
+        _save_card_from_stripe_event(
+            event_data=event_data,
+            metadata=dict(metadata),
+        )
+
+    except Exception as exc:
+
+        logger.exception(
+            "Webhook card persistence error: %s",
+            exc,
+        )
+
+        return jsonify(
+            {
+                "ok": False,
+                "error": "card_save_failed",
+            }
+        ), 500
 
     # ---------------------------
     # Idempotency protection
