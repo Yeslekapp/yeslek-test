@@ -13,6 +13,7 @@ from flask import Blueprint, jsonify, redirect, render_template, request, sessio
 from services.payment.currency_service import CurrencyService
 from services.payment.fees_service import FeesService
 from services.order.history_service import HistoryService
+from services.security.recharge_limit_service import RechargeLimitService
 from services.recharge.recharge_service import (
     detect_country_iso_from_phone,
     is_phone_length_valid,
@@ -712,8 +713,59 @@ def enter_number_post():
             recent_numbers=_get_recent_recharge_numbers(
                 session.get("user_id")
             ),
-
         ), 400
+
+    # ---------------------------
+    # Global recharge limit
+    # ---------------------------
+
+    limit_state = RechargeLimitService.check(
+        phone=phone
+    )
+
+    if not limit_state["allowed"]:
+
+        retry_after_seconds = int(
+            limit_state.get(
+                "retry_after_seconds",
+                0,
+            )
+            or 0
+        )
+
+        total_minutes = max(
+            1,
+            (
+                retry_after_seconds
+                + 59
+            )
+            // 60,
+        )
+
+        phone_limit_hours, phone_limit_minutes = divmod(
+            total_minutes,
+            60,
+        )
+
+        city = get_city_for_country(
+            country_iso
+        )
+
+        return render_template(
+            "recharge/enter_number.html",
+            initial_phone=phone,
+            country_iso=country_iso,
+            country_flag=_country_flag_from_iso(
+                country_iso
+            ),
+            city=city,
+            phone_limit_error=True,
+            phone_limit_hours=phone_limit_hours,
+            phone_limit_minutes=phone_limit_minutes,
+            recent_numbers=_get_recent_recharge_numbers(
+                session.get("user_id")
+            ),
+        ), 429
 
     session["recharge_phone"] = phone
     session["country_iso"] = country_iso.upper()
