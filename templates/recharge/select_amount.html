@@ -16,8 +16,8 @@
   <h1 class="tz-title">{{ t("recharge.selectAmount.title") }}</h1>
 
   <form method="post" action="{{ url_for('recharge.select_amount_post') }}" class="tz-stack" id="selectAmountForm">
-    <input type="hidden" name="min_amount" value="2">
-<input type="hidden" name="max_amount" value="40">
+    <input type="hidden" name="min_amount" value="1.99">
+    <input type="hidden" name="max_amount" value="34.99">
 
 {# ---------------------------
    Phone + Operator Card
@@ -73,20 +73,20 @@
       {% if amounts and amounts.fixedAmounts and amounts.fixedAmounts|length > 0 %}
         <div class="tz-wrap" id="fixedAmountWrap">
          {% for v in amounts.fixedAmounts %}
-  {% if v >= 2 and v <= 40 %}
+  {% if v >= 1.99 and v <= 34.99 %}
     <button type="button"
             class="tz-amt-btn {% if v == amount %}is-selected{% endif %}"
             data-amount="{{ v }}">
-      {{ "%.0f"|format(v) }} €
+      {{ "%.2f"|format(v) }} €
     </button>
   {% endif %}
 {% endfor %}
         </div>
       {% else %}
         <div style="padding:6px 4px;">
-        <input id="amountRange" type="range"
-       min="2"
-       max="40"
+       <input id="amountRange" type="range"
+       min="1.99"
+       max="34.99"
        step="0.01"
        value="{{ amount }}"
        style="width:100%;">

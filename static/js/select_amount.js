@@ -39,8 +39,8 @@
 
   const userCurrency = "€";
 
-  let minAmount = 2;
-  let maxAmount = 40;
+  let minAmount = 1.99;
+  let maxAmount = 34.99;
 
   let debounceT = null;
 
@@ -131,11 +131,12 @@ if (creditEarnedText) {
 
     if (continueBtn) {
 
-      const payTemplate = continueBtn?.dataset?.payText || "Pay {amount}";
+      const payText = continueBtn?.dataset?.payText || "";
       const formatted = `${fmt2(total)} ${userCurrency}`;
 
-      continueBtn.textContent =
-        payTemplate.replace("{amount}", formatted);
+      continueBtn.textContent = payText.includes("{amount}")
+        ? payText.replace("{amount}", formatted)
+        : `${payText} ${formatted}`.trim();
 
       // ✅ validation bouton (FIX)
       const isValid = a >= minAmount && a <= maxAmount;

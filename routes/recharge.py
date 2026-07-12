@@ -853,8 +853,8 @@ def select_amount_get():
     # ---------------------------
     operator_amounts = {
         "fixedAmounts": [],
-        "minAmount": 2,
-        "maxAmount": 50,
+        "minAmount": 1.99,
+        "maxAmount": 34.99,
     }
 
     if operator_id:
@@ -995,8 +995,8 @@ def select_amount_post():
     # ---------------------------
     # VALIDATION
     # ---------------------------
-    MIN_AMOUNT = 2.0
-    MAX_AMOUNT = 40.0
+    MIN_AMOUNT = 1.99
+    MAX_AMOUNT = 34.99
 
     if amount < MIN_AMOUNT or amount > MAX_AMOUNT:
         if is_ajax:
@@ -1180,8 +1180,8 @@ def api_quote():
     # Feature: Amount validation (SECURE)
     # ---------------------------
 
-    MIN_AMOUNT = 2.0
-    MAX_AMOUNT = 40.0
+    MIN_AMOUNT = 1.99
+    MAX_AMOUNT = 34.99
 
     if amount < MIN_AMOUNT or amount > MAX_AMOUNT:
         return jsonify({
@@ -1275,8 +1275,8 @@ def api_fees():
     # ---------------------------
     # VALIDATION (same as select_amount)
     # ---------------------------
-    MIN_AMOUNT = 2.0
-    MAX_AMOUNT = 40.0
+    MIN_AMOUNT = 1.99
+    MAX_AMOUNT = 34.99
 
     if amount < MIN_AMOUNT or amount > MAX_AMOUNT:
         return jsonify({
