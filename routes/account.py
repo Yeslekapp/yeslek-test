@@ -29,39 +29,14 @@ def card_storage_get():
 
     user_id = session.get("user_id")
 
-    current_app.logger.info(
-        "CARD STORAGE SESSION | user_id=%s",
-        user_id,
-    )
-
     if not user_id:
-
         return redirect(
             url_for("auth.login_get")
         )
 
-    try:
-
-        cards = CardService.get_user_cards(
-            str(user_id)
-        )
-
-        current_app.logger.info(
-            "CARD STORAGE RESULT | user_id=%s | count=%s | cards=%s",
-            user_id,
-            len(cards),
-            cards,
-        )
-
-    except Exception as exc:
-
-        current_app.logger.exception(
-            "CARD STORAGE ERROR | user_id=%s | error=%s",
-            user_id,
-            exc,
-        )
-
-        cards = []
+    cards = CardService.get_user_cards(
+        str(user_id)
+    )
 
     return render_template(
         "account/card_storage.html",

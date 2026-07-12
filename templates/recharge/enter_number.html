@@ -119,69 +119,6 @@
 <script defer src="{{ url_for('static', filename='js/phone_rules.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/country_picker.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/enter_number.js') }}"></script>
-
-<script>
-  window.addEventListener("load", () => {
-
-    const phoneInput =
-      document.getElementById("phoneInput");
-
-    const phoneHelp =
-      document.getElementById("phoneHelp");
-
-    const continueBtn =
-      document.getElementById("continueBtn");
-
-    if (
-      !phoneInput
-      || !phoneHelp
-      || phoneHelp.dataset.serverInvalid !== "true"
-    ) {
-      return;
-    }
-
-    phoneInput.classList.add(
-      "tz-input--error"
-    );
-
-    phoneInput.setAttribute(
-      "aria-invalid",
-      "true"
-    );
-
-    phoneHelp.textContent =
-      phoneHelp.dataset.invalid || "";
-
-    if (continueBtn) {
-
-      continueBtn.disabled = true;
-
-      continueBtn.setAttribute(
-        "aria-disabled",
-        "true"
-      );
-
-    }
-
-    phoneInput.addEventListener(
-      "input",
-      () => {
-
-        phoneHelp.dataset.serverInvalid =
-          "false";
-
-        phoneInput.removeAttribute(
-          "aria-invalid"
-        );
-
-      },
-      {
-        once: true,
-      }
-    );
-
-  });
-</script>
 {% endblock %}
 
 {% block content %}
@@ -293,16 +230,11 @@
           data-empty="{{ t('recharge.enterNumber.enterNumber') }}"
           data-valid="{{ t('recharge.enterNumber.validNumber') }}"
           data-invalid="{{ t('recharge.enterNumber.invalidNumber') }}"
-          data-server-invalid="{{ 'true' if phone_error else 'false' }}"
-          aria-live="polite"
         >
-          {% if phone_error %}
-            {{ t("recharge.enterNumber.invalidNumber") }}
-          {% else %}
-            {{ t("recharge.enterNumber.enterNumber") }}
-          {% endif %}
+          {{ t("recharge.enterNumber.enterNumber") }}
         </span>
       </div>
+
 
     </section>
 

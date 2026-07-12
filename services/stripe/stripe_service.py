@@ -266,6 +266,9 @@ class StripeService:
                 description=StripeService._payment_description(
                     clean_metadata
                 ),
+                receipt_email=StripeService._safe_str(
+                    clean_metadata.get("user_email")
+                ) or None,
                 idempotency_key=idempotency_key,
             )
 
@@ -370,7 +373,13 @@ class StripeService:
 
         if valid_customer_id:
             params["customer"] = valid_customer_id
+        receipt_email = StripeService._safe_str(
+            clean_metadata.get("user_email")
+            or customer_email
+        )
 
+        if receipt_email:
+            params["receipt_email"] = receipt_email
         if save_card and valid_customer_id:
             params["setup_future_usage"] = "off_session"
 

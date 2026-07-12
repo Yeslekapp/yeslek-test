@@ -31,7 +31,6 @@ from services.security.payment_guard_service import (
     PaymentGuardError,
     PaymentGuardService,
 )
-from services.security.recharge_limit_service import RechargeLimitService
 payment_bp = Blueprint("payment", __name__, url_prefix="/payment")
 
 logger = logging.getLogger(__name__)
@@ -64,95 +63,6 @@ def _safe_get(
         return obj.get(key, default)
 
     return getattr(obj, key, default)
-
-# ---------------------------
-# Recharge limit helpers
-# ---------------------------
-
-def _reserve_recharge_limit_slot(
-    *,
-    phone: str,
-    reservation_key: str,
-) -> Optional[Dict[str, Any]]:
-
-    try:
-
-        return RechargeLimitService.reserve(
-            phone=phone,
-            reservation_key=reservation_key,
-        )
-
-    except Exception as exc:
-
-        logger.exception(
-            "Recharge limit reservation error: %s",
-            exc,
-        )
-
-        return None
-
-
-def _release_recharge_limit_slot(
-    reservation_key: str,
-) -> None:
-
-    try:
-
-        RechargeLimitService.release(
-            reservation_key=reservation_key
-        )
-
-    except Exception as exc:
-
-        logger.exception(
-            "Recharge limit release error: %s",
-            exc,
-        )
-
-
-def _bind_recharge_limit_slot(
-    *,
-    reservation_key: str,
-    payment_intent_id: str,
-) -> None:
-
-    try:
-
-        RechargeLimitService.bind_payment_intent(
-            reservation_key=reservation_key,
-            payment_intent_id=payment_intent_id,
-        )
-
-    except Exception as exc:
-
-        logger.exception(
-            "Recharge limit PaymentIntent bind error: %s",
-            exc,
-        )
-
-
-def _confirm_recharge_limit_slot(
-    *,
-    phone: str,
-    reservation_key: str,
-    payment_intent_id: str,
-) -> None:
-
-    try:
-
-        RechargeLimitService.mark_success(
-            phone=phone,
-            reservation_key=reservation_key,
-            payment_intent_id=payment_intent_id,
-        )
-
-    except Exception as exc:
-
-        logger.exception(
-            "Recharge limit success sync error: %s",
-            exc,
-        )
-
 # ---------------------------
 # Forfait display helper
 # ---------------------------
@@ -1374,34 +1284,6 @@ def card_post():
         metadata["stripe_customer_id"] = stripe_customer_id
         metadata["save_card"] = "false"
 
-        # ---------------------------
-        # Global phone reservation
-        # ---------------------------
-
-        limit_state = _reserve_recharge_limit_slot(
-            phone=ctx["phone"],
-            reservation_key=idem_key,
-        )
-
-        if limit_state is None:
-
-            return jsonify(
-                {
-                    "error": "payment_temporarily_unavailable",
-                }
-            ), 503
-
-        if not limit_state.get(
-            "allowed",
-            False,
-        ):
-
-            return jsonify(
-                {
-                    "error": "invalid_phone",
-                }
-            ), 400
-
         try:
             intent = StripeService.create_saved_card_payment_intent(
                 amount=ctx["final_amount"],
@@ -1417,14 +1299,7 @@ def card_post():
                 "id",
                 "",
             )
-            _bind_recharge_limit_slot(
-                reservation_key=idem_key,
-                payment_intent_id=_safe_get(
-                    intent,
-                    "id",
-                    "",
-                ),
-            )
+
             return jsonify(
                 {
                     "client_secret": _safe_get(
@@ -1449,10 +1324,6 @@ def card_post():
                 exc
             )
 
-            _release_recharge_limit_slot(
-                idem_key
-            )
-
             logger.warning(
                 "Saved card rejected | user_id=%s | card_id=%s | error=%s",
                 user_id,
@@ -1472,9 +1343,7 @@ def card_post():
                 "Saved card payment intent error: %s",
                 exc,
             )
-            _release_recharge_limit_slot(
-                idem_key
-            )
+
             return jsonify(
                 {
                     "error": "saved_card_payment_error",
@@ -1522,37 +1391,8 @@ def card_post():
             ), 400
 
     # ---------------------------
-    # Global phone reservation
-    # ---------------------------
-
-    limit_state = _reserve_recharge_limit_slot(
-        phone=ctx["phone"],
-        reservation_key=idem_key,
-    )
-
-    if limit_state is None:
-
-        return jsonify(
-            {
-                "error": "payment_temporarily_unavailable",
-            }
-        ), 503
-
-    if not limit_state.get(
-        "allowed",
-        False,
-    ):
-
-        return jsonify(
-            {
-                "error": "invalid_phone",
-            }
-        ), 400
-
-    # ---------------------------
     # Create Stripe intent
     # ---------------------------
-
     try:
         intent = StripeService.create_payment_intent(
             amount=ctx["final_amount"],
@@ -1577,10 +1417,6 @@ def card_post():
 
         session["last_payment_intent_id"] = intent.id
 
-        _bind_recharge_limit_slot(
-            reservation_key=idem_key,
-            payment_intent_id=intent.id,
-        )
         return jsonify(
             {
                 "client_secret": intent.client_secret,
@@ -1594,10 +1430,6 @@ def card_post():
         logger.exception(
             "Stripe payment intent error: %s",
             exc,
-        )
-
-        _release_recharge_limit_slot(
-            idem_key
         )
 
         return jsonify(
@@ -1654,26 +1486,12 @@ def stripe_webhook_post():
         "payment_intent.canceled",
     }:
 
-        failed_idem_key = _safe_str(
-            metadata.get(
-                "payment_idempotency_key"
-            )
-        )
-
-        if failed_idem_key:
-
-            _release_recharge_limit_slot(
-                failed_idem_key
-            )
-
         try:
-
             PaymentGuardService.record_failed_payment(
                 metadata=metadata,
             )
 
         except Exception:
-
             logger.exception(
                 "Payment guard failed-event tracking error"
             )
@@ -1711,113 +1529,6 @@ def stripe_webhook_post():
             }
         ), 400
 
-    # ---------------------------
-    # Save card before deduplication
-    # ---------------------------
-    save_card = (
-        _safe_str(
-            metadata.get("save_card")
-        ).lower()
-        == "true"
-    )
-
-    card_user_id = _safe_str(
-        metadata.get("user_id")
-    )
-
-    card_payment_method_id = _safe_str(
-        event_data.get("payment_method")
-    )
-
-    card_customer_id = _safe_str(
-        event_data.get("customer")
-        or metadata.get(
-            "stripe_customer_id"
-        )
-    )
-
-    logger.info(
-        "SAVE CARD CHECK | user_id=%s | save_card=%s | payment_method=%s | customer=%s",
-        card_user_id,
-        save_card,
-        card_payment_method_id,
-        card_customer_id,
-    )
-
-    if save_card:
-
-        if not card_user_id:
-
-            logger.warning(
-                "CARD SAVE SKIPPED | missing_user_id"
-            )
-
-        elif not card_payment_method_id:
-
-            logger.warning(
-                "CARD SAVE SKIPPED | missing_payment_method_id"
-            )
-
-        elif not card_customer_id:
-
-            logger.warning(
-                "CARD SAVE SKIPPED | missing_stripe_customer_id"
-            )
-
-        else:
-
-            try:
-
-                payment_method_obj = (
-                    StripeService.retrieve_payment_method(
-                        card_payment_method_id
-                    )
-                )
-
-                card_data = getattr(
-                    payment_method_obj,
-                    "card",
-                    None,
-                )
-
-                if not card_data:
-
-                    logger.warning(
-                        "CARD SAVE SKIPPED | missing_card_data"
-                    )
-
-                else:
-
-                    CardService.save_card(
-                        user_id=str(
-                            card_user_id
-                        ),
-                        payment_method=payment_method_obj,
-                        stripe_customer_id=str(
-                            card_customer_id
-                        ),
-                    )
-
-                    logger.info(
-                        "CARD SAVED | user_id=%s | payment_method=%s | customer=%s",
-                        card_user_id,
-                        card_payment_method_id,
-                        card_customer_id,
-                    )
-
-            except Exception as exc:
-
-                logger.exception(
-                    "CARD SAVE ERROR: %s",
-                    exc,
-                )
-
-                return jsonify(
-                    {
-                        "ok": False,
-                        "error": "card_save_failed",
-                    }
-                ), 500
     # ---------------------------
     # Idempotency protection
     # ---------------------------
@@ -2021,9 +1732,7 @@ def stripe_webhook_post():
     # Validation sécurité
     # ---------------------------
     if not phone or base_amount <= 0:
-        _release_recharge_limit_slot(
-            idem_key
-        )
+
         IdempotencyService.store_result(
             idem_key,
             {
@@ -2046,9 +1755,7 @@ def stripe_webhook_post():
     ).lower()
 
     if stripe_currency != "eur":
-        _release_recharge_limit_slot(
-            idem_key
-        )
+
         IdempotencyService.store_result(
             idem_key,
             {
@@ -2063,10 +1770,6 @@ def stripe_webhook_post():
         stripe_amount - charged_amount
     ) > 0.01:
 
-        _release_recharge_limit_slot(
-            idem_key
-        )
-
         IdempotencyService.store_result(
             idem_key,
             {
@@ -2075,11 +1778,7 @@ def stripe_webhook_post():
             },
         )
 
-        return jsonify(
-            {
-                "ok": True,
-            }
-        ), 200
+        return jsonify({"ok": True}), 200
 
     # ---------------------------
     # 🔒 FORFAIT / DATA LOGIC
@@ -2130,11 +1829,7 @@ def stripe_webhook_post():
     if forfait_id_raw and not operator_id:
 
         logger.error(
-            "Missing operator_id for DATA recharge"
-        )
-
-        _release_recharge_limit_slot(
-            idem_key
+            "❌ Missing operator_id for DATA recharge"
         )
 
         IdempotencyService.store_result(
@@ -2145,11 +1840,7 @@ def stripe_webhook_post():
             },
         )
 
-        return jsonify(
-            {
-                "ok": True,
-            }
-        ), 200
+        return jsonify({"ok": True}), 200
 
     # ---------------------------
     # PROCESS RECHARGE
@@ -2207,8 +1898,6 @@ def stripe_webhook_post():
         payload_obj.update({
             "stripe_id": payment_reference,
             "payment_intent_id": payment_reference,
-            "payment_idempotency_key": idem_key,
-            "phone": phone,
             "stripe_customer_id": stripe_customer_id,
             "payment_method_id": payment_method_id,
             "payment_method": payment_method,
@@ -2225,67 +1914,82 @@ def stripe_webhook_post():
             "admin_received": admin_received,
         })
         # ---------------------------
-        # Recharge result status
+        # Gestion erreurs recharge
         # ---------------------------
+        if result.status in {"FAILED", "REFUNDED"}:
 
-        result_status = _safe_str(
-            result.status
-        ).upper()
-
-        if result_status in {
-            "FAILED",
-            "REFUNDED",
-        }:
-
-            payload_obj["status"] = "FAILED"
-
-            payload_obj["reason"] = (
-                "recharge_failed"
-            )
-
-            _release_recharge_limit_slot(
-                idem_key
-            )
-
-        elif result_status == "SUCCESS":
-
-            payload_obj["status"] = "SUCCESS"
-
-            _confirm_recharge_limit_slot(
-                phone=phone,
-                reservation_key=idem_key,
-                payment_intent_id=payment_reference,
-            )
+         payload_obj["status"] = "FAILED"
+         payload_obj["reason"] = "recharge_failed"
 
         else:
 
-            payload_obj["status"] = "PROCESSING"
-
-            # ---------------------------
-            # Count accepted recharge
-            # during the 12-hour window
-            # ---------------------------
-
-            _confirm_recharge_limit_slot(
-                phone=phone,
-                reservation_key=idem_key,
-                payment_intent_id=payment_reference,
-            )
+         payload_obj["status"] = "SUCCESS"
 
 
 
         # ---------------------------
         # Save result
         # ---------------------------
-        IdempotencyService.store_result(
-            idem_key,
-            payload_obj,
-        )
+        IdempotencyService.store_result(idem_key, payload_obj)
+        _store_payment_success_payload(payload_obj)
 
-        _store_payment_success_payload(
-            payload_obj
-        )
+        # ---------------------------
+        # Save card
+        # ---------------------------
+        try:
+            save_card = (
+                _safe_str(metadata.get("save_card")).lower()
+                == "true"
+            )
 
+            payment_method_id = _safe_str(
+                event_data.get("payment_method")
+            )
+
+            stripe_customer_id = _safe_str(
+                event_data.get("customer")
+                or metadata.get("stripe_customer_id")
+            )
+
+            logger.info(
+                "SAVE CARD CHECK | user_id=%s | save_card=%s | payment_method=%s | customer=%s",
+                user_id,
+                save_card,
+                payment_method_id,
+                stripe_customer_id,
+            )
+
+            if save_card and user_id and payment_method_id:
+
+                pm = StripeService.retrieve_payment_method(
+                    payment_method_id
+                )
+
+                card_data = getattr(
+                    pm,
+                    "card",
+                    None,
+                )
+
+                if card_data:
+                    CardService.save_card(
+                        user_id=str(user_id),
+                        payment_method=pm,
+                        stripe_customer_id=stripe_customer_id,
+                    )
+
+                    logger.info(
+                        "CARD SAVED | user_id=%s | payment_method=%s | customer=%s",
+                        user_id,
+                        payment_method_id,
+                        stripe_customer_id,
+                    )
+
+        except Exception as e:
+            logger.exception(
+                "CARD SAVE ERROR: %s",
+                e,
+            )
 
         # ---------------------------
         # Email
@@ -2304,55 +2008,25 @@ def stripe_webhook_post():
             except Exception:
                 logger.exception("Email error")
 
-    except TransactionServiceError as exc:
-
-        logger.exception(
-            "Recharge error: %s",
-            exc,
-        )
-
-        _release_recharge_limit_slot(
-            idem_key
-        )
+    except TransactionServiceError as e:
+        logger.exception("Recharge error: %s", e)
 
         IdempotencyService.store_result(
             idem_key,
-            {
-                "status": "FAILED",
-                "reason": "recharge_error",
-            },
+            {"status": "FAILED", "reason": "recharge_error"},
         )
 
-        return jsonify(
-            {
-                "ok": True,
-            }
-        ), 200
+        return jsonify({"ok": True}), 200
 
-    except Exception as exc:
-
-        logger.exception(
-            "Webhook unexpected error: %s",
-            exc,
-        )
-
-        _release_recharge_limit_slot(
-            idem_key
-        )
+    except Exception as e:
+        logger.exception("Webhook unexpected error: %s", e)
 
         IdempotencyService.store_result(
             idem_key,
-            {
-                "status": "FAILED",
-                "reason": "unexpected_error",
-            },
+            {"status": "FAILED", "reason": "unexpected_error"},
         )
 
-        return jsonify(
-            {
-                "ok": True,
-            }
-        ), 200
+        return jsonify({"ok": True}), 200
 
     return jsonify({"ok": True}), 200
 

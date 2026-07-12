@@ -13,7 +13,6 @@ from flask import Blueprint, jsonify, redirect, render_template, request, sessio
 from services.payment.currency_service import CurrencyService
 from services.payment.fees_service import FeesService
 from services.order.history_service import HistoryService
-from services.security.recharge_limit_service import RechargeLimitService
 from services.recharge.recharge_service import (
     detect_country_iso_from_phone,
     is_phone_length_valid,
@@ -691,283 +690,74 @@ def enter_number_get():
 
 @recharge_bp.post("/enter-number")
 def enter_number_post():
+    raw = request.form.get("phone", "")
+    phone = normalize_phone_e164_light(raw)
 
-    raw = request.form.get(
-        "phone",
-        "",
-    )
-
-    phone = normalize_phone_e164_light(
-        raw
-    )
-
-    country_iso = str(
+    country_iso = (
         request.form.get("country_iso")
         or detect_country_iso_from_phone(phone)
         or "AF"
-    ).strip().upper()
+    )
 
-    # ---------------------------
-    # Phone validation
-    # ---------------------------
-
-    if (
-        not phone
-        or not is_phone_length_valid(phone)
-    ):
-
-        city = get_city_for_country(
-            country_iso
-        )
+    if not phone or not is_phone_length_valid(phone):
+        city = get_city_for_country(country_iso)
 
         return render_template(
             "recharge/enter_number.html",
             initial_phone=phone or "+93",
             country_iso=country_iso,
-            country_flag=_country_flag_from_iso(
-                country_iso
-            ),
+            country_flag=_country_flag_from_iso(country_iso),
             city=city,
             phone_error=True,
             recent_numbers=_get_recent_recharge_numbers(
                 session.get("user_id")
             ),
+
         ), 400
-
-    # ---------------------------
-    # Global recharge limit
-    # ---------------------------
-
-    try:
-
-        limit_state = RechargeLimitService.check(
-            phone=phone
-        )
-
-    except Exception as exc:
-
-        logger.exception(
-            "Recharge limit check error: %s",
-            exc,
-        )
-
-        limit_state = {
-            "allowed": False,
-        }
-
-    if not limit_state.get(
-        "allowed",
-        False,
-    ):
-
-        # ---------------------------
-        # Clear previous recharge flow
-        # ---------------------------
-
-        session.pop(
-            "recharge_phone",
-            None,
-        )
-
-        session.pop(
-            "country_iso",
-            None,
-        )
-
-        session.pop(
-            "recharge_operator",
-            None,
-        )
-
-        session.pop(
-            "recharge_type",
-            None,
-        )
-
-        session.pop(
-            "recharge_amount",
-            None,
-        )
-
-        session.pop(
-            "recharge_total_amount",
-            None,
-        )
-
-        session.pop(
-            "recharge_amounts",
-            None,
-        )
-
-        session.pop(
-            "recharge_forfait",
-            None,
-        )
-
-        session.pop(
-            "recharge_data_plans",
-            None,
-        )
-
-        session.pop(
-            "received_display",
-            None,
-        )
-
-        session.pop(
-            "payment_idempotency_key",
-            None,
-        )
-
-        session.pop(
-            "last_payment_amount",
-            None,
-        )
-
-        session.modified = True
-
-        city = get_city_for_country(
-            country_iso
-        )
-
-        return render_template(
-            "recharge/enter_number.html",
-            initial_phone=phone,
-            country_iso=country_iso,
-            country_flag=_country_flag_from_iso(
-                country_iso
-            ),
-            city=city,
-            phone_error=True,
-            recent_numbers=_get_recent_recharge_numbers(
-                session.get("user_id")
-            ),
-        ), 400
-
-    # ---------------------------
-    # Save recharge context
-    # ---------------------------
 
     session["recharge_phone"] = phone
-
-    session["country_iso"] = (
-        country_iso
-    )
-
+    session["country_iso"] = country_iso.upper()
     # ---------------------------
     # Save recent number history
     # ---------------------------
-
     _store_recent_recharge_number(
         phone=phone,
         country_iso=country_iso,
     )
 
     # ---------------------------
-    # Preload operator, plans and amounts
+    # 🔥 FIX: PRELOAD OPERATOR + DATA + AMOUNTS
     # ---------------------------
-
     try:
-
-        operator = lookup_phone_number(
-            phone,
-            country_iso,
-        )
+        operator = lookup_phone_number(phone, country_iso)
 
         if operator:
+            session["recharge_operator"] = operator
 
-            session[
-                "recharge_operator"
-            ] = operator
-
-            # ---------------------------
-            # Data plans
-            # ---------------------------
-
-            if operator.get(
-                "supports_data"
-            ):
-
+            # 👉 DATA plans (forfaits)
+            if operator.get("supports_data"):
                 try:
-
-                    plans = get_reloadly_plans(
-                        operator
-                    )
-
-                except Exception as exc:
-
-                    logger.exception(
-                        "Reloadly plans preload error: %s",
-                        exc,
-                    )
-
+                    plans = get_reloadly_plans(operator)
+                except Exception:
                     plans = []
-
             else:
-
                 plans = []
 
-            session[
-                "recharge_data_plans"
-            ] = plans
+            session["recharge_data_plans"] = plans
 
-            # ---------------------------
-            # Operator amounts
-            # ---------------------------
-
+            # 👉 Amounts
             try:
-
-                amounts = (
-                    get_reloadly_operator_amounts(
-                        operator.get("id")
-                    )
-                )
-
-            except Exception as exc:
-
-                logger.exception(
-                    "Reloadly amounts preload error: %s",
-                    exc,
-                )
-
+                amounts = get_reloadly_operator_amounts(operator.get("id"))
+            except Exception:
                 amounts = {}
 
-            session[
-                "recharge_amounts"
-            ] = amounts
+            session["recharge_amounts"] = amounts
 
-        else:
+    except Exception:
+        session["recharge_data_plans"] = []
+        session["recharge_amounts"] = {}
 
-            session[
-                "recharge_data_plans"
-            ] = []
-
-            session[
-                "recharge_amounts"
-            ] = {}
-
-    except Exception as exc:
-
-        logger.exception(
-            "Operator preload error: %s",
-            exc,
-        )
-
-        session[
-            "recharge_data_plans"
-        ] = []
-
-        session[
-            "recharge_amounts"
-        ] = {}
-
-    session.modified = True
-
-    return redirect(
-        url_for(
-            "recharge.select_amount_get"
-        )
-    )
+    return redirect(url_for("recharge.select_amount_get"))
 
 
 # ---------------------------
