@@ -363,7 +363,7 @@ class StripeService:
             # ---------------------------
             "payment_method_options": {
                 "card": {
-                    "request_three_d_secure": "automatic",
+                    "request_three_d_secure": "challenge",
                 }
             },
         }
