@@ -1711,7 +1711,113 @@ def stripe_webhook_post():
             }
         ), 400
 
+    # ---------------------------
+    # Save card before deduplication
+    # ---------------------------
+    save_card = (
+        _safe_str(
+            metadata.get("save_card")
+        ).lower()
+        == "true"
+    )
 
+    card_user_id = _safe_str(
+        metadata.get("user_id")
+    )
+
+    card_payment_method_id = _safe_str(
+        event_data.get("payment_method")
+    )
+
+    card_customer_id = _safe_str(
+        event_data.get("customer")
+        or metadata.get(
+            "stripe_customer_id"
+        )
+    )
+
+    logger.info(
+        "SAVE CARD CHECK | user_id=%s | save_card=%s | payment_method=%s | customer=%s",
+        card_user_id,
+        save_card,
+        card_payment_method_id,
+        card_customer_id,
+    )
+
+    if save_card:
+
+        if not card_user_id:
+
+            logger.warning(
+                "CARD SAVE SKIPPED | missing_user_id"
+            )
+
+        elif not card_payment_method_id:
+
+            logger.warning(
+                "CARD SAVE SKIPPED | missing_payment_method_id"
+            )
+
+        elif not card_customer_id:
+
+            logger.warning(
+                "CARD SAVE SKIPPED | missing_stripe_customer_id"
+            )
+
+        else:
+
+            try:
+
+                payment_method_obj = (
+                    StripeService.retrieve_payment_method(
+                        card_payment_method_id
+                    )
+                )
+
+                card_data = getattr(
+                    payment_method_obj,
+                    "card",
+                    None,
+                )
+
+                if not card_data:
+
+                    logger.warning(
+                        "CARD SAVE SKIPPED | missing_card_data"
+                    )
+
+                else:
+
+                    CardService.save_card(
+                        user_id=str(
+                            card_user_id
+                        ),
+                        payment_method=payment_method_obj,
+                        stripe_customer_id=str(
+                            card_customer_id
+                        ),
+                    )
+
+                    logger.info(
+                        "CARD SAVED | user_id=%s | payment_method=%s | customer=%s",
+                        card_user_id,
+                        card_payment_method_id,
+                        card_customer_id,
+                    )
+
+            except Exception as exc:
+
+                logger.exception(
+                    "CARD SAVE ERROR: %s",
+                    exc,
+                )
+
+                return jsonify(
+                    {
+                        "ok": False,
+                        "error": "card_save_failed",
+                    }
+                ), 500
     # ---------------------------
     # Idempotency protection
     # ---------------------------
@@ -2180,95 +2286,6 @@ def stripe_webhook_post():
             payload_obj
         )
 
-        # ---------------------------
-        # Save card
-        # ---------------------------
-        try:
-
-            save_card = (
-                _safe_str(
-                    metadata.get("save_card")
-                ).lower()
-                == "true"
-            )
-
-            payment_method_id = _safe_str(
-                event_data.get(
-                    "payment_method"
-                )
-            )
-
-            stripe_customer_id = _safe_str(
-                event_data.get("customer")
-                or metadata.get(
-                    "stripe_customer_id"
-                )
-            )
-
-            logger.info(
-                "SAVE CARD CHECK | user_id=%s | save_card=%s | payment_method=%s | customer=%s",
-                user_id,
-                save_card,
-                payment_method_id,
-                stripe_customer_id,
-            )
-
-            if (
-                save_card
-                and user_id
-                and payment_method_id
-                and stripe_customer_id
-            ):
-
-                pm = StripeService.retrieve_payment_method(
-                    payment_method_id
-                )
-
-                card_data = getattr(
-                    pm,
-                    "card",
-                    None,
-                )
-
-                if card_data:
-
-                    CardService.save_card(
-                        user_id=str(user_id),
-                        payment_method=pm,
-                        stripe_customer_id=str(
-                            stripe_customer_id
-                        ),
-                    )
-
-                    logger.info(
-                        "CARD SAVED | user_id=%s | payment_method=%s | customer=%s",
-                        user_id,
-                        payment_method_id,
-                        stripe_customer_id,
-                    )
-
-                else:
-
-                    logger.warning(
-                        "CARD SAVE SKIPPED | missing_card_data"
-                    )
-
-            else:
-
-                logger.warning(
-                    "CARD SAVE SKIPPED | save_card=%s | user_id=%s | payment_method=%s | customer=%s",
-                    save_card,
-                    user_id,
-                    payment_method_id,
-                    stripe_customer_id,
-                )
-
-        except Exception as exc:
-
-            logger.exception(
-                "CARD SAVE ERROR: %s",
-                exc,
-            )
 
         # ---------------------------
         # Email
