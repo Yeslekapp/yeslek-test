@@ -33,7 +33,7 @@ class FeesService:
     "LRD": Decimal("0.23"),
     "SLL": Decimal("0.23"),
     "GHS": Decimal("0.22"),
-    "NGN": Decimal("0.99"),
+    "NGN": Decimal("3.00"),
     "XAF": Decimal("0.20"),
     "CVE": Decimal("0.22"),
     "STN": Decimal("0.22"),
