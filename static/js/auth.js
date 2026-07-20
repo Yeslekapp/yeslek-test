@@ -22,13 +22,17 @@
   }
 
   // Anti double submit + loading button
-  document.querySelectorAll("form[data-tz-form]").forEach((form) => {
-    form.addEventListener("submit", () => {
-      const btn = form.querySelector("button[type=submit]");
-      setButtonLoading(btn, true);
-      form.setAttribute("aria-busy", "true");
-    });
+document.querySelectorAll("form[data-tz-form]").forEach((form) => {
+  form.addEventListener("submit", (event) => {
+    const btn =
+      event.submitter instanceof HTMLButtonElement
+        ? event.submitter
+        : form.querySelector("button[type=submit]");
+
+    setButtonLoading(btn, true);
+    form.setAttribute("aria-busy", "true");
   });
+});
 
   // OTP: digits only + paste + autofocus
   document.querySelectorAll("input[data-tz-otp]").forEach((otp) => {

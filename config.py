@@ -231,7 +231,64 @@ TELNYX_SMS_FROM = os.getenv(
     "",
 )
 
+# ---------------------------
+# WhatsApp Cloud API
+# ---------------------------
 
+WHATSAPP_GRAPH_API_VERSION = os.getenv(
+    "WHATSAPP_GRAPH_API_VERSION",
+    "",
+).strip()
+
+WHATSAPP_ACCESS_TOKEN = os.getenv(
+    "WHATSAPP_ACCESS_TOKEN",
+    "",
+).strip()
+
+WHATSAPP_PHONE_NUMBER_ID = os.getenv(
+    "WHATSAPP_PHONE_NUMBER_ID",
+    "",
+).strip()
+
+WHATSAPP_BUSINESS_ACCOUNT_ID = os.getenv(
+    "WHATSAPP_BUSINESS_ACCOUNT_ID",
+    "",
+).strip()
+
+WHATSAPP_TEMPLATE_OTP_NAME = os.getenv(
+    "WHATSAPP_TEMPLATE_OTP_NAME",
+    "yeslek_otp",
+).strip()
+
+WHATSAPP_TEMPLATE_OTP_LANGUAGE = os.getenv(
+    "WHATSAPP_TEMPLATE_OTP_LANGUAGE",
+    "en",
+).strip()
+
+
+# ---------------------------
+# WhatsApp Webhook
+# ---------------------------
+
+WHATSAPP_VERIFY_TOKEN = os.getenv(
+    "WHATSAPP_VERIFY_TOKEN",
+    "",
+).strip()
+
+META_APP_SECRET = os.getenv(
+    "META_APP_SECRET",
+    "",
+).strip()
+
+
+# ---------------------------
+# OTP Security
+# ---------------------------
+
+OTP_PEPPER = os.getenv(
+    "OTP_PEPPER",
+    "",
+).strip()
 # ---------------------------
 # Brevo Email
 # ---------------------------
@@ -364,7 +421,35 @@ MAX_CONTENT_LENGTH = int(
     )
 )
 
+# ---------------------------
+# WhatsApp production safety guard
+# ---------------------------
 
+if IS_PROD:
+
+    required_whatsapp_settings = {
+        "WHATSAPP_GRAPH_API_VERSION": WHATSAPP_GRAPH_API_VERSION,
+        "WHATSAPP_ACCESS_TOKEN": WHATSAPP_ACCESS_TOKEN,
+        "WHATSAPP_PHONE_NUMBER_ID": WHATSAPP_PHONE_NUMBER_ID,
+        "WHATSAPP_BUSINESS_ACCOUNT_ID": WHATSAPP_BUSINESS_ACCOUNT_ID,
+        "WHATSAPP_TEMPLATE_OTP_NAME": WHATSAPP_TEMPLATE_OTP_NAME,
+        "WHATSAPP_TEMPLATE_OTP_LANGUAGE": WHATSAPP_TEMPLATE_OTP_LANGUAGE,
+        "WHATSAPP_VERIFY_TOKEN": WHATSAPP_VERIFY_TOKEN,
+        "META_APP_SECRET": META_APP_SECRET,
+        "OTP_PEPPER": OTP_PEPPER,
+    }
+
+    missing_whatsapp_settings = [
+        name
+        for name, value in required_whatsapp_settings.items()
+        if not value
+    ]
+
+    if missing_whatsapp_settings:
+        raise RuntimeError(
+            "Missing WhatsApp configuration: "
+            + ", ".join(missing_whatsapp_settings)
+        )
 # ---------------------------
 # Safe debug logs
 # ---------------------------

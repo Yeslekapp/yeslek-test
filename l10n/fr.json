@@ -67,7 +67,11 @@
     "change_phone": "Modifier le numéro",
     "logout_confirm": "Voulez-vous vous déconnecter ?",
     "or_continue": "Ou continuer avec",
-    "legal_notice": "En poursuivant, vous acceptez nos Conditions d’utilisation et notre Politique de confidentialité."
+    "legal_notice": "En poursuivant, vous acceptez nos Conditions d’utilisation et notre Politique de confidentialité.",
+  "otp_whatsapp_help": "Saisissez le code à 6 chiffres envoyé sur WhatsApp.",
+  "otp_resent": "Un nouveau code a été envoyé sur WhatsApp.",
+  "otp_resend_wait": "Veuillez patienter avant de demander un nouveau code.",
+  "otp_send_failed": "Impossible d’envoyer le code sur WhatsApp. Veuillez réessayer."
   },
 
   "lang": {

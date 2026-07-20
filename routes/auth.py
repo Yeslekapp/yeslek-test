@@ -2,7 +2,16 @@
 # Auth Routes — FINAL CLEAN (OTP + Google FIX)
 # ---------------------------
 
-from flask import Blueprint, render_template, request, session, redirect, url_for
+from flask import (
+    Blueprint,
+    current_app,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+
 import re
 import time
 import os
@@ -14,7 +23,10 @@ from google_auth_oauthlib.flow import Flow
 import requests
 
 from services.communication.email_otp_service import EmailOTPService
-from services.communication.sms_service import SMSService
+from services.communication.whatsapp_service import (
+    WhatsAppService,
+    WhatsAppServiceError,
+)
 from services.communication.otp_service import OtpService
 from services.auth_service import get_or_create_user
 
@@ -611,90 +623,377 @@ def email_code():
 
 
 # ============================================================
-# PHONE LOGIN
+# PHONE LOGIN — WHATSAPP OTP
 # ============================================================
-@auth_bp.route("/phone", methods=["GET", "POST"])
+
+@auth_bp.route(
+    "/phone",
+    methods=["GET", "POST"],
+)
 def phone():
 
     if request.method == "POST":
 
-        name = (request.form.get("name") or "").strip()
-        local_number = request.form.get("phone")
-        country_code = request.form.get("country_code")
+        name = (
+            request.form.get("name")
+            or ""
+        ).strip()
 
-        if not local_number:
-            return render_template("auth/phone_login.html", error=True)
+        local_number = (
+            request.form.get("phone")
+            or ""
+        ).strip()
 
-        phone_number = f"{country_code}{local_number}".replace(" ", "")
+        country_code = (
+            request.form.get("country_code")
+            or ""
+        ).strip()
+
+        phone_number = _normalize_phone(
+            country_code,
+            local_number,
+        )
+
+        if phone_number is None:
+            return render_template(
+                "auth/phone_login.html",
+                error=True,
+                send_error=False,
+            )
 
         if name:
             session["user_name"] = name
 
-        try:
-            code = OtpService.generate_code()
-            OtpService.store_otp("sms", phone_number, code)
+        now = time.time()
 
-            SMSService.send_sms(
-                phone_number,
-                f"Your yeslek verification code is {code}"
+        previous_phone = session.get(
+            "pending_phone"
+        )
+
+        previous_sent_at = float(
+            session.get(
+                "phone_otp_last_sent",
+                0,
+            )
+            or 0
+        )
+
+        # ---------------------------
+        # Anti double-send
+        # ---------------------------
+
+        if (
+            previous_phone == phone_number
+            and now - previous_sent_at
+            < PHONE_OTP_RESEND_COOLDOWN
+        ):
+            return redirect(
+                url_for("auth.otp")
             )
 
-        except Exception as e:
-            print("TELNYX ERROR:", e)
-            return render_template("auth/phone_login.html", error=True)
+        try:
+            _send_whatsapp_otp(
+                phone_number
+            )
+
+        except WhatsAppServiceError as exc:
+            current_app.logger.error(
+                "WhatsApp OTP send failed for phone ending %s: %s",
+                phone_number[-4:],
+                exc,
+            )
+
+            return render_template(
+                "auth/phone_login.html",
+                error=False,
+                send_error=True,
+            )
+
+        except Exception:
+            current_app.logger.exception(
+                "Unexpected WhatsApp OTP error for phone ending %s",
+                phone_number[-4:],
+            )
+
+            return render_template(
+                "auth/phone_login.html",
+                error=False,
+                send_error=True,
+            )
 
         session["pending_phone"] = phone_number
+        session.modified = True
 
-        return redirect(url_for("auth.otp"))
+        return redirect(
+            url_for("auth.otp")
+        )
 
-    return render_template("auth/phone_login.html")
+    return render_template(
+        "auth/phone_login.html",
+        error=False,
+        send_error=False,
+    )
 
 
 # ============================================================
-# PHONE OTP VERIFY
+# PHONE OTP VERIFY — WHATSAPP
 # ============================================================
-@auth_bp.route("/otp", methods=["GET", "POST"])
+
+@auth_bp.route(
+    "/otp",
+    methods=["GET", "POST"],
+)
 def otp():
 
-    phone_value = session.get("pending_phone")
+    phone_value = session.get(
+        "pending_phone"
+    )
 
     if not phone_value:
-        return redirect(url_for("auth.phone"))
+        return redirect(
+            url_for("auth.phone")
+        )
 
     if request.method == "POST":
 
-        entered_code = (request.form.get("code") or "").strip()
+        intent = (
+            request.form.get("intent")
+            or "verify"
+        ).strip().lower()
 
-        valid = OtpService.verify_otp("sms", phone_value, entered_code)
+        # ---------------------------
+        # Resend WhatsApp OTP
+        # ---------------------------
 
-        if not valid:
-            return render_template(
-                "auth/otp.html",
-                phone=phone_value,
-                error=True
+        if intent == "resend":
+            now = time.time()
+
+            last_sent_at = float(
+                session.get(
+                    "phone_otp_last_sent",
+                    0,
+                )
+                or 0
             )
 
-        user = get_or_create_user(phone=phone_value)
+            if (
+                now - last_sent_at
+                < PHONE_OTP_RESEND_COOLDOWN
+            ):
+                return _render_phone_otp(
+                    phone_value,
+                    info_key="auth.otp_resend_wait",
+                )
+
+            try:
+                _send_whatsapp_otp(
+                    phone_value
+                )
+
+            except WhatsAppServiceError as exc:
+                current_app.logger.error(
+                    "WhatsApp OTP resend failed for phone ending %s: %s",
+                    phone_value[-4:],
+                    exc,
+                )
+
+                return _render_phone_otp(
+                    phone_value,
+                    error_key="auth.otp_send_failed",
+                )
+
+            except Exception:
+                current_app.logger.exception(
+                    "Unexpected WhatsApp OTP resend error for phone ending %s",
+                    phone_value[-4:],
+                )
+
+                return _render_phone_otp(
+                    phone_value,
+                    error_key="auth.otp_send_failed",
+                )
+
+            return _render_phone_otp(
+                phone_value,
+                info_key="auth.otp_resent",
+            )
+
+        # ---------------------------
+        # Verify WhatsApp OTP
+        # ---------------------------
+
+        entered_code = (
+            request.form.get("code")
+            or ""
+        ).strip()
+
+        if not re.fullmatch(
+            r"\d{6}",
+            entered_code,
+        ):
+            return _render_phone_otp(
+                phone_value,
+                error_key="auth.otp_invalid",
+            )
+
+        valid = OtpService.verify_otp(
+            "whatsapp",
+            phone_value,
+            entered_code,
+        )
+
+        if not valid:
+            return _render_phone_otp(
+                phone_value,
+                error_key="auth.otp_invalid",
+            )
+
+        user = get_or_create_user(
+            phone=phone_value
+        )
 
         session["user_id"] = user.id
         session["user_phone"] = phone_value
         session.permanent = True
 
-        session.pop("pending_phone", None)
+        session.pop(
+            "pending_phone",
+            None,
+        )
+
+        session.pop(
+            "phone_otp_last_sent",
+            None,
+        )
 
         next_url = (
-        session.pop("auth_next_url", None)
-        or url_for("recharge.select_amount_get")
-      )
+            session.pop(
+                "auth_next_url",
+                None,
+            )
+            or url_for(
+                "recharge.select_amount_get"
+            )
+        )
 
-        return redirect(next_url, code=303)
+        return redirect(
+            next_url,
+            code=303,
+        )
 
-    return render_template(
-        "auth/otp.html",
-        phone=phone_value,
-        masked_phone=_mask_phone(phone_value)
+    return _render_phone_otp(
+        phone_value
     )
 
+# ---------------------------
+# Phone OTP helpers
+# ---------------------------
+
+PHONE_OTP_RESEND_COOLDOWN = 30
+
+
+def _normalize_phone(
+    country_code: str,
+    local_number: str,
+) -> str | None:
+    """
+    Construit un numéro E.164.
+
+    Le sélecteur actuel contient notamment la France, le Royaume-Uni,
+    l'Allemagne, l'Italie, l'Espagne et les États-Unis.
+    """
+
+    country_digits = re.sub(
+        r"\D+",
+        "",
+        str(country_code or ""),
+    )
+
+    local_digits = re.sub(
+        r"\D+",
+        "",
+        str(local_number or ""),
+    )
+
+    if not country_digits or not local_digits:
+        return None
+
+    # Le zéro italien peut être significatif.
+    if (
+        country_digits != "39"
+        and local_digits.startswith("0")
+    ):
+        local_digits = local_digits[1:]
+
+    phone_number = (
+        f"+{country_digits}{local_digits}"
+    )
+
+    if not re.fullmatch(
+        r"\+[1-9]\d{7,14}",
+        phone_number,
+    ):
+        return None
+
+    return phone_number
+
+
+# ---------------------------
+# Send WhatsApp OTP
+# ---------------------------
+
+def _send_whatsapp_otp(
+    phone_number: str,
+) -> str:
+    """
+    Génère, stocke puis envoie un nouveau code WhatsApp.
+
+    Le code est supprimé si l'envoi échoue afin d'éviter
+    de conserver un OTP qui n'a pas été transmis.
+    """
+
+    code = OtpService.generate_code(
+        length=6,
+    )
+
+    OtpService.store_otp(
+        "whatsapp",
+        phone_number,
+        code,
+    )
+
+    try:
+        result = WhatsAppService.send_otp(
+            to_number=phone_number,
+            code=code,
+        )
+
+    except Exception:
+        OtpService.delete_otp(
+            "whatsapp",
+            phone_number,
+        )
+        raise
+
+    session["phone_otp_last_sent"] = time.time()
+    session.modified = True
+
+    return result.message_id
+
+
+def _render_phone_otp(
+    phone_number: str,
+    *,
+    error_key: str | None = None,
+    info_key: str | None = None,
+):
+    return render_template(
+        "auth/otp.html",
+        phone=phone_number,
+        masked_phone=_mask_phone(phone_number),
+        error_key=error_key,
+        info_key=info_key,
+    )
 
 # ============================================================
 # LOGOUT

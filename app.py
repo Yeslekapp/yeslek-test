@@ -29,6 +29,7 @@ from routes.admin import admin_bp
 from routes.reloadly import reloadly_bp
 from routes.seo import seo_bp
 from routes.legal import legal_bp
+from routes.whatsapp_webhook import whatsapp_webhook_bp
 # ---------------------------
 # Create tables (TEMP)
 # ---------------------------
@@ -417,6 +418,7 @@ def create_app() -> Flask:
     app.register_blueprint(reloadly_bp)
     app.register_blueprint(seo_bp)
     app.register_blueprint(legal_bp)
+    app.register_blueprint(whatsapp_webhook_bp)
 
     return app
 

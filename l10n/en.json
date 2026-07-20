@@ -65,7 +65,11 @@
     "change_phone": "Change number",
     "logout_confirm": "Do you want to log out?",
     "or_continue": "Or continue with",
-    "legal_notice": "By continuing, you accept our Terms of Use and Privacy Policy."
+    "legal_notice": "By continuing, you accept our Terms of Use and Privacy Policy.",
+  "otp_whatsapp_help": "Enter the 6-digit code sent to you on WhatsApp.",
+  "otp_resent": "A new code has been sent on WhatsApp.",
+  "otp_resend_wait": "Please wait before requesting another code.",
+  "otp_send_failed": "We could not send the WhatsApp code. Please try again."
   },
 
   "lang": {

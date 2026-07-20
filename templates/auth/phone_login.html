@@ -69,11 +69,15 @@
                required />
       </div>
 
-      {% if error %}
-        <div class="tz-auth-error">
-          {{ t("auth.invalid_phone") }}
-        </div>
-      {% endif %}
+{% if error %}
+  <div class="tz-auth-error">
+    {{ t("auth.invalid_phone") }}
+  </div>
+{% elif send_error %}
+  <div class="tz-auth-error">
+    {{ t("auth.otp_send_failed") }}
+  </div>
+{% endif %}
 
       <!-- BUTTON -->
       <button type="submit" class="tz-auth-btn">
